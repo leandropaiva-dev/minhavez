@@ -94,7 +94,7 @@ export default function TermosPage() {
             <section>
               <h2 className="text-2xl font-semibold text-white mb-4">8. Limitação de Responsabilidade</h2>
               <p className="leading-relaxed">
-                O MinhaVez não será responsável por quaisquer danos indiretos, incidentais, especiais, consequenciais ou punitivos resultantes do uso ou incapacidade de usar o serviço. Fornecemos o serviço "como está" sem garantias de qualquer tipo.
+                O MinhaVez não será responsável por quaisquer danos indiretos, incidentais, especiais, consequenciais ou punitivos resultantes do uso ou incapacidade de usar o serviço. Fornecemos o serviço &quot;como está&quot; sem garantias de qualquer tipo.
               </p>
             </section>
 

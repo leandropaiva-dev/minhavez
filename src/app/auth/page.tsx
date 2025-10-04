@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import LoginForm from '@/components/auth/LoginForm'
@@ -8,7 +8,7 @@ import SignupForm from '@/components/auth/SignupForm'
 import AuthSidebar from '@/components/auth/AuthSidebar'
 import { ArrowLeft } from 'lucide-react'
 
-export default function AuthPage() {
+function AuthContent() {
   const searchParams = useSearchParams()
   const mode = searchParams.get('mode')
   const [isLogin, setIsLogin] = useState(mode !== 'signup')
@@ -24,6 +24,7 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen bg-black flex items-center justify-center p-2 sm:p-4 relative">
       {/* Botão Voltar */}
+      {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
       <a
         href="/"
         className="fixed top-4 left-4 z-50 inline-flex items-center gap-2 text-zinc-400 hover:text-white transition-colors text-sm"
@@ -112,5 +113,17 @@ export default function AuthPage() {
         </AnimatePresence>
       </div>
     </div>
+  )
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-zinc-400">Carregando...</div>
+      </div>
+    }>
+      <AuthContent />
+    </Suspense>
   )
 }
