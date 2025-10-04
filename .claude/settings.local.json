@@ -8,7 +8,8 @@
       "Bash(rm:*)",
       "Bash(git config:*)",
       "Bash(git add:*)",
-      "Bash(del nul)"
+      "Bash(del nul)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
