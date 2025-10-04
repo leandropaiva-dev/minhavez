@@ -62,7 +62,13 @@ export default function Features() {
       <div className="feature-section min-h-screen flex items-center justify-center py-12 md:py-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
-            <div className="text-left">
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="text-left"
+            >
               <div className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-blue-600/10 border border-blue-600/20 mb-4 md:mb-6">
                 <Clock className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
                 <span className="text-blue-400 font-semibold text-sm md:text-base">Real-time</span>
@@ -87,9 +93,15 @@ export default function Features() {
                   <span>Estimativa de tempo</span>
                 </li>
               </ul>
-            </div>
+            </motion.div>
 
-            <div className="relative">
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="relative"
+            >
               <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-2xl blur-3xl opacity-50" />
               <motion.div
                 whileHover={{ scale: 1.05, rotate: 2 }}
@@ -97,14 +109,14 @@ export default function Features() {
                 className="relative"
               >
                 <Image
-                  src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&q=80&fit=crop"
+                  src="/feat1.jpg"
                   alt="Acompanhamento Real-time"
                   width={600}
                   height={400}
                   className="rounded-xl md:rounded-2xl shadow-2xl border border-zinc-800 w-full h-auto"
                 />
               </motion.div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </div>
@@ -113,7 +125,13 @@ export default function Features() {
       <div className="feature-section min-h-screen flex items-center justify-center py-12 md:py-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
-            <div className="relative order-2 md:order-1">
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="relative order-2 md:order-1"
+            >
               <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-blue-600/20 rounded-2xl blur-3xl opacity-50" />
               <motion.div
                 whileHover={{ scale: 1.05, rotate: -2 }}
@@ -128,9 +146,15 @@ export default function Features() {
                   className="rounded-xl md:rounded-2xl shadow-2xl border border-zinc-800 w-full h-auto"
                 />
               </motion.div>
-            </div>
+            </motion.div>
 
-            <div className="order-1 md:order-2 text-left">
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="order-1 md:order-2 text-left"
+            >
               <div className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-purple-600/10 border border-purple-600/20 mb-4 md:mb-6">
                 <QrCode className="w-4 h-4 md:w-5 md:h-5 text-purple-600" />
                 <span className="text-purple-400 font-semibold text-sm md:text-base">QR Code</span>
@@ -155,7 +179,7 @@ export default function Features() {
                   <span>Compartilhar via WhatsApp</span>
                 </li>
               </ul>
-            </div>
+            </motion.div>
           </div>
         </div>
       </div>
@@ -164,7 +188,13 @@ export default function Features() {
       <div className="feature-section min-h-screen flex items-center justify-center py-12 md:py-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
-            <div className="text-left">
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="text-left"
+            >
               <div className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-blue-600/10 border border-blue-600/20 mb-4 md:mb-6">
                 <LayoutDashboard className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
                 <span className="text-blue-400 font-semibold text-sm md:text-base">Dashboard</span>
@@ -189,9 +219,15 @@ export default function Features() {
                   <span>Controle total</span>
                 </li>
               </ul>
-            </div>
+            </motion.div>
 
-            <div className="relative">
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="relative"
+            >
               <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-2xl blur-3xl opacity-50" />
               <motion.div
                 whileHover={{ scale: 1.05, rotate: 2 }}
@@ -206,7 +242,7 @@ export default function Features() {
                   className="rounded-xl md:rounded-2xl shadow-2xl border border-zinc-800 w-full h-auto"
                 />
               </motion.div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </div>
