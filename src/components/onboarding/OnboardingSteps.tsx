@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { CreditCard, Building2, CheckCircle2 } from 'lucide-react'
+import { CreditCard, Building2, CheckCircle2, AlertCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { saveBusinessInfo, completeOnboarding } from '@/lib/onboarding/actions'
 
 interface User {
   email?: string
@@ -19,16 +20,55 @@ interface OnboardingStepsProps {
 export default function OnboardingSteps({ user }: OnboardingStepsProps) {
   const router = useRouter()
   const [step, setStep] = useState(1)
-  const [restaurantName, setRestaurantName] = useState('')
+
+  // Form data
+  const [businessName, setBusinessName] = useState('')
+  const [businessType, setBusinessType] = useState('')
+  const [phone, setPhone] = useState('')
+  const [address, setAddress] = useState('')
+
+  // UI state
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const handleSaveBusinessInfo = async () => {
+    setLoading(true)
+    setError('')
+
+    const result = await saveBusinessInfo({
+      name: businessName,
+      businessType,
+      phone,
+      address,
+    })
+
+    setLoading(false)
+
+    if (result.error) {
+      setError(result.error)
+      return false
+    }
+
+    return true
+  }
+
+  const handleContinueToPayment = async () => {
+    const saved = await handleSaveBusinessInfo()
+    if (saved) {
+      setStep(3)
+    }
+  }
 
   const handleComplete = async () => {
     setLoading(true)
-    // TODO: Save restaurant info to database
-    // For now, just redirect to dashboard
-    setTimeout(() => {
-      router.push('/dashboard')
-    }, 1000)
+    setError('')
+
+    const result = await completeOnboarding()
+
+    if (result?.error) {
+      setError(result.error)
+      setLoading(false)
+    }
   }
 
   return (
@@ -96,6 +136,13 @@ export default function OnboardingSteps({ user }: OnboardingStepsProps) {
             Conte-nos um pouco sobre seu estabelecimento
           </p>
 
+          {error && (
+            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
+              <p className="text-sm text-red-400">{error}</p>
+            </div>
+          )}
+
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-zinc-300 mb-2">
@@ -103,18 +150,24 @@ export default function OnboardingSteps({ user }: OnboardingStepsProps) {
               </label>
               <input
                 type="text"
-                value={restaurantName}
-                onChange={(e) => setRestaurantName(e.target.value)}
+                value={businessName}
+                onChange={(e) => setBusinessName(e.target.value)}
                 placeholder="Ex: Restaurante Sabor da Casa"
                 className="w-full px-4 py-3 bg-black border border-zinc-800 rounded-lg text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                required
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-zinc-300 mb-2">
-                Tipo de Negócio
+                Tipo de Negócio *
               </label>
-              <select className="w-full px-4 py-3 bg-black border border-zinc-800 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent">
+              <select
+                value={businessType}
+                onChange={(e) => setBusinessType(e.target.value)}
+                className="w-full px-4 py-3 bg-black border border-zinc-800 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                required
+              >
                 <option value="">Selecione...</option>
                 <option value="restaurante">Restaurante</option>
                 <option value="bar">Bar</option>
@@ -126,11 +179,27 @@ export default function OnboardingSteps({ user }: OnboardingStepsProps) {
 
             <div>
               <label className="block text-sm font-medium text-zinc-300 mb-2">
-                Telefone
+                Telefone *
               </label>
               <input
                 type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
                 placeholder="+351 912 345 678"
+                className="w-full px-4 py-3 bg-black border border-zinc-800 rounded-lg text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-zinc-300 mb-2">
+                Endereço (Opcional)
+              </label>
+              <input
+                type="text"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="Rua, número, cidade"
                 className="w-full px-4 py-3 bg-black border border-zinc-800 rounded-lg text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
               />
             </div>
@@ -141,15 +210,16 @@ export default function OnboardingSteps({ user }: OnboardingStepsProps) {
               onClick={() => setStep(1)}
               variant="outline"
               className="flex-1 border-zinc-700 text-white"
+              disabled={loading}
             >
               Voltar
             </Button>
             <Button
-              onClick={() => setStep(3)}
-              disabled={!restaurantName}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+              onClick={handleContinueToPayment}
+              disabled={!businessName || !businessType || !phone || loading}
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
             >
-              Continuar
+              {loading ? 'Salvando...' : 'Continuar'}
             </Button>
           </div>
         </div>
@@ -164,6 +234,13 @@ export default function OnboardingSteps({ user }: OnboardingStepsProps) {
           <p className="text-sm sm:text-base text-zinc-400 mb-6 sm:mb-8">
             Adicione um cartão para começar seu teste grátis de 14 dias
           </p>
+
+          {error && (
+            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
+              <p className="text-sm text-red-400">{error}</p>
+            </div>
+          )}
 
           <div className="bg-blue-600/10 border border-blue-600/20 rounded-xl p-4 mb-6">
             <p className="text-blue-400 text-sm">
@@ -228,16 +305,20 @@ export default function OnboardingSteps({ user }: OnboardingStepsProps) {
 
           <div className="flex gap-4">
             <Button
-              onClick={() => setStep(2)}
+              onClick={() => {
+                setError('')
+                setStep(2)
+              }}
               variant="outline"
               className="flex-1 border-zinc-700 text-white"
+              disabled={loading}
             >
               Voltar
             </Button>
             <Button
               onClick={handleComplete}
               disabled={loading}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
             >
               {loading ? 'Processando...' : 'Começar Teste Grátis'}
             </Button>
