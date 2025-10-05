@@ -7,15 +7,32 @@ import { signOut } from '@/lib/auth/actions'
 import { saveBusinessInfo } from '@/lib/onboarding/actions'
 
 interface SettingsManagerProps {
-  business: any
-  user: any
+  business: {
+    name?: string
+    business_type?: string
+    phone?: string
+    address?: string
+    trial_ends_at?: string
+  } | null
+  user: {
+    id: string
+    email?: string
+    user_metadata?: {
+      name?: string
+    }
+  }
 }
 
 export default function SettingsManager({ business, user }: SettingsManagerProps) {
   const [activeTab, setActiveTab] = useState<'business' | 'notifications' | 'billing' | 'security'>('business')
-  const [businessData, setBusinessData] = useState({
+  const [businessData, setBusinessData] = useState<{
+    name: string
+    type: 'restaurante' | 'bar' | 'clinica' | 'barbearia' | 'outro' | ''
+    phone: string
+    address: string
+  }>({
     name: business?.name || '',
-    type: business?.business_type || '',
+    type: (business?.business_type as 'restaurante' | 'bar' | 'clinica' | 'barbearia' | 'outro') || '',
     phone: business?.phone || '',
     address: business?.address || '',
   })
@@ -28,9 +45,15 @@ export default function SettingsManager({ business, user }: SettingsManagerProps
     setError('')
     setSuccess(false)
 
+    if (!businessData.type) {
+      setError('Tipo de negócio é obrigatório')
+      setLoading(false)
+      return
+    }
+
     const result = await saveBusinessInfo({
       name: businessData.name,
-      businessType: businessData.type as any,
+      businessType: businessData.type,
       phone: businessData.phone,
       address: businessData.address,
     })
@@ -62,7 +85,7 @@ export default function SettingsManager({ business, user }: SettingsManagerProps
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => setActiveTab(tab.id as 'business' | 'notifications' | 'billing' | 'security')}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                   activeTab === tab.id
                     ? 'bg-blue-600 text-white'
@@ -120,7 +143,7 @@ export default function SettingsManager({ business, user }: SettingsManagerProps
                 <select
                   value={businessData.type}
                   onChange={(e) =>
-                    setBusinessData({ ...businessData, type: e.target.value })
+                    setBusinessData({ ...businessData, type: e.target.value as 'restaurante' | 'bar' | 'clinica' | 'barbearia' | 'outro' | '' })
                   }
                   className="w-full px-4 py-3 bg-black border border-zinc-800 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-600"
                 >

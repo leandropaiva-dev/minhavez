@@ -42,7 +42,7 @@ export function SheetTrigger({ children, asChild }: SheetTriggerProps) {
   if (asChild && React.isValidElement(children)) {
     return React.cloneElement(children, {
       onClick: handleClick,
-    } as any)
+    } as React.HTMLAttributes<HTMLElement>)
   }
 
   return <button onClick={handleClick}>{children}</button>
@@ -103,7 +103,7 @@ export function SheetClose({ children, asChild }: SheetCloseProps) {
   if (asChild && React.isValidElement(children)) {
     return React.cloneElement(children, {
       onClick: handleClick,
-    } as any)
+    } as React.HTMLAttributes<HTMLElement>)
   }
 
   return <button onClick={handleClick}>{children}</button>

@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { CreditCard, Building2, CheckCircle2, AlertCircle } from 'lucide-react'
-import { useRouter } from 'next/navigation'
 import { saveBusinessInfo, completeOnboarding } from '@/lib/onboarding/actions'
 
 interface User {
@@ -18,12 +17,11 @@ interface OnboardingStepsProps {
 }
 
 export default function OnboardingSteps({ user }: OnboardingStepsProps) {
-  const router = useRouter()
   const [step, setStep] = useState(1)
 
   // Form data
   const [businessName, setBusinessName] = useState('')
-  const [businessType, setBusinessType] = useState('')
+  const [businessType, setBusinessType] = useState<'restaurante' | 'bar' | 'clinica' | 'barbearia' | 'outro' | ''>('')
   const [phone, setPhone] = useState('')
   const [address, setAddress] = useState('')
 
@@ -35,9 +33,15 @@ export default function OnboardingSteps({ user }: OnboardingStepsProps) {
     setLoading(true)
     setError('')
 
+    if (!businessType) {
+      setError('Tipo de negócio é obrigatório')
+      setLoading(false)
+      return false
+    }
+
     const result = await saveBusinessInfo({
       name: businessName,
-      businessType,
+      businessType: businessType as 'restaurante' | 'bar' | 'clinica' | 'barbearia' | 'outro',
       phone,
       address,
     })
@@ -164,7 +168,7 @@ export default function OnboardingSteps({ user }: OnboardingStepsProps) {
               </label>
               <select
                 value={businessType}
-                onChange={(e) => setBusinessType(e.target.value)}
+                onChange={(e) => setBusinessType(e.target.value as 'restaurante' | 'bar' | 'clinica' | 'barbearia' | 'outro' | '')}
                 className="w-full px-4 py-3 bg-black border border-zinc-800 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
                 required
               >
