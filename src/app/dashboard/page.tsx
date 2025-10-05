@@ -121,7 +121,19 @@ export default async function DashboardPage() {
         </div>
 
         {/* Recent Queue Table */}
-        <RecentQueue />
+        {business?.id && (
+          await (async () => {
+            const { data: queueEntries } = await supabase
+              .from('queue_entries')
+              .select('id, customer_name, customer_phone, position, joined_at, status')
+              .eq('business_id', business.id)
+              .eq('status', 'waiting')
+              .order('position', { ascending: true })
+              .limit(10)
+
+            return <RecentQueue entries={queueEntries || []} />
+          })()
+        )}
       </main>
     </DashboardLayout>
   )
