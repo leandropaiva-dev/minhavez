@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { Button } from '@/components/ui/button'
+import { signOut } from '@/lib/auth/actions'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -20,7 +21,7 @@ export default async function DashboardPage() {
             <span className="text-zinc-400 text-xs sm:text-sm hidden sm:inline">
               {user.user_metadata?.name || user.email}
             </span>
-            <form action="/auth/signout" method="POST">
+            <form action={signOut}>
               <Button
                 type="submit"
                 variant="outline"
