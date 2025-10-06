@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Phone, Check, X, Clock, User, Bell } from 'lucide-react'
+import { Phone, Check, X, Clock, User, Bell } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -20,9 +20,6 @@ interface QueueEntry {
 export default function QueueManager() {
   const [queue, setQueue] = useState<QueueEntry[]>([])
   const [loading, setLoading] = useState(true)
-
-  const [showAddModal, setShowAddModal] = useState(false)
-  const [newCustomer, setNewCustomer] = useState({ name: '', phone: '' })
 
   useEffect(() => {
     fetchQueue()
@@ -52,7 +49,7 @@ export default function QueueManager() {
 
   const updateStatus = async (id: string, status: string) => {
     const supabase = createClient()
-    const updates: any = { status }
+    const updates: Record<string, string> = { status }
 
     if (status === 'called') updates.called_at = new Date().toISOString()
     else if (status === 'attending') updates.attended_at = new Date().toISOString()
@@ -70,10 +67,6 @@ export default function QueueManager() {
     return `${Math.floor(diffMinutes / 60)}h${diffMinutes % 60}min`
   }
 
-  const handleAddCustomer = () => {
-    // Removido - clientes entram via QR code
-    setShowAddModal(false)
-  }
 
   const statusConfig: Record<string, { label: string; color: string }> = {
     waiting: { label: 'Aguardando', color: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' },

@@ -11,7 +11,7 @@ interface JoinQueueFormProps {
   businessName: string
 }
 
-export default function JoinQueueForm({ businessId, businessName }: JoinQueueFormProps) {
+export default function JoinQueueForm({ businessId }: JoinQueueFormProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')

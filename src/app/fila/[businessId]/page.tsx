@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { redirect, notFound } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import JoinQueueForm from '@/components/queue/JoinQueueForm'
 
 interface PageProps {

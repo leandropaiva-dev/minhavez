@@ -1,4 +1,4 @@
-import { Filter, MoreVertical } from 'lucide-react'
+import { MoreVertical } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 
