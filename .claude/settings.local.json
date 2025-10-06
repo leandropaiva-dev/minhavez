@@ -15,7 +15,8 @@
       "Bash(taskkill:*)",
       "Bash(del \"c:\\minhavez\\src\\app\\dashboard\\layout.tsx\")",
       "Bash(git checkout:*)",
-      "Bash(npx supabase:*)"
+      "Bash(npx supabase:*)",
+      "Bash(git log:*)"
     ],
     "deny": [],
     "ask": []
