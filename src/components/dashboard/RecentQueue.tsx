@@ -71,7 +71,9 @@ export default function RecentQueue({ entries: initialEntries, businessId }: Rec
       })
       .subscribe()
 
-    return () => { supabase.removeChannel(channel) }
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [businessId])
 
   return (

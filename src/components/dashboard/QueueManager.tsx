@@ -42,7 +42,9 @@ export default function QueueManager({ businessId }: QueueManagerProps) {
       })
       .subscribe()
 
-    return () => { supabase.removeChannel(channel) }
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [businessId])
 
   const fetchQueue = async () => {
