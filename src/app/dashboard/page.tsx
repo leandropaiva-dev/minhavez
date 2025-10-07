@@ -131,7 +131,7 @@ export default async function DashboardPage() {
               .order('position', { ascending: true })
               .limit(10)
 
-            return <RecentQueue entries={queueEntries || []} />
+            return <RecentQueue entries={queueEntries || []} businessId={business.id} />
           })()
         )}
       </main>

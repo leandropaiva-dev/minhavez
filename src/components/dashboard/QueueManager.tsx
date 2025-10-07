@@ -17,9 +17,14 @@ interface QueueEntry {
   notes: string | null
 }
 
-export default function QueueManager() {
+interface QueueManagerProps {
+  businessId: string
+}
+
+export default function QueueManager({ businessId }: QueueManagerProps) {
   const [queue, setQueue] = useState<QueueEntry[]>([])
   const [loading, setLoading] = useState(true)
+  const [callingId, setCallingId] = useState<string | null>(null)
 
   useEffect(() => {
     fetchQueue()
@@ -27,19 +32,25 @@ export default function QueueManager() {
     const supabase = createClient()
     const channel = supabase
       .channel('queue-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'queue_entries' }, () => {
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'queue_entries',
+        filter: `business_id=eq.${businessId}`
+      }, () => {
         fetchQueue()
       })
       .subscribe()
 
     return () => { supabase.removeChannel(channel) }
-  }, [])
+  }, [businessId])
 
   const fetchQueue = async () => {
     const supabase = createClient()
     const { data } = await supabase
       .from('queue_entries')
       .select('*')
+      .eq('business_id', businessId)
       .in('status', ['waiting', 'called', 'attending'])
       .order('position', { ascending: true })
 
@@ -51,9 +62,15 @@ export default function QueueManager() {
     const supabase = createClient()
     const updates: Record<string, string> = { status }
 
-    if (status === 'called') updates.called_at = new Date().toISOString()
-    else if (status === 'attending') updates.attended_at = new Date().toISOString()
-    else if (status === 'completed') updates.completed_at = new Date().toISOString()
+    if (status === 'called') {
+      updates.called_at = new Date().toISOString()
+      setCallingId(id)
+      setTimeout(() => setCallingId(null), 2000)
+    } else if (status === 'attending') {
+      updates.attended_at = new Date().toISOString()
+    } else if (status === 'completed') {
+      updates.completed_at = new Date().toISOString()
+    }
 
     await supabase.from('queue_entries').update(updates).eq('id', id)
     fetchQueue()
@@ -143,7 +160,15 @@ export default function QueueManager() {
               const waitTime = calculateWaitTime(entry.joined_at)
 
               return (
-                <div key={entry.id} className="p-6 hover:bg-zinc-950 transition-colors">
+                <div
+                  key={entry.id}
+                  className={cn(
+                    "p-6 transition-all duration-300",
+                    callingId === entry.id
+                      ? "bg-blue-950 border-l-4 border-l-blue-500"
+                      : "hover:bg-zinc-950"
+                  )}
+                >
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
@@ -167,8 +192,14 @@ export default function QueueManager() {
                       </span>
 
                       {entry.status === 'waiting' && (
-                        <Button onClick={() => updateStatus(entry.id, 'called')} size="sm" className="bg-blue-600 hover:bg-blue-700">
-                          <Bell className="w-4 h-4 mr-2" />Chamar
+                        <Button
+                          onClick={() => updateStatus(entry.id, 'called')}
+                          size="sm"
+                          disabled={callingId === entry.id}
+                          className="bg-blue-600 hover:bg-blue-700"
+                        >
+                          <Bell className={cn("w-4 h-4 mr-2", callingId === entry.id && "animate-bounce")} />
+                          {callingId === entry.id ? 'Chamando...' : 'Chamar'}
                         </Button>
                       )}
 

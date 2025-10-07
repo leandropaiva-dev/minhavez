@@ -36,8 +36,16 @@ export default function QueueWaitView({ entry: initialEntry, currentPosition: in
   const [estimatedWaitTime, setEstimatedWaitTime] = useState(initialWaitTime)
   const [copied, setCopied] = useState(false)
   const [canceling, setCanceling] = useState(false)
+  const [justCalled, setJustCalled] = useState(false)
 
   const currentUrl = typeof window !== 'undefined' ? window.location.href : ''
+
+  // Solicita permissão para notificações
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission()
+    }
+  }, [])
 
   // Realtime updates
   useEffect(() => {
@@ -55,7 +63,49 @@ export default function QueueWaitView({ entry: initialEntry, currentPosition: in
         },
         (payload) => {
           if (payload.new) {
-            setEntry(prev => ({ ...prev, ...payload.new }))
+            const newEntry = payload.new as typeof entry
+            const wasWaiting = entry.status === 'waiting'
+            const nowCalled = newEntry.status === 'called'
+
+            // Detecta quando cliente é chamado
+            if (wasWaiting && nowCalled) {
+              setJustCalled(true)
+              // Toca som de notificação
+              if (typeof window !== 'undefined' && 'Notification' in window) {
+                if (Notification.permission === 'granted') {
+                  new Notification('Você foi chamado!', {
+                    body: `${entry.business?.name} está te chamando`,
+                    icon: '/icon.png',
+                    tag: 'queue-call',
+                    requireInteraction: true
+                  })
+                }
+              }
+              // Vibra (mobile)
+              if ('vibrate' in navigator) {
+                navigator.vibrate([200, 100, 200, 100, 200])
+              }
+              // Toca som
+              try {
+                const audio = new Audio('/notification.mp3')
+                audio.play().catch(() => {
+                  // Fallback para beep do sistema
+                  const ctx = new AudioContext()
+                  const oscillator = ctx.createOscillator()
+                  const gainNode = ctx.createGain()
+                  oscillator.connect(gainNode)
+                  gainNode.connect(ctx.destination)
+                  oscillator.frequency.value = 800
+                  gainNode.gain.value = 0.3
+                  oscillator.start()
+                  setTimeout(() => oscillator.stop(), 500)
+                })
+              } catch (e) {
+                console.log('Audio não disponível')
+              }
+            }
+
+            setEntry(prev => ({ ...prev, ...newEntry }))
           }
         }
       )
@@ -68,17 +118,28 @@ export default function QueueWaitView({ entry: initialEntry, currentPosition: in
           filter: `business_id=eq.${entry.business_id}`,
         },
         async () => {
-          // Recalcula posição quando há mudanças na fila
-          const { count } = await supabase
+          // Busca a entrada atual para pegar a posição atualizada
+          const { data: currentEntry } = await supabase
             .from('queue_entries')
-            .select('*', { count: 'exact', head: true })
-            .eq('business_id', entry.business_id)
-            .eq('status', 'waiting')
-            .lt('position', entry.position || 999999)
+            .select('position, status')
+            .eq('id', entry.id)
+            .single()
 
-          const newPosition = (count || 0) + 1
-          setCurrentPosition(newPosition)
-          setEstimatedWaitTime((count || 0) * 15)
+          if (!currentEntry) return
+
+          // Recalcula posição apenas se ainda estiver waiting
+          if (currentEntry.status === 'waiting') {
+            const { count } = await supabase
+              .from('queue_entries')
+              .select('*', { count: 'exact', head: true })
+              .eq('business_id', entry.business_id)
+              .eq('status', 'waiting')
+              .lt('position', currentEntry.position || 999999)
+
+            const newPosition = (count || 0) + 1
+            setCurrentPosition(newPosition)
+            setEstimatedWaitTime((count || 0) * 15)
+          }
         }
       )
       .subscribe()
@@ -86,7 +147,7 @@ export default function QueueWaitView({ entry: initialEntry, currentPosition: in
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [entry.id, entry.business_id, entry.position])
+  }, [entry.id, entry.business_id])
 
   const handleCopyLink = async () => {
     try {
@@ -139,7 +200,7 @@ export default function QueueWaitView({ entry: initialEntry, currentPosition: in
         }
       case 'called':
         return {
-          icon: <AlertCircle className="w-12 h-12 text-yellow-500" />,
+          icon: <AlertCircle className={`w-12 h-12 text-yellow-500 ${justCalled ? 'animate-bounce' : ''}`} />,
           title: 'Você foi chamado!',
           color: 'yellow',
         }
@@ -179,7 +240,11 @@ export default function QueueWaitView({ entry: initialEntry, currentPosition: in
   const statusDisplay = getStatusDisplay()
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4">
+    <div className={`min-h-screen flex items-center justify-center p-4 transition-all duration-500 ${
+      entry.status === 'called'
+        ? 'bg-gradient-to-br from-yellow-950 via-black to-yellow-950 animate-pulse'
+        : 'bg-black'
+    }`}>
       <div className="w-full max-w-lg">
         {/* Business Info */}
         <div className="text-center mb-6">
@@ -191,13 +256,30 @@ export default function QueueWaitView({ entry: initialEntry, currentPosition: in
           )}
         </div>
 
+        {/* Alert quando chamado */}
+        {entry.status === 'called' && (
+          <div className="mb-6 bg-yellow-500 text-black rounded-xl p-6 animate-bounce">
+            <div className="text-center">
+              <AlertCircle className="w-16 h-16 mx-auto mb-3" />
+              <h2 className="text-3xl font-bold mb-2">🔔 SUA VEZ!</h2>
+              <p className="text-lg font-semibold">Dirija-se ao atendimento agora!</p>
+            </div>
+          </div>
+        )}
+
         {/* Status Card */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 mb-6">
+        <div className={`bg-zinc-900 border rounded-xl p-8 mb-6 transition-all duration-300 ${
+          entry.status === 'called'
+            ? 'border-yellow-500 shadow-2xl shadow-yellow-500/50 ring-4 ring-yellow-500/20'
+            : 'border-zinc-800'
+        }`}>
           <div className="flex flex-col items-center text-center mb-6">
             <div className="mb-4">
               {statusDisplay.icon}
             </div>
-            <h2 className="text-2xl font-bold text-white mb-2">
+            <h2 className={`text-2xl font-bold mb-2 ${
+              entry.status === 'called' ? 'text-yellow-500 animate-pulse' : 'text-white'
+            }`}>
               {statusDisplay.title}
             </h2>
             <p className="text-zinc-400">{entry.customer_name}</p>

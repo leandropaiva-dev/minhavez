@@ -30,7 +30,7 @@ export default async function QueuePage() {
           </p>
         </div>
 
-        <QueueManager />
+        {business?.id && <QueueManager businessId={business.id} />}
       </main>
     </DashboardLayout>
   )

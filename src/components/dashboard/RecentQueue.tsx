@@ -1,6 +1,10 @@
+'use client'
+
 import { MoreVertical } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
 
 interface QueueEntry {
   id: string
@@ -13,6 +17,7 @@ interface QueueEntry {
 
 interface RecentQueueProps {
   entries: QueueEntry[]
+  businessId?: string
 }
 
 const statusConfig = {
@@ -37,7 +42,38 @@ function calculateWaitTime(joinedAt: string): string {
   return `${hours}h${minutes}min`
 }
 
-export default function RecentQueue({ entries }: RecentQueueProps) {
+export default function RecentQueue({ entries: initialEntries, businessId }: RecentQueueProps) {
+  const [entries, setEntries] = useState<QueueEntry[]>(initialEntries)
+
+  useEffect(() => {
+    if (!businessId) return
+
+    const supabase = createClient()
+
+    const channel = supabase
+      .channel('recent-queue-realtime')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'queue_entries',
+        filter: `business_id=eq.${businessId}`
+      }, async () => {
+        // Atualiza a lista quando há mudanças
+        const { data } = await supabase
+          .from('queue_entries')
+          .select('*')
+          .eq('business_id', businessId)
+          .eq('status', 'waiting')
+          .order('position', { ascending: true })
+          .limit(10)
+
+        if (data) setEntries(data)
+      })
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [businessId])
+
   return (
     <div className="relative group">
       {/* Blur effect */}
