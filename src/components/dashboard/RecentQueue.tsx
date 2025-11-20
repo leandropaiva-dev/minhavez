@@ -46,8 +46,12 @@ export default function RecentQueue({ entries: initialEntries, businessId }: Rec
   const [entries, setEntries] = useState<QueueEntry[]>(initialEntries)
 
   useEffect(() => {
-    if (!businessId) return
+    if (!businessId) {
+      console.log('RecentQueue - No businessId provided')
+      return
+    }
 
+    console.log('RecentQueue - Setting up real-time for businessId:', businessId)
     const supabase = createClient()
 
     const channel = supabase

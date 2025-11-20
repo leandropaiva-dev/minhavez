@@ -1,0 +1,373 @@
+import type { BusinessSegment, DashboardConfig } from '@/types/config.types'
+
+export const DASHBOARD_CONFIGS: Record<BusinessSegment, DashboardConfig> = {
+  restaurante: {
+    metrics: [
+      { id: 'queue_count', label: 'Na Fila', icon: 'Users', type: 'count' },
+      {
+        id: 'reservations_today',
+        label: 'Reservas Hoje',
+        icon: 'Calendar',
+        type: 'count',
+      },
+      {
+        id: 'avg_wait_time',
+        label: 'Tempo Médio',
+        icon: 'Clock',
+        type: 'time',
+      },
+      {
+        id: 'tables_occupied',
+        label: 'Mesas Ocupadas',
+        icon: 'Utensils',
+        type: 'count',
+      },
+    ],
+    quickActions: [
+      {
+        id: 'add_reservation',
+        label: 'Nova Reserva',
+        icon: 'CalendarPlus',
+        action: 'add_reservation',
+        variant: 'default',
+      },
+      {
+        id: 'call_next',
+        label: 'Chamar Próximo',
+        icon: 'Bell',
+        action: 'call_next',
+        variant: 'default',
+      },
+      {
+        id: 'view_menu',
+        label: 'Ver Cardápio',
+        icon: 'BookOpen',
+        action: 'view_menu',
+        variant: 'outline',
+      },
+      {
+        id: 'table_status',
+        label: 'Status das Mesas',
+        icon: 'Grid3x3',
+        action: 'table_status',
+        variant: 'secondary',
+      },
+    ],
+    defaultView: 'fila',
+    terminology: {
+      queueLabel: 'Fila de Espera',
+      customerLabel: 'Cliente',
+      callAction: 'Chamar Mesa',
+    },
+  },
+  clinica: {
+    metrics: [
+      {
+        id: 'patients_waiting',
+        label: 'Aguardando',
+        icon: 'Users',
+        type: 'count',
+      },
+      {
+        id: 'appointments_today',
+        label: 'Consultas Hoje',
+        icon: 'Calendar',
+        type: 'count',
+      },
+      {
+        id: 'avg_wait_time',
+        label: 'Tempo de Espera',
+        icon: 'Clock',
+        type: 'time',
+      },
+      {
+        id: 'doctors_available',
+        label: 'Médicos Disponíveis',
+        icon: 'Stethoscope',
+        type: 'count',
+      },
+    ],
+    quickActions: [
+      {
+        id: 'new_appointment',
+        label: 'Nova Consulta',
+        icon: 'CalendarPlus',
+        action: 'new_appointment',
+        variant: 'default',
+      },
+      {
+        id: 'call_patient',
+        label: 'Chamar Paciente',
+        icon: 'Bell',
+        action: 'call_patient',
+        variant: 'default',
+      },
+      {
+        id: 'view_schedule',
+        label: 'Ver Agenda',
+        icon: 'Calendar',
+        action: 'view_schedule',
+        variant: 'outline',
+      },
+      {
+        id: 'patient_records',
+        label: 'Prontuários',
+        icon: 'FileText',
+        action: 'patient_records',
+        variant: 'secondary',
+      },
+    ],
+    defaultView: 'fila',
+    terminology: {
+      queueLabel: 'Fila de Atendimento',
+      customerLabel: 'Paciente',
+      callAction: 'Chamar para Consulta',
+    },
+  },
+  barbearia: {
+    metrics: [
+      { id: 'queue_count', label: 'Na Fila', icon: 'Users', type: 'count' },
+      {
+        id: 'served_today',
+        label: 'Atendidos Hoje',
+        icon: 'CheckCircle',
+        type: 'count',
+      },
+      {
+        id: 'avg_service_time',
+        label: 'Tempo Médio',
+        icon: 'Clock',
+        type: 'time',
+      },
+      {
+        id: 'chairs_occupied',
+        label: 'Cadeiras Ocupadas',
+        icon: 'Armchair',
+        type: 'count',
+      },
+    ],
+    quickActions: [
+      {
+        id: 'call_next',
+        label: 'Chamar Próximo',
+        icon: 'Bell',
+        action: 'call_next',
+        variant: 'default',
+      },
+      {
+        id: 'new_scheduling',
+        label: 'Novo Agendamento',
+        icon: 'CalendarPlus',
+        action: 'new_scheduling',
+        variant: 'default',
+      },
+      {
+        id: 'view_services',
+        label: 'Serviços',
+        icon: 'Scissors',
+        action: 'view_services',
+        variant: 'outline',
+      },
+      {
+        id: 'daily_summary',
+        label: 'Resumo do Dia',
+        icon: 'BarChart3',
+        action: 'daily_summary',
+        variant: 'secondary',
+      },
+    ],
+    defaultView: 'fila',
+    terminology: {
+      queueLabel: 'Fila de Atendimento',
+      customerLabel: 'Cliente',
+      callAction: 'Chamar Cliente',
+    },
+  },
+  salao_beleza: {
+    metrics: [
+      {
+        id: 'clients_waiting',
+        label: 'Aguardando',
+        icon: 'Users',
+        type: 'count',
+      },
+      {
+        id: 'appointments_today',
+        label: 'Agendamentos Hoje',
+        icon: 'Calendar',
+        type: 'count',
+      },
+      {
+        id: 'avg_service_time',
+        label: 'Tempo Médio',
+        icon: 'Clock',
+        type: 'time',
+      },
+      {
+        id: 'stations_occupied',
+        label: 'Estações Ocupadas',
+        icon: 'Sparkles',
+        type: 'count',
+      },
+    ],
+    quickActions: [
+      {
+        id: 'call_next',
+        label: 'Chamar Próxima',
+        icon: 'Bell',
+        action: 'call_next',
+        variant: 'default',
+      },
+      {
+        id: 'new_appointment',
+        label: 'Novo Agendamento',
+        icon: 'CalendarPlus',
+        action: 'new_appointment',
+        variant: 'default',
+      },
+      {
+        id: 'view_services',
+        label: 'Serviços',
+        icon: 'Sparkles',
+        action: 'view_services',
+        variant: 'outline',
+      },
+      {
+        id: 'products',
+        label: 'Produtos',
+        icon: 'ShoppingBag',
+        action: 'products',
+        variant: 'secondary',
+      },
+    ],
+    defaultView: 'agenda',
+    terminology: {
+      queueLabel: 'Fila de Atendimento',
+      customerLabel: 'Cliente',
+      callAction: 'Chamar Cliente',
+    },
+  },
+  consultorio: {
+    metrics: [
+      {
+        id: 'patients_waiting',
+        label: 'Aguardando',
+        icon: 'Users',
+        type: 'count',
+      },
+      {
+        id: 'sessions_today',
+        label: 'Sessões Hoje',
+        icon: 'Calendar',
+        type: 'count',
+      },
+      {
+        id: 'avg_wait_time',
+        label: 'Tempo de Espera',
+        icon: 'Clock',
+        type: 'time',
+      },
+      {
+        id: 'completed_sessions',
+        label: 'Sessões Concluídas',
+        icon: 'CheckCircle',
+        type: 'count',
+      },
+    ],
+    quickActions: [
+      {
+        id: 'call_patient',
+        label: 'Chamar Paciente',
+        icon: 'Bell',
+        action: 'call_patient',
+        variant: 'default',
+      },
+      {
+        id: 'new_session',
+        label: 'Nova Sessão',
+        icon: 'CalendarPlus',
+        action: 'new_session',
+        variant: 'default',
+      },
+      {
+        id: 'view_schedule',
+        label: 'Ver Agenda',
+        icon: 'Calendar',
+        action: 'view_schedule',
+        variant: 'outline',
+      },
+      {
+        id: 'patient_notes',
+        label: 'Anotações',
+        icon: 'FileText',
+        action: 'patient_notes',
+        variant: 'secondary',
+      },
+    ],
+    defaultView: 'agenda',
+    terminology: {
+      queueLabel: 'Fila de Atendimento',
+      customerLabel: 'Paciente',
+      callAction: 'Chamar para Sessão',
+    },
+  },
+  outro: {
+    metrics: [
+      { id: 'queue_count', label: 'Na Fila', icon: 'Users', type: 'count' },
+      {
+        id: 'served_today',
+        label: 'Atendidos Hoje',
+        icon: 'CheckCircle',
+        type: 'count',
+      },
+      {
+        id: 'avg_wait_time',
+        label: 'Tempo Médio',
+        icon: 'Clock',
+        type: 'time',
+      },
+      {
+        id: 'active_services',
+        label: 'Atendimentos Ativos',
+        icon: 'Activity',
+        type: 'count',
+      },
+    ],
+    quickActions: [
+      {
+        id: 'call_next',
+        label: 'Chamar Próximo',
+        icon: 'Bell',
+        action: 'call_next',
+        variant: 'default',
+      },
+      {
+        id: 'new_entry',
+        label: 'Nova Entrada',
+        icon: 'Plus',
+        action: 'new_entry',
+        variant: 'default',
+      },
+      {
+        id: 'view_queue',
+        label: 'Ver Fila',
+        icon: 'List',
+        action: 'view_queue',
+        variant: 'outline',
+      },
+      {
+        id: 'settings',
+        label: 'Configurações',
+        icon: 'Settings',
+        action: 'settings',
+        variant: 'secondary',
+      },
+    ],
+    defaultView: 'fila',
+    terminology: {
+      queueLabel: 'Fila de Atendimento',
+      customerLabel: 'Cliente',
+      callAction: 'Chamar Cliente',
+    },
+  },
+}

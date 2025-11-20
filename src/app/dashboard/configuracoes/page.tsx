@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
-import SettingsManager from '@/components/dashboard/SettingsManager'
+import ConfigurationsTabs from '@/components/dashboard/ConfigurationsTabs'
 import { getBusiness } from '@/lib/onboarding/actions'
 
 export default async function SettingsPage() {
@@ -30,7 +30,9 @@ export default async function SettingsPage() {
           </p>
         </div>
 
-        <SettingsManager business={business} user={user} />
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+          <ConfigurationsTabs />
+        </div>
       </main>
     </DashboardLayout>
   )

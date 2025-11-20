@@ -1,11 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
-import MetricCard from '@/components/dashboard/MetricCard'
-import MonthlyChart from '@/components/dashboard/MonthlyChart'
-import MonthlyTarget from '@/components/dashboard/MonthlyTarget'
-import RecentQueue from '@/components/dashboard/RecentQueue'
-import QRCodeCard from '@/components/dashboard/QRCodeCard'
+import DynamicDashboard from '@/components/dashboard/DynamicDashboard'
 import { getBusiness } from '@/lib/onboarding/actions'
 
 export default async function DashboardPage() {
@@ -70,6 +66,24 @@ export default async function DashboardPage() {
     }
   }
 
+  // Fetch queue entries for DynamicDashboard
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let queueEntries: any[] = []
+  if (business?.id) {
+    const { data } = await supabase
+      .from('queue_entries')
+      .select('id, customer_name, customer_phone, position, joined_at, status')
+      .eq('business_id', business.id)
+      .eq('status', 'waiting')
+      .order('position', { ascending: true })
+      .limit(10)
+
+    queueEntries = data || []
+  }
+
+  // Debug log
+  console.log('Dashboard Page - business:', business?.id, business?.name)
+
   return (
     <DashboardLayout
       businessName={business?.name}
@@ -77,63 +91,19 @@ export default async function DashboardPage() {
       userEmail={user.email}
     >
       <main className="p-4 lg:p-8">
-        {/* Metrics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6 mb-6">
-          <MetricCard
-            title="Fila Atual"
-            value={queueStats.currentQueue}
-            iconName="users"
-            subtitle="clientes esperando"
-          />
-          <MetricCard
-            title="Atendidos Hoje"
-            value={queueStats.todayAttended}
-            iconName="clock"
-            subtitle="clientes atendidos"
-          />
-          <MetricCard
-            title="Tempo Médio"
-            value={`${queueStats.avgWaitTime}min`}
-            iconName="trending-up"
-            subtitle="tempo de espera"
-          />
-        </div>
-
-        {/* Charts and QR Code Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 mb-6">
-          <div className="lg:col-span-2">
-            <MonthlyChart />
+        {!business && (
+          <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 mb-6">
+            <p className="text-yellow-500 text-sm">
+              ⚠️ Nenhum negócio encontrado. Complete o onboarding em /onboarding
+            </p>
           </div>
-          <div className="space-y-4 lg:space-y-6">
-            <MonthlyTarget
-              percentage={75.55}
-              target={20000}
-              revenue={20000}
-              today={3287}
-            />
-            {business?.id && (
-              <QRCodeCard
-                businessId={business.id}
-                businessName={business.name || 'Meu Negócio'}
-              />
-            )}
-          </div>
-        </div>
-
-        {/* Recent Queue Table */}
-        {business?.id && (
-          await (async () => {
-            const { data: queueEntries } = await supabase
-              .from('queue_entries')
-              .select('id, customer_name, customer_phone, position, joined_at, status')
-              .eq('business_id', business.id)
-              .eq('status', 'waiting')
-              .order('position', { ascending: true })
-              .limit(10)
-
-            return <RecentQueue entries={queueEntries || []} businessId={business.id} />
-          })()
         )}
+        <DynamicDashboard
+          businessId={business?.id}
+          businessName={business?.name}
+          queueStats={queueStats}
+          queueEntries={queueEntries}
+        />
       </main>
     </DashboardLayout>
   )

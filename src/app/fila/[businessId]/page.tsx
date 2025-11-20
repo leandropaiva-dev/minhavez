@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
-import JoinQueueForm from '@/components/queue/JoinQueueForm'
+import QueueFormWrapper from '@/components/queue/QueueFormWrapper'
 
 interface PageProps {
   params: Promise<{
@@ -68,7 +68,10 @@ export default async function QueuePage({ params }: PageProps) {
         </div>
 
         {/* Join Queue Form */}
-        <JoinQueueForm businessId={businessId} businessName={business.name} />
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+          <h2 className="text-xl font-bold text-white mb-6">Entrar na Fila</h2>
+          <QueueFormWrapper businessId={businessId} businessName={business.name} />
+        </div>
       </div>
     </div>
   )
