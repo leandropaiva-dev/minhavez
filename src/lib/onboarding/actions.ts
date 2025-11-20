@@ -3,13 +3,16 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import type { BusinessType } from '@/types/database.types'
+import type { BusinessType, Country, DocumentType } from '@/types/database.types'
 
 export interface BusinessData {
   name: string
-  businessType: BusinessType
+  businessType?: BusinessType
   phone: string
   address?: string
+  country: Country
+  documentType?: DocumentType
+  documentNumber?: string
 }
 
 export async function saveBusinessInfo(data: BusinessData) {
@@ -19,7 +22,7 @@ export async function saveBusinessInfo(data: BusinessData) {
   const { data: { user }, error: userError } = await supabase.auth.getUser()
 
   if (userError || !user) {
-    return { error: 'Usuário não autenticado' }
+    return { error: 'Usuário não autenticado', businessId: null }
   }
 
   // Check if user already has a business
@@ -29,40 +32,54 @@ export async function saveBusinessInfo(data: BusinessData) {
     .eq('user_id', user.id)
     .single()
 
+  let businessId: string
+
   if (existingBusiness) {
     // Update existing business
     const { error: updateError } = await supabase
       .from('businesses')
       .update({
         name: data.name,
-        business_type: data.businessType,
+        business_type: data.businessType || null,
         phone: data.phone,
         address: data.address,
+        country: data.country,
+        document_type: data.documentType || null,
+        document_number: data.documentNumber || null,
       })
       .eq('user_id', user.id)
 
     if (updateError) {
-      return { error: updateError.message }
+      return { error: updateError.message, businessId: null }
     }
+
+    businessId = existingBusiness.id
   } else {
     // Create new business
-    const { error: insertError } = await supabase
+    const { data: newBusiness, error: insertError } = await supabase
       .from('businesses')
       .insert({
         user_id: user.id,
         name: data.name,
-        business_type: data.businessType,
+        business_type: data.businessType || null,
         phone: data.phone,
         address: data.address,
+        country: data.country,
+        document_type: data.documentType || null,
+        document_number: data.documentNumber || null,
       })
+      .select('id')
+      .single()
 
-    if (insertError) {
-      return { error: insertError.message }
+    if (insertError || !newBusiness) {
+      return { error: insertError?.message || 'Erro ao criar negócio', businessId: null }
     }
+
+    businessId = newBusiness.id
   }
 
   revalidatePath('/dashboard')
-  return { success: true }
+  return { success: true, businessId }
 }
 
 export async function completeOnboarding() {

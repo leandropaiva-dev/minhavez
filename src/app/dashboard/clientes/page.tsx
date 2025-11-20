@@ -16,7 +16,6 @@ export default async function CustomersPage() {
 
   return (
     <DashboardLayout
-      businessName={business?.name}
       userName={user.user_metadata?.name}
       userEmail={user.email}
     >

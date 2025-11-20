@@ -56,6 +56,7 @@ export default function SettingsManager({ business, user }: SettingsManagerProps
       businessType: businessData.type,
       phone: businessData.phone,
       address: businessData.address,
+      country: 'BR',
     })
 
     setLoading(false)

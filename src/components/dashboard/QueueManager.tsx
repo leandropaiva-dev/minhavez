@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Phone, Check, X, Clock, User, Bell } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -26,6 +26,19 @@ export default function QueueManager({ businessId }: QueueManagerProps) {
   const [loading, setLoading] = useState(true)
   const [callingId, setCallingId] = useState<string | null>(null)
 
+  const fetchQueue = useCallback(async () => {
+    const supabase = createClient()
+    const { data } = await supabase
+      .from('queue_entries')
+      .select('*')
+      .eq('business_id', businessId)
+      .in('status', ['waiting', 'called', 'attending'])
+      .order('position', { ascending: true })
+
+    if (data) setQueue(data)
+    setLoading(false)
+  }, [businessId])
+
   useEffect(() => {
     fetchQueue()
 
@@ -45,20 +58,7 @@ export default function QueueManager({ businessId }: QueueManagerProps) {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [businessId])
-
-  const fetchQueue = async () => {
-    const supabase = createClient()
-    const { data } = await supabase
-      .from('queue_entries')
-      .select('*')
-      .eq('business_id', businessId)
-      .in('status', ['waiting', 'called', 'attending'])
-      .order('position', { ascending: true })
-
-    if (data) setQueue(data)
-    setLoading(false)
-  }
+  }, [businessId, fetchQueue])
 
   const updateStatus = async (id: string, status: string) => {
     const supabase = createClient()

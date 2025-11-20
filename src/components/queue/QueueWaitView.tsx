@@ -100,7 +100,7 @@ export default function QueueWaitView({ entry: initialEntry, currentPosition: in
                   oscillator.start()
                   setTimeout(() => oscillator.stop(), 500)
                 })
-              } catch (e) {
+              } catch {
                 console.log('Audio não disponível')
               }
             }
@@ -147,7 +147,7 @@ export default function QueueWaitView({ entry: initialEntry, currentPosition: in
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [entry.id, entry.business_id])
+  }, [entry.id, entry.business_id, entry.business?.name, entry.status])
 
   const handleCopyLink = async () => {
     try {

@@ -17,6 +17,9 @@ export interface Database {
           business_type: string | null
           phone: string | null
           address: string | null
+          country: 'BR' | 'PT'
+          document_type: 'CNPJ' | 'CPF' | 'NIF_EMPRESA' | 'NIF_INDIVIDUAL' | null
+          document_number: string | null
           subscription_status: 'trial' | 'active' | 'canceled' | 'past_due'
           trial_ends_at: string | null
           stripe_customer_id: string | null
@@ -31,6 +34,9 @@ export interface Database {
           business_type?: string | null
           phone?: string | null
           address?: string | null
+          country?: 'BR' | 'PT'
+          document_type?: 'CNPJ' | 'CPF' | 'NIF_EMPRESA' | 'NIF_INDIVIDUAL' | null
+          document_number?: string | null
           subscription_status?: 'trial' | 'active' | 'canceled' | 'past_due'
           trial_ends_at?: string | null
           stripe_customer_id?: string | null
@@ -45,6 +51,9 @@ export interface Database {
           business_type?: string | null
           phone?: string | null
           address?: string | null
+          country?: 'BR' | 'PT'
+          document_type?: 'CNPJ' | 'CPF' | 'NIF_EMPRESA' | 'NIF_INDIVIDUAL' | null
+          document_number?: string | null
           subscription_status?: 'trial' | 'active' | 'canceled' | 'past_due'
           trial_ends_at?: string | null
           stripe_customer_id?: string | null
@@ -134,3 +143,5 @@ export type QueueEntryUpdate = Database['public']['Tables']['queue_entries']['Up
 export type BusinessType = 'restaurante' | 'bar' | 'clinica' | 'barbearia' | 'outro'
 export type SubscriptionStatus = 'trial' | 'active' | 'canceled' | 'past_due'
 export type QueueStatus = 'waiting' | 'called' | 'attending' | 'completed' | 'cancelled' | 'no_show'
+export type Country = 'BR' | 'PT'
+export type DocumentType = 'CNPJ' | 'CPF' | 'NIF_EMPRESA' | 'NIF_INDIVIDUAL'

@@ -63,7 +63,11 @@ export default function ConfigurationsTabs() {
   const handleSaveBasicInfo = () => {
     // Save to localStorage (in a real app, this would go to Supabase)
     const progress = getOnboardingProgress() || { currentStep: 0 }
-    progress.basicInfo = basicInfo
+    progress.basicInfo = {
+      ...basicInfo,
+      country: 'BR',
+      countryDetectedAuto: false
+    }
     localStorage.setItem('minhavez_onboarding_progress', JSON.stringify(progress))
 
     setSaved(true)

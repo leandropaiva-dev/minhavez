@@ -21,7 +21,15 @@
       "Bash(tasklist)",
       "Bash(findstr:*)",
       "Bash(if exist .next rmdir /s /q .next)",
-      "Bash(powershell:*)"
+      "Bash(powershell:*)",
+      "Bash(timeout:*)",
+      "Bash(del \"c:\\minhavez\\src\\lib\\onboarding\\actions.ts\")",
+      "Bash(dir c:minhavezsrclibonboarding)",
+      "Bash(npm run dev:fresh:*)",
+      "Bash(curl:*)",
+      "Bash(npx shadcn@latest add https://magicui.design/r/animated-theme-toggler)",
+      "Bash(npx shadcn@latest add:*)",
+      "Bash(npm run lint)"
     ],
     "deny": [],
     "ask": []

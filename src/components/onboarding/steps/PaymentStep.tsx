@@ -1,7 +1,11 @@
 'use client'
 
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { CreditCard, Check } from 'lucide-react'
+import { CreditCard, Check, AlertCircle } from 'lucide-react'
+import { saveBusinessInfo } from '@/lib/onboarding/actions'
+import { getOnboardingProgress } from '@/lib/config/storage'
+import type { BusinessData } from '@/lib/onboarding/actions'
 
 interface PaymentStepProps {
   onNext: () => void
@@ -9,6 +13,53 @@ interface PaymentStepProps {
 }
 
 export default function PaymentStep({ onNext, onBack }: PaymentStepProps) {
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const handleFinish = async () => {
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      // Get onboarding data from localStorage
+      const progress = getOnboardingProgress()
+
+      if (!progress?.basicInfo) {
+        setError('Dados básicos não encontrados. Por favor, volte e preencha novamente.')
+        setIsLoading(false)
+        return
+      }
+
+      const { basicInfo } = progress
+
+      // Prepare business data
+      const businessData: BusinessData = {
+        name: basicInfo.name,
+        phone: basicInfo.phone,
+        address: basicInfo.address,
+        country: basicInfo.country,
+        documentType: basicInfo.documentType || basicInfo.nifType,
+        documentNumber: basicInfo.cnpj || basicInfo.cpf || basicInfo.nif,
+      }
+
+      // Save to database
+      const result = await saveBusinessInfo(businessData)
+
+      if (result.error) {
+        setError(result.error)
+        setIsLoading(false)
+        return
+      }
+
+      // Success! Continue to dashboard
+      onNext()
+    } catch (err) {
+      console.error('Error saving business info:', err)
+      setError('Erro ao salvar informações. Tente novamente.')
+      setIsLoading(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -17,6 +68,16 @@ export default function PaymentStep({ onNext, onBack }: PaymentStepProps) {
           Configure sua forma de pagamento
         </p>
       </div>
+
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-red-500 text-sm font-medium">Erro</p>
+            <p className="text-red-400 text-sm mt-1">{error}</p>
+          </div>
+        </div>
+      )}
 
       <div className="max-w-2xl mx-auto">
         <div className="border-2 border-blue-600 rounded-xl p-8 bg-gradient-to-br from-blue-950/20 to-purple-950/20 text-center space-y-6">
@@ -68,11 +129,21 @@ export default function PaymentStep({ onNext, onBack }: PaymentStepProps) {
       </div>
 
       <div className="flex gap-3 pt-4">
-        <Button type="button" variant="outline" onClick={onBack} className="flex-1">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onBack}
+          className="flex-1"
+          disabled={isLoading}
+        >
           Voltar
         </Button>
-        <Button onClick={onNext} className="flex-1">
-          Finalizar e Ir para Dashboard
+        <Button
+          onClick={handleFinish}
+          className="flex-1"
+          disabled={isLoading}
+        >
+          {isLoading ? 'Salvando...' : 'Finalizar e Ir para Dashboard'}
         </Button>
       </div>
     </div>

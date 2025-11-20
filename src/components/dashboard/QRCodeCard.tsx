@@ -74,6 +74,30 @@ export default function QRCodeCard({ businessId, businessName }: QRCodeCardProps
     window.open(queueUrl, '_blank')
   }
 
+  // Check if businessId is valid - render early return
+  if (!businessId || businessId === 'default') {
+    return (
+      <div className="relative group">
+        <div className="relative bg-zinc-900 border border-zinc-800 rounded-xl p-4 sm:p-6">
+          <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+            <div className="p-2 bg-yellow-600/10 rounded-lg flex-shrink-0">
+              <QrCode className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />
+            </div>
+            <div className="min-w-0">
+              <h3 className="text-base sm:text-lg font-semibold text-white truncate">Fila Pública</h3>
+              <p className="text-xs sm:text-sm text-zinc-400 truncate">Complete o onboarding</p>
+            </div>
+          </div>
+          <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 text-center">
+            <p className="text-yellow-500 text-sm">
+              ⚠️ Complete o onboarding em <a href="/onboarding" className="underline">/onboarding</a> para gerar seu QR code
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="relative group">
       {/* Blur effect */}

@@ -44,6 +44,7 @@ export default function OnboardingSteps({ user }: OnboardingStepsProps) {
       businessType: businessType as 'restaurante' | 'bar' | 'clinica' | 'barbearia' | 'outro',
       phone,
       address,
+      country: 'BR',
     })
 
     setLoading(false)

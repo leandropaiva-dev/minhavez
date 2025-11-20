@@ -1,40 +1,33 @@
 'use client'
 
-import { useState } from 'react'
 import Sidebar from './Sidebar'
 import Header from './Header'
 
 interface DashboardLayoutProps {
-  businessName?: string
   userName?: string
   userEmail?: string
   children: React.ReactNode
 }
 
 export default function DashboardLayout({
-  businessName,
   userName,
   userEmail,
-  children
+  children,
 }: DashboardLayoutProps) {
-  const [menuOpen, setMenuOpen] = useState(false)
-
   return (
-    <div className="min-h-screen bg-black">
-      <Sidebar
-        businessName={businessName}
-        open={menuOpen}
-        onOpenChange={setMenuOpen}
-      />
+    <div className="min-h-screen bg-zinc-50 dark:bg-black">
+      {/* Header - Full width, fixed at top */}
+      <Header userName={userName} userEmail={userEmail} />
 
-      <div className="lg:pl-64">
-        <Header
-          userName={userName}
-          userEmail={userEmail}
-          onMenuClick={() => setMenuOpen(true)}
-        />
+      {/* Sidebar - Desktop Only */}
+      <div className="hidden lg:block">
+        <Sidebar />
+      </div>
 
-        {children}
+      {/* Main Content Area */}
+      <div className="pt-16 lg:pl-16">
+        {/* Page Content */}
+        <main className="w-full">{children}</main>
       </div>
     </div>
   )

@@ -70,13 +70,32 @@ export interface DashboardConfig {
   }
 }
 
+export type Country = 'BR' | 'PT'
+export type DocumentType = 'CNPJ' | 'CPF' | 'NIF_EMPRESA' | 'NIF_INDIVIDUAL'
+
+export interface BasicInfo {
+  // Country detection
+  country: Country
+  countryDetectedAuto: boolean
+
+  // Business info
+  name: string
+  phone: string
+  address: string
+
+  // Document info (BR)
+  documentType?: 'CNPJ' | 'CPF'
+  cnpj?: string
+  cpf?: string
+
+  // Document info (PT)
+  nifType?: 'NIF_EMPRESA' | 'NIF_INDIVIDUAL'
+  nif?: string
+}
+
 export interface OnboardingProgress {
   currentStep: number
-  basicInfo?: {
-    name: string
-    phone: string
-    address: string
-  }
+  basicInfo?: BasicInfo
   segmentConfig?: SegmentConfig
   formConfig?: QueueFormConfig
   completedAt?: string

@@ -37,7 +37,7 @@ export function SheetTrigger({ children, asChild }: SheetTriggerProps) {
   const context = React.useContext(SheetContext)
   if (!context) throw new Error("SheetTrigger must be used within Sheet")
 
-  const handleClick = () => context.setOpen(true)
+  const handleClick = () => context.setOpen(!context.open)
 
   if (asChild && React.isValidElement(children)) {
     return React.cloneElement(children, {
@@ -61,24 +61,24 @@ export function SheetContent({ children, side = 'left', className }: SheetConten
   if (!context.open) return null
 
   const sideClasses = {
-    left: 'left-0 top-0 h-full w-80 border-r animate-in slide-in-from-left',
-    right: 'right-0 top-0 h-full w-80 border-l animate-in slide-in-from-right',
-    top: 'top-0 left-0 w-full h-80 border-b animate-in slide-in-from-top',
+    left: 'left-0 h-full w-80 border-r animate-in slide-in-from-left',
+    right: 'right-0 h-full w-80 border-l animate-in slide-in-from-right',
+    top: 'left-0 w-full h-80 border-b animate-in slide-in-from-top',
     bottom: 'bottom-0 left-0 w-full h-80 border-t animate-in slide-in-from-bottom',
   }
 
   return (
     <>
-      {/* Overlay */}
+      {/* Blurred overlay - below header */}
       <div
-        className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm animate-in fade-in"
+        className="fixed inset-0 top-16 z-40 bg-black/50 backdrop-blur-sm"
         onClick={() => context.setOpen(false)}
       />
 
       {/* Content */}
       <div
         className={cn(
-          'fixed z-50 bg-zinc-950 border-zinc-800 shadow-lg',
+          'fixed z-50 bg-zinc-100 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 shadow-lg',
           sideClasses[side],
           className
         )}

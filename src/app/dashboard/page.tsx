@@ -86,7 +86,6 @@ export default async function DashboardPage() {
 
   return (
     <DashboardLayout
-      businessName={business?.name}
       userName={user.user_metadata?.name}
       userEmail={user.email}
     >
