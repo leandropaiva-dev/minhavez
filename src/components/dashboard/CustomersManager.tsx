@@ -62,53 +62,53 @@ export default function CustomersManager() {
   return (
     <div className="space-y-6">
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 sm:p-6">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-blue-500/10 rounded-lg">
-              <TrendingUp className="w-6 h-6 text-blue-500" />
+            <div className="p-2 sm:p-3 bg-blue-500/10 rounded-lg">
+              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500" />
             </div>
             <div>
-              <p className="text-zinc-400 text-sm">Total Clientes</p>
-              <p className="text-2xl font-bold text-white">{customers.length}</p>
+              <p className="text-zinc-400 text-xs sm:text-sm">Total Clientes</p>
+              <p className="text-xl sm:text-2xl font-bold text-white">{customers.length}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 sm:p-6">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-green-500/10 rounded-lg">
-              <TrendingUp className="w-6 h-6 text-green-500" />
+            <div className="p-2 sm:p-3 bg-green-500/10 rounded-lg">
+              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-green-500" />
             </div>
             <div>
-              <p className="text-zinc-400 text-sm">Ativos</p>
-              <p className="text-2xl font-bold text-white">
+              <p className="text-zinc-400 text-xs sm:text-sm">Ativos</p>
+              <p className="text-xl sm:text-2xl font-bold text-white">
                 {customers.filter((c) => c.status === 'active').length}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 sm:p-6">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-yellow-500/10 rounded-lg">
-              <Calendar className="w-6 h-6 text-yellow-500" />
+            <div className="p-2 sm:p-3 bg-yellow-500/10 rounded-lg">
+              <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-500" />
             </div>
             <div>
-              <p className="text-zinc-400 text-sm">Novos (30d)</p>
-              <p className="text-2xl font-bold text-white">12</p>
+              <p className="text-zinc-400 text-xs sm:text-sm">Novos (30d)</p>
+              <p className="text-xl sm:text-2xl font-bold text-white">12</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 sm:p-6">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-purple-500/10 rounded-lg">
-              <TrendingUp className="w-6 h-6 text-purple-500" />
+            <div className="p-2 sm:p-3 bg-purple-500/10 rounded-lg">
+              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-purple-500" />
             </div>
             <div>
-              <p className="text-zinc-400 text-sm">Média Visitas</p>
-              <p className="text-2xl font-bold text-white">15.3</p>
+              <p className="text-zinc-400 text-xs sm:text-sm">Média Visitas</p>
+              <p className="text-xl sm:text-2xl font-bold text-white">15.3</p>
             </div>
           </div>
         </div>
@@ -138,28 +138,28 @@ export default function CustomersManager() {
       {/* Customers Table */}
       <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full min-w-[500px]">
             <thead className="bg-zinc-950 border-b border-zinc-800">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider">
                   Cliente
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider hidden md:table-cell">
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider hidden md:table-cell">
                   Contato
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider hidden lg:table-cell">
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider hidden lg:table-cell">
                   Visitas
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider hidden lg:table-cell">
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider hidden lg:table-cell">
                   Última Visita
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider hidden xl:table-cell">
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider hidden xl:table-cell">
                   Tempo Médio
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider">
 
                 </th>
               </tr>
@@ -170,47 +170,47 @@ export default function CustomersManager() {
                   key={customer.id}
                   className="hover:bg-zinc-950 transition-colors"
                 >
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                        <span className="text-white font-semibold">
+                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <span className="text-sm sm:text-base text-white font-semibold">
                           {customer.name.charAt(0)}
                         </span>
                       </div>
-                      <div>
-                        <p className="font-medium text-white">{customer.name}</p>
-                        <p className="text-sm text-zinc-500 md:hidden">
+                      <div className="min-w-0">
+                        <p className="font-medium text-white text-sm sm:text-base truncate">{customer.name}</p>
+                        <p className="text-xs sm:text-sm text-zinc-500 md:hidden truncate">
                           {customer.phone}
                         </p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap hidden md:table-cell">
+                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap hidden md:table-cell">
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2 text-sm text-zinc-400">
-                        <Mail className="w-4 h-4" />
-                        {customer.email}
+                      <div className="flex items-center gap-2 text-xs sm:text-sm text-zinc-400">
+                        <Mail className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                        <span className="truncate">{customer.email}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-zinc-400">
-                        <Phone className="w-4 h-4" />
-                        {customer.phone}
+                      <div className="flex items-center gap-2 text-xs sm:text-sm text-zinc-400">
+                        <Phone className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                        <span className="truncate">{customer.phone}</span>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap hidden lg:table-cell">
-                    <p className="text-white font-semibold">{customer.totalVisits}</p>
+                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap hidden lg:table-cell">
+                    <p className="text-white font-semibold text-sm sm:text-base">{customer.totalVisits}</p>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap hidden lg:table-cell">
-                    <p className="text-zinc-400">
+                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap hidden lg:table-cell">
+                    <p className="text-zinc-400 text-xs sm:text-sm">
                       {customer.lastVisit.toLocaleDateString('pt-PT')}
                     </p>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap hidden xl:table-cell">
-                    <p className="text-zinc-400">{customer.avgWaitTime}</p>
+                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap hidden xl:table-cell">
+                    <p className="text-zinc-400 text-xs sm:text-sm">{customer.avgWaitTime}</p>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                     <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium border ${
+                      className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium border ${
                         customer.status === 'active'
                           ? 'bg-green-500/10 text-green-500 border-green-500/20'
                           : 'bg-zinc-700/10 text-zinc-500 border-zinc-700/20'
@@ -219,9 +219,9 @@ export default function CustomersManager() {
                       {customer.status === 'active' ? 'Ativo' : 'Inativo'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                     <button className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors">
-                      <MoreVertical className="w-4 h-4" />
+                      <MoreVertical className="w-3 h-3 sm:w-4 sm:h-4" />
                     </button>
                   </td>
                 </tr>
