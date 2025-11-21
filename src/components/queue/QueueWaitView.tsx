@@ -37,6 +37,16 @@ export default function QueueWaitView({ entry: initialEntry, currentPosition: in
   const [copied, setCopied] = useState(false)
   const [canceling, setCanceling] = useState(false)
   const [justCalled, setJustCalled] = useState(false)
+  const [cancelModalOpen, setCancelModalOpen] = useState(false)
+  const [selectedReason, setSelectedReason] = useState('')
+  const [customReason, setCustomReason] = useState('')
+
+  const CUSTOMER_CANCEL_REASONS = [
+    'Não posso mais esperar',
+    'Mudança de planos',
+    'Tempo de espera muito longo',
+    'Outro motivo',
+  ]
 
   const currentUrl = typeof window !== 'undefined' ? window.location.href : ''
 
@@ -175,16 +185,28 @@ export default function QueueWaitView({ entry: initialEntry, currentPosition: in
     }
   }
 
+  const openCancelModal = () => {
+    setSelectedReason('')
+    setCustomReason('')
+    setCancelModalOpen(true)
+  }
+
+  const closeCancelModal = () => {
+    setCancelModalOpen(false)
+    setSelectedReason('')
+    setCustomReason('')
+  }
+
   const handleCancel = async () => {
-    if (!confirm('Tem certeza que deseja sair da fila?')) {
-      return
-    }
+    const reason = selectedReason === 'Outro motivo' ? customReason : selectedReason
+    if (!reason.trim()) return
 
     setCanceling(true)
-    const result = await cancelQueueEntry(entry.id)
+    const result = await cancelQueueEntry(entry.id, reason)
     setCanceling(false)
 
     if (result.success) {
+      closeCancelModal()
       router.push(`/fila/${entry.business_id}`)
     }
   }
@@ -361,11 +383,10 @@ export default function QueueWaitView({ entry: initialEntry, currentPosition: in
                 </Button>
               </div>
               <Button
-                onClick={handleCancel}
-                disabled={canceling}
+                onClick={openCancelModal}
                 className="w-full bg-red-600/10 border border-red-600/20 hover:bg-red-600/20 text-red-500"
               >
-                {canceling ? 'Cancelando...' : 'Sair da Fila'}
+                Sair da Fila
               </Button>
             </>
           )}
@@ -387,6 +408,68 @@ export default function QueueWaitView({ entry: initialEntry, currentPosition: in
           </p>
         )}
       </div>
+
+      {/* Cancel Modal */}
+      {cancelModalOpen && (
+        <div
+          className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
+          onClick={closeCancelModal}
+        >
+          <div
+            className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold text-white mb-2">
+              Sair da fila
+            </h3>
+            <p className="text-sm text-zinc-400 mb-4">
+              Por que você está saindo da fila?
+            </p>
+
+            <div className="space-y-2 mb-4">
+              {CUSTOMER_CANCEL_REASONS.map((reason) => (
+                <button
+                  key={reason}
+                  onClick={() => setSelectedReason(reason)}
+                  className={`w-full text-left px-4 py-3 rounded-lg border transition-all text-sm ${
+                    selectedReason === reason
+                      ? 'border-blue-500 bg-blue-950 text-blue-400'
+                      : 'border-zinc-700 hover:bg-zinc-800 text-white'
+                  }`}
+                >
+                  {reason}
+                </button>
+              ))}
+            </div>
+
+            {selectedReason === 'Outro motivo' && (
+              <textarea
+                value={customReason}
+                onChange={(e) => setCustomReason(e.target.value)}
+                placeholder="Descreva o motivo..."
+                className="w-full px-4 py-3 rounded-lg border border-zinc-700 bg-zinc-800 text-white text-sm resize-none mb-4 placeholder:text-zinc-500"
+                rows={3}
+              />
+            )}
+
+            <div className="flex gap-3">
+              <Button
+                onClick={closeCancelModal}
+                className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white"
+              >
+                Voltar
+              </Button>
+              <Button
+                onClick={handleCancel}
+                disabled={canceling || !selectedReason || (selectedReason === 'Outro motivo' && !customReason.trim())}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white disabled:opacity-50"
+              >
+                {canceling ? 'Saindo...' : 'Confirmar'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

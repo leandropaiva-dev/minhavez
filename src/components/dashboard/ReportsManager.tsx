@@ -1,15 +1,20 @@
 'use client'
 
-import { useState } from 'react'
-import { Calendar, Download, TrendingUp, TrendingDown, Users, Clock } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { useState, useEffect, useCallback } from 'react'
+import { Calendar, Users, Clock, CheckCircle, XCircle, TrendingUp, TrendingDown, Loader2 } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import {
   AreaChart,
   Area,
   BarChart,
   Bar,
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -20,289 +25,592 @@ import {
   Cell,
 } from 'recharts'
 
-const dailyData = [
-  { date: '01/10', clientes: 23, tempo: 12 },
-  { date: '02/10', clientes: 31, tempo: 15 },
-  { date: '03/10', clientes: 28, tempo: 10 },
-  { date: '04/10', clientes: 35, tempo: 14 },
-  { date: '05/10', clientes: 42, tempo: 18 },
-]
+type PeriodFilter = '7d' | '30d' | '90d'
+type TypeFilter = 'all' | 'queue' | 'reservation'
 
-const hourlyData = [
-  { hora: '09h', clientes: 5 },
-  { hora: '10h', clientes: 12 },
-  { hora: '11h', clientes: 18 },
-  { hora: '12h', clientes: 25 },
-  { hora: '13h', clientes: 20 },
-  { hora: '14h', clientes: 15 },
-  { hora: '15h', clientes: 22 },
-  { hora: '16h', clientes: 28 },
-  { hora: '17h', clientes: 30 },
-  { hora: '18h', clientes: 18 },
-]
+interface ReportsManagerProps {
+  businessId: string
+}
 
-const statusData = [
-  { name: 'Atendidos', value: 156, color: '#10b981' },
-  { name: 'Cancelados', value: 12, color: '#ef4444' },
-  { name: 'Não Compareceram', value: 8, color: '#f59e0b' },
-]
+interface DailyData {
+  date: string
+  clientes: number
+  tempo: number
+}
 
-export default function ReportsManager() {
-  const [period, setPeriod] = useState<'7d' | '30d' | '90d'>('30d')
+interface HourlyData {
+  hora: string
+  clientes: number
+}
+
+interface StatusData {
+  name: string
+  value: number
+  color: string
+}
+
+interface Stats {
+  totalClientes: number
+  totalCompletados: number
+  totalCancelados: number
+  tempoMedioEspera: number
+  mediaDiaria: number
+  taxaConversao: number
+  comparacaoClientes: number
+  comparacaoTempo: number
+  comparacaoConversao: number
+  comparacaoMedia: number
+}
+
+export default function ReportsManager({ businessId }: ReportsManagerProps) {
+  const [period, setPeriod] = useState<PeriodFilter>('30d')
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
+  const [loading, setLoading] = useState(true)
+
+  const [stats, setStats] = useState<Stats>({
+    totalClientes: 0,
+    totalCompletados: 0,
+    totalCancelados: 0,
+    tempoMedioEspera: 0,
+    mediaDiaria: 0,
+    taxaConversao: 0,
+    comparacaoClientes: 0,
+    comparacaoTempo: 0,
+    comparacaoConversao: 0,
+    comparacaoMedia: 0,
+  })
+
+  const [dailyData, setDailyData] = useState<DailyData[]>([])
+  const [hourlyData, setHourlyData] = useState<HourlyData[]>([])
+  const [statusData, setStatusData] = useState<StatusData[]>([])
+
+  const fetchReportData = useCallback(async () => {
+    setLoading(true)
+    const supabase = createClient()
+
+    const endDate = new Date()
+    const startDate = new Date()
+    const prevStartDate = new Date()
+
+    // Set date ranges based on period
+    const days = period === '7d' ? 7 : period === '30d' ? 30 : 90
+    startDate.setDate(startDate.getDate() - days)
+    prevStartDate.setDate(prevStartDate.getDate() - (days * 2))
+
+    const startStr = startDate.toISOString()
+    const endStr = endDate.toISOString()
+    const prevStartStr = prevStartDate.toISOString()
+
+    // Fetch queue entries for current period
+    const queueQuery = supabase
+      .from('queue_entries')
+      .select('id, status, joined_at, called_at, attended_at, completed_at')
+      .eq('business_id', businessId)
+      .gte('joined_at', startStr)
+      .lte('joined_at', endStr)
+
+    // Fetch queue entries for previous period (comparison)
+    const prevQueueQuery = supabase
+      .from('queue_entries')
+      .select('id, status, joined_at, called_at, attended_at, completed_at')
+      .eq('business_id', businessId)
+      .gte('joined_at', prevStartStr)
+      .lt('joined_at', startStr)
+
+    // Fetch reservations for current period
+    const reservationsQuery = supabase
+      .from('reservations')
+      .select('id, status, reservation_date, reservation_time, created_at, updated_at')
+      .eq('business_id', businessId)
+      .gte('reservation_date', startDate.toISOString().split('T')[0])
+      .lte('reservation_date', endDate.toISOString().split('T')[0])
+
+    // Fetch reservations for previous period
+    const prevReservationsQuery = supabase
+      .from('reservations')
+      .select('id, status, reservation_date, reservation_time, created_at, updated_at')
+      .eq('business_id', businessId)
+      .gte('reservation_date', prevStartDate.toISOString().split('T')[0])
+      .lt('reservation_date', startDate.toISOString().split('T')[0])
+
+    const [
+      { data: queueData },
+      { data: prevQueueData },
+      { data: reservationsData },
+      { data: prevReservationsData },
+    ] = await Promise.all([
+      queueQuery,
+      prevQueueQuery,
+      reservationsQuery,
+      prevReservationsQuery,
+    ])
+
+    // Process current period data
+    const currentEntries: { date: string; status: string; waitTime: number; type: 'queue' | 'reservation' }[] = []
+
+    if (typeFilter === 'all' || typeFilter === 'queue') {
+      queueData?.forEach(entry => {
+        const waitTime = entry.called_at && entry.joined_at
+          ? (new Date(entry.called_at).getTime() - new Date(entry.joined_at).getTime()) / 60000
+          : 0
+        currentEntries.push({
+          date: new Date(entry.joined_at).toISOString().split('T')[0],
+          status: entry.status,
+          waitTime,
+          type: 'queue',
+        })
+      })
+    }
+
+    if (typeFilter === 'all' || typeFilter === 'reservation') {
+      reservationsData?.forEach(entry => {
+        currentEntries.push({
+          date: entry.reservation_date,
+          status: entry.status,
+          waitTime: 0,
+          type: 'reservation',
+        })
+      })
+    }
+
+    // Process previous period data for comparison
+    const prevEntries: { status: string; waitTime: number }[] = []
+
+    if (typeFilter === 'all' || typeFilter === 'queue') {
+      prevQueueData?.forEach(entry => {
+        const waitTime = entry.called_at && entry.joined_at
+          ? (new Date(entry.called_at).getTime() - new Date(entry.joined_at).getTime()) / 60000
+          : 0
+        prevEntries.push({ status: entry.status, waitTime })
+      })
+    }
+
+    if (typeFilter === 'all' || typeFilter === 'reservation') {
+      prevReservationsData?.forEach(entry => {
+        prevEntries.push({ status: entry.status, waitTime: 0 })
+      })
+    }
+
+    // Calculate stats
+    const totalClientes = currentEntries.length
+    const totalCompletados = currentEntries.filter(e => e.status === 'completed').length
+    const totalCancelados = currentEntries.filter(e => e.status === 'cancelled').length
+    const waitTimes = currentEntries.filter(e => e.waitTime > 0).map(e => e.waitTime)
+    const tempoMedioEspera = waitTimes.length > 0
+      ? Math.round(waitTimes.reduce((a, b) => a + b, 0) / waitTimes.length)
+      : 0
+    const taxaConversao = totalClientes > 0
+      ? Math.round((totalCompletados / totalClientes) * 1000) / 10
+      : 0
+    const mediaDiaria = Math.round(totalClientes / days)
+
+    // Calculate previous period stats for comparison
+    const prevTotalClientes = prevEntries.length
+    const prevTotalCompletados = prevEntries.filter(e => e.status === 'completed').length
+    const prevWaitTimes = prevEntries.filter(e => e.waitTime > 0).map(e => e.waitTime)
+    const prevTempoMedio = prevWaitTimes.length > 0
+      ? prevWaitTimes.reduce((a, b) => a + b, 0) / prevWaitTimes.length
+      : 0
+    const prevTaxaConversao = prevTotalClientes > 0
+      ? (prevTotalCompletados / prevTotalClientes) * 100
+      : 0
+    const prevMediaDiaria = prevTotalClientes / days
+
+    // Calculate comparison percentages
+    const comparacaoClientes = prevTotalClientes > 0
+      ? Math.round(((totalClientes - prevTotalClientes) / prevTotalClientes) * 100)
+      : 0
+    const comparacaoTempo = prevTempoMedio > 0
+      ? Math.round(((tempoMedioEspera - prevTempoMedio) / prevTempoMedio) * 100)
+      : 0
+    const comparacaoConversao = prevTaxaConversao > 0
+      ? Math.round((taxaConversao - prevTaxaConversao) * 10) / 10
+      : 0
+    const comparacaoMedia = prevMediaDiaria > 0
+      ? Math.round(((mediaDiaria - prevMediaDiaria) / prevMediaDiaria) * 100)
+      : 0
+
+    setStats({
+      totalClientes,
+      totalCompletados,
+      totalCancelados,
+      tempoMedioEspera,
+      mediaDiaria,
+      taxaConversao,
+      comparacaoClientes,
+      comparacaoTempo,
+      comparacaoConversao,
+      comparacaoMedia,
+    })
+
+    // Generate daily data for chart
+    const dailyMap = new Map<string, { clientes: number; waitTimes: number[] }>()
+
+    for (let i = 0; i < days; i++) {
+      const date = new Date()
+      date.setDate(date.getDate() - i)
+      const dateStr = date.toISOString().split('T')[0]
+      dailyMap.set(dateStr, { clientes: 0, waitTimes: [] })
+    }
+
+    currentEntries.forEach(entry => {
+      const existing = dailyMap.get(entry.date)
+      if (existing) {
+        existing.clientes++
+        if (entry.waitTime > 0) {
+          existing.waitTimes.push(entry.waitTime)
+        }
+      }
+    })
+
+    const dailyChartData: DailyData[] = []
+    dailyMap.forEach((value, key) => {
+      const avgWait = value.waitTimes.length > 0
+        ? Math.round(value.waitTimes.reduce((a, b) => a + b, 0) / value.waitTimes.length)
+        : 0
+      dailyChartData.push({
+        date: new Date(key).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+        clientes: value.clientes,
+        tempo: avgWait,
+      })
+    })
+
+    dailyChartData.reverse()
+    // Limit to last 14 days for readability
+    setDailyData(dailyChartData.slice(-14))
+
+    // Generate hourly data (only for queue entries)
+    const hourlyMap = new Map<number, number>()
+    for (let i = 8; i <= 22; i++) {
+      hourlyMap.set(i, 0)
+    }
+
+    queueData?.forEach(entry => {
+      const hour = new Date(entry.joined_at).getHours()
+      if (hourlyMap.has(hour)) {
+        hourlyMap.set(hour, (hourlyMap.get(hour) || 0) + 1)
+      }
+    })
+
+    reservationsData?.forEach(entry => {
+      const hour = parseInt(entry.reservation_time.split(':')[0])
+      if (hourlyMap.has(hour)) {
+        hourlyMap.set(hour, (hourlyMap.get(hour) || 0) + 1)
+      }
+    })
+
+    const hourlyChartData: HourlyData[] = []
+    hourlyMap.forEach((value, key) => {
+      hourlyChartData.push({
+        hora: `${key}h`,
+        clientes: value,
+      })
+    })
+
+    setHourlyData(hourlyChartData)
+
+    // Status distribution
+    setStatusData([
+      { name: 'Concluídos', value: totalCompletados, color: '#3b82f6' },
+      { name: 'Cancelados', value: totalCancelados, color: '#ef4444' },
+    ])
+
+    setLoading(false)
+  }, [businessId, period, typeFilter])
+
+  useEffect(() => {
+    fetchReportData()
+  }, [fetchReportData])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 text-zinc-500 animate-spin" />
+      </div>
+    )
+  }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center justify-between">
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0">
-          <Button
-            onClick={() => setPeriod('7d')}
-            variant={period === '7d' ? 'default' : 'outline'}
-            className={
-              period === '7d'
-                ? 'bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm'
-                : 'border-zinc-700 text-xs sm:text-sm'
-            }
-          >
-            7 dias
-          </Button>
-          <Button
-            onClick={() => setPeriod('30d')}
-            variant={period === '30d' ? 'default' : 'outline'}
-            className={
-              period === '30d'
-                ? 'bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm'
-                : 'border-zinc-700 text-xs sm:text-sm'
-            }
-          >
-            30 dias
-          </Button>
-          <Button
-            onClick={() => setPeriod('90d')}
-            variant={period === '90d' ? 'default' : 'outline'}
-            className={
-              period === '90d'
-                ? 'bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm'
-                : 'border-zinc-700 text-xs sm:text-sm'
-            }
-          >
-            90 dias
-          </Button>
-        </div>
+    <div className="space-y-4 sm:space-y-6">
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-2">
+          <Select value={period} onValueChange={(value) => setPeriod(value as PeriodFilter)}>
+            <SelectTrigger className="h-9 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white text-xs sm:text-sm w-full sm:w-[120px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
+              <SelectItem value="7d" className="text-zinc-900 dark:text-white text-xs sm:text-sm">7 dias</SelectItem>
+              <SelectItem value="30d" className="text-zinc-900 dark:text-white text-xs sm:text-sm">30 dias</SelectItem>
+              <SelectItem value="90d" className="text-zinc-900 dark:text-white text-xs sm:text-sm">90 dias</SelectItem>
+            </SelectContent>
+          </Select>
 
-        <Button className="bg-green-600 hover:bg-green-700 text-white text-xs sm:text-sm w-full sm:w-auto">
-          <Download className="w-4 h-4 mr-2" />
-          Exportar PDF
-        </Button>
+          <Select value={typeFilter} onValueChange={(value) => setTypeFilter(value as TypeFilter)}>
+            <SelectTrigger className="h-9 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white text-xs sm:text-sm w-full sm:w-[140px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
+              <SelectItem value="all" className="text-zinc-900 dark:text-white text-xs sm:text-sm">Fila + Reservas</SelectItem>
+              <SelectItem value="queue" className="text-zinc-900 dark:text-white text-xs sm:text-sm">Apenas Fila</SelectItem>
+              <SelectItem value="reservation" className="text-zinc-900 dark:text-white text-xs sm:text-sm">Apenas Reservas</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 sm:p-6">
-          <div className="flex items-center justify-between mb-3 sm:mb-4">
-            <div className="p-2 sm:p-3 bg-blue-500/10 rounded-lg">
-              <Users className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 sm:p-4">
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
+            <div className="p-1.5 sm:p-2 bg-zinc-100 dark:bg-zinc-800 rounded-lg">
+              <Users className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-600 dark:text-zinc-400" />
             </div>
-            <div className="flex items-center gap-1 text-green-500 text-xs sm:text-sm">
-              <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span>12%</span>
-            </div>
+            {stats.comparacaoClientes !== 0 && (
+              <div className={`flex items-center gap-1 text-[10px] sm:text-xs ${stats.comparacaoClientes >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                {stats.comparacaoClientes >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                <span>{Math.abs(stats.comparacaoClientes)}%</span>
+              </div>
+            )}
           </div>
-          <p className="text-zinc-400 text-xs sm:text-sm mb-1">Total de Clientes</p>
-          <p className="text-2xl sm:text-3xl font-bold text-white">1,245</p>
-          <p className="text-zinc-500 text-xs mt-2">+145 vs mês anterior</p>
+          <p className="text-zinc-500 dark:text-zinc-400 text-[10px] sm:text-xs mb-0.5">Total de Clientes</p>
+          <p className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white">{stats.totalClientes.toLocaleString('pt-BR')}</p>
         </div>
 
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 sm:p-6">
-          <div className="flex items-center justify-between mb-3 sm:mb-4">
-            <div className="p-2 sm:p-3 bg-green-500/10 rounded-lg">
-              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-green-500" />
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 sm:p-4">
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
+            <div className="p-1.5 sm:p-2 bg-zinc-100 dark:bg-zinc-800 rounded-lg">
+              <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-600 dark:text-zinc-400" />
             </div>
-            <div className="flex items-center gap-1 text-green-500 text-xs sm:text-sm">
-              <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span>8%</span>
-            </div>
+            {stats.comparacaoConversao !== 0 && (
+              <div className={`flex items-center gap-1 text-[10px] sm:text-xs ${stats.comparacaoConversao >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                {stats.comparacaoConversao >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                <span>{Math.abs(stats.comparacaoConversao)}%</span>
+              </div>
+            )}
           </div>
-          <p className="text-zinc-400 text-xs sm:text-sm mb-1">Taxa de Conversão</p>
-          <p className="text-2xl sm:text-3xl font-bold text-white">94.5%</p>
-          <p className="text-zinc-500 text-xs mt-2">+3.2% vs mês anterior</p>
+          <p className="text-zinc-500 dark:text-zinc-400 text-[10px] sm:text-xs mb-0.5">Taxa de Conclusão</p>
+          <p className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white">{stats.taxaConversao}%</p>
         </div>
 
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 sm:p-6">
-          <div className="flex items-center justify-between mb-3 sm:mb-4">
-            <div className="p-2 sm:p-3 bg-yellow-500/10 rounded-lg">
-              <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-500" />
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 sm:p-4">
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
+            <div className="p-1.5 sm:p-2 bg-zinc-100 dark:bg-zinc-800 rounded-lg">
+              <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-600 dark:text-zinc-400" />
             </div>
-            <div className="flex items-center gap-1 text-red-500 text-xs sm:text-sm">
-              <TrendingDown className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span>2%</span>
-            </div>
+            {stats.comparacaoTempo !== 0 && (
+              <div className={`flex items-center gap-1 text-[10px] sm:text-xs ${stats.comparacaoTempo <= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                {stats.comparacaoTempo <= 0 ? <TrendingDown className="w-3 h-3" /> : <TrendingUp className="w-3 h-3" />}
+                <span>{Math.abs(stats.comparacaoTempo)}%</span>
+              </div>
+            )}
           </div>
-          <p className="text-zinc-400 text-xs sm:text-sm mb-1">Tempo Médio Espera</p>
-          <p className="text-2xl sm:text-3xl font-bold text-white">12min</p>
-          <p className="text-zinc-500 text-xs mt-2">-15s vs mês anterior</p>
+          <p className="text-zinc-500 dark:text-zinc-400 text-[10px] sm:text-xs mb-0.5">Tempo Médio Espera</p>
+          <p className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white">{stats.tempoMedioEspera}min</p>
         </div>
 
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 sm:p-6">
-          <div className="flex items-center justify-between mb-3 sm:mb-4">
-            <div className="p-2 sm:p-3 bg-purple-500/10 rounded-lg">
-              <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-purple-500" />
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 sm:p-4">
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
+            <div className="p-1.5 sm:p-2 bg-zinc-100 dark:bg-zinc-800 rounded-lg">
+              <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-600 dark:text-zinc-400" />
             </div>
-            <div className="flex items-center gap-1 text-green-500 text-xs sm:text-sm">
-              <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span>15%</span>
-            </div>
+            {stats.comparacaoMedia !== 0 && (
+              <div className={`flex items-center gap-1 text-[10px] sm:text-xs ${stats.comparacaoMedia >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                {stats.comparacaoMedia >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                <span>{Math.abs(stats.comparacaoMedia)}%</span>
+              </div>
+            )}
           </div>
-          <p className="text-zinc-400 text-xs sm:text-sm mb-1">Média Diária</p>
-          <p className="text-2xl sm:text-3xl font-bold text-white">42</p>
-          <p className="text-zinc-500 text-xs mt-2">+6 clientes/dia</p>
+          <p className="text-zinc-500 dark:text-zinc-400 text-[10px] sm:text-xs mb-0.5">Média Diária</p>
+          <p className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white">{stats.mediaDiaria}</p>
         </div>
       </div>
 
       {/* Charts Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Daily Customers Chart */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 sm:p-6">
-          <h3 className="text-white font-semibold text-base sm:text-lg mb-3 sm:mb-4">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 sm:p-6">
+          <h3 className="text-zinc-900 dark:text-white font-semibold text-sm sm:text-base mb-3 sm:mb-4">
             Clientes por Dia
           </h3>
-          <div className="w-full overflow-x-auto -mx-2 sm:mx-0">
-            <div className="min-w-[300px] px-2 sm:px-0">
-              <ResponsiveContainer width="100%" height={250}>
-                <AreaChart data={dailyData}>
-                  <defs>
-                    <linearGradient id="colorClientes" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-                  <XAxis dataKey="date" stroke="#71717a" fontSize={10} />
-                  <YAxis stroke="#71717a" fontSize={10} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#18181b',
-                      border: '1px solid #27272a',
-                      borderRadius: '8px',
-                    }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="clientes"
-                    stroke="#3b82f6"
-                    fillOpacity={1}
-                    fill="url(#colorClientes)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+          {dailyData.length > 0 ? (
+            <div className="w-full overflow-x-auto -mx-2 sm:mx-0">
+              <div className="min-w-[300px] px-2 sm:px-0">
+                <ResponsiveContainer width="100%" height={220}>
+                  <AreaChart data={dailyData}>
+                    <defs>
+                      <linearGradient id="colorClientes" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e4e4e7" className="dark:stroke-zinc-800" />
+                    <XAxis dataKey="date" stroke="#71717a" fontSize={10} />
+                    <YAxis stroke="#71717a" fontSize={10} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'var(--tooltip-bg, #18181b)',
+                        border: '1px solid var(--tooltip-border, #27272a)',
+                        borderRadius: '8px',
+                        color: 'var(--tooltip-color, #fff)',
+                      }}
+                      labelStyle={{ color: 'var(--tooltip-color, #fff)' }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="clientes"
+                      stroke="#3b82f6"
+                      fillOpacity={1}
+                      fill="url(#colorClientes)"
+                      name="Clientes"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex items-center justify-center h-[220px] text-zinc-500 dark:text-zinc-400 text-sm">
+              Sem dados para o período selecionado
+            </div>
+          )}
         </div>
 
         {/* Hourly Distribution */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 sm:p-6">
-          <h3 className="text-white font-semibold text-base sm:text-lg mb-3 sm:mb-4">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 sm:p-6">
+          <h3 className="text-zinc-900 dark:text-white font-semibold text-sm sm:text-base mb-3 sm:mb-4">
             Distribuição por Horário
           </h3>
-          <div className="w-full overflow-x-auto -mx-2 sm:mx-0">
-            <div className="min-w-[300px] px-2 sm:px-0">
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={hourlyData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-                  <XAxis dataKey="hora" stroke="#71717a" fontSize={10} />
-                  <YAxis stroke="#71717a" fontSize={10} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#18181b',
-                      border: '1px solid #27272a',
-                      borderRadius: '8px',
-                    }}
-                  />
-                  <Bar dataKey="clientes" fill="#3b82f6" radius={[8, 8, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+          {hourlyData.some(d => d.clientes > 0) ? (
+            <div className="w-full overflow-x-auto -mx-2 sm:mx-0">
+              <div className="min-w-[300px] px-2 sm:px-0">
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={hourlyData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e4e4e7" className="dark:stroke-zinc-800" />
+                    <XAxis dataKey="hora" stroke="#71717a" fontSize={10} />
+                    <YAxis stroke="#71717a" fontSize={10} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'var(--tooltip-bg, #18181b)',
+                        border: '1px solid var(--tooltip-border, #27272a)',
+                        borderRadius: '8px',
+                        color: 'var(--tooltip-color, #fff)',
+                      }}
+                      labelStyle={{ color: 'var(--tooltip-color, #fff)' }}
+                    />
+                    <Bar dataKey="clientes" fill="#3b82f6" radius={[4, 4, 0, 0]} name="Clientes" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex items-center justify-center h-[220px] text-zinc-500 dark:text-zinc-400 text-sm">
+              Sem dados para o período selecionado
+            </div>
+          )}
         </div>
       </div>
 
       {/* Charts Row 2 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Status Distribution */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 sm:p-6">
-          <h3 className="text-white font-semibold text-base sm:text-lg mb-3 sm:mb-4">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 sm:p-6">
+          <h3 className="text-zinc-900 dark:text-white font-semibold text-sm sm:text-base mb-3 sm:mb-4">
             Status dos Atendimentos
           </h3>
-          <div className="flex items-center justify-center">
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie
-                  data={statusData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={50}
-                  outerRadius={80}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {statusData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#18181b',
-                    border: '1px solid #27272a',
-                    borderRadius: '8px',
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 mt-4">
-            {statusData.map((item) => (
-              <div key={item.name} className="flex items-center gap-2">
-                <div
-                  className="w-3 h-3 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: item.color }}
-                />
-                <span className="text-xs sm:text-sm text-zinc-400 truncate">{item.name}</span>
-                <span className="text-xs sm:text-sm font-semibold text-white">
-                  {item.value}
-                </span>
+          {statusData.some(d => d.value > 0) ? (
+            <>
+              <div className="flex items-center justify-center">
+                <ResponsiveContainer width="100%" height={200}>
+                  <PieChart>
+                    <Pie
+                      data={statusData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={50}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {statusData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'var(--tooltip-bg, #18181b)',
+                        border: '1px solid var(--tooltip-border, #27272a)',
+                        borderRadius: '8px',
+                        color: 'var(--tooltip-color, #fff)',
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
-            ))}
-          </div>
+              <div className="flex flex-wrap items-center justify-center gap-4 mt-2">
+                {statusData.map((item) => (
+                  <div key={item.name} className="flex items-center gap-2">
+                    <div
+                      className="w-3 h-3 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: item.color }}
+                    />
+                    <span className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">{item.name}</span>
+                    <span className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-white">
+                      {item.value}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center justify-center h-[200px] text-zinc-500 dark:text-zinc-400 text-sm">
+              Sem dados para o período selecionado
+            </div>
+          )}
         </div>
 
-        {/* Wait Time Trend */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 sm:p-6">
-          <h3 className="text-white font-semibold text-base sm:text-lg mb-3 sm:mb-4">
-            Tempo de Espera (minutos)
+        {/* Summary Stats */}
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 sm:p-6">
+          <h3 className="text-zinc-900 dark:text-white font-semibold text-sm sm:text-base mb-3 sm:mb-4">
+            Resumo do Período
           </h3>
-          <div className="w-full overflow-x-auto -mx-2 sm:mx-0">
-            <div className="min-w-[300px] px-2 sm:px-0">
-              <ResponsiveContainer width="100%" height={250}>
-                <LineChart data={dailyData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-                  <XAxis dataKey="date" stroke="#71717a" fontSize={10} />
-                  <YAxis stroke="#71717a" fontSize={10} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#18181b',
-                      border: '1px solid #27272a',
-                      borderRadius: '8px',
-                    }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="tempo"
-                    stroke="#f59e0b"
-                    strokeWidth={2}
-                    dot={{ fill: '#f59e0b', r: 4 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <CheckCircle className="w-5 h-5 text-blue-500" />
+                <span className="text-sm text-zinc-700 dark:text-zinc-300">Atendimentos Concluídos</span>
+              </div>
+              <span className="text-lg font-bold text-zinc-900 dark:text-white">{stats.totalCompletados}</span>
+            </div>
+
+            <div className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <XCircle className="w-5 h-5 text-red-500" />
+                <span className="text-sm text-zinc-700 dark:text-zinc-300">Atendimentos Cancelados</span>
+              </div>
+              <span className="text-lg font-bold text-zinc-900 dark:text-white">{stats.totalCancelados}</span>
+            </div>
+
+            <div className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <Clock className="w-5 h-5 text-zinc-500" />
+                <span className="text-sm text-zinc-700 dark:text-zinc-300">Tempo Total de Espera</span>
+              </div>
+              <span className="text-lg font-bold text-zinc-900 dark:text-white">
+                {stats.tempoMedioEspera * stats.totalClientes > 60
+                  ? `${Math.round(stats.tempoMedioEspera * stats.totalClientes / 60)}h`
+                  : `${stats.tempoMedioEspera * stats.totalClientes}min`
+                }
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <Users className="w-5 h-5 text-zinc-500" />
+                <span className="text-sm text-zinc-700 dark:text-zinc-300">Pico de Clientes (dia)</span>
+              </div>
+              <span className="text-lg font-bold text-zinc-900 dark:text-white">
+                {dailyData.length > 0 ? Math.max(...dailyData.map(d => d.clientes)) : 0}
+              </span>
             </div>
           </div>
         </div>

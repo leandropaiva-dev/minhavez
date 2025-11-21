@@ -12,7 +12,11 @@ export default async function ReportsPage() {
     redirect('/auth')
   }
 
-  await getBusiness()
+  const business = await getBusiness()
+
+  if (!business) {
+    redirect('/onboarding')
+  }
 
   return (
     <DashboardLayout
@@ -21,15 +25,15 @@ export default async function ReportsPage() {
     >
       <main className="p-4 lg:p-8">
         <div className="mb-6">
-          <h1 className="text-2xl lg:text-3xl font-bold text-white mb-2">
+          <h1 className="text-2xl lg:text-3xl font-bold text-zinc-900 dark:text-white mb-2">
             Relatórios
           </h1>
-          <p className="text-zinc-400">
+          <p className="text-zinc-500 dark:text-zinc-400">
             Análise detalhada do desempenho do seu negócio
           </p>
         </div>
 
-        <ReportsManager />
+        <ReportsManager businessId={business.id} />
       </main>
     </DashboardLayout>
   )

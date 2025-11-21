@@ -8,7 +8,7 @@ import FAQ from '@/components/landing/FAQ'
 
 export default function Home() {
   return (
-    <>
+    <div className="dark bg-black text-white min-h-screen">
       <Navbar />
       <Hero />
       <HowItWorks />
@@ -16,6 +16,6 @@ export default function Home() {
       <Pricing />
       <FAQ />
       <Footer />
-    </>
+    </div>
   )
 }

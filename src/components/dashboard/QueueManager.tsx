@@ -21,12 +21,27 @@ interface QueueManagerProps {
   businessId: string
 }
 
+const CANCELLATION_REASONS = [
+  'Cliente não apareceu',
+  'Cliente pediu para cancelar',
+  'Saiu da fila por conta própria',
+  'Tempo de espera excedido',
+  'Desistiu após ser chamado',
+  'Outro motivo',
+]
+
 export default function QueueManager({ businessId }: QueueManagerProps) {
   const [queue, setQueue] = useState<QueueEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [callingId, setCallingId] = useState<string | null>(null)
   const [isQueueOpen, setIsQueueOpen] = useState(true)
   const [todayAttended, setTodayAttended] = useState(0)
+
+  // Cancellation modal state
+  const [cancelModalOpen, setCancelModalOpen] = useState(false)
+  const [cancellingEntry, setCancellingEntry] = useState<QueueEntry | null>(null)
+  const [selectedReason, setSelectedReason] = useState('')
+  const [customReason, setCustomReason] = useState('')
 
   const fetchQueue = useCallback(async () => {
     const supabase = createClient()
@@ -87,9 +102,9 @@ export default function QueueManager({ businessId }: QueueManagerProps) {
     }
   }, [businessId, fetchQueue])
 
-  const updateStatus = async (id: string, status: string) => {
+  const updateStatus = async (id: string, status: string, cancellationReason?: string) => {
     const supabase = createClient()
-    const updates: Record<string, string> = { status }
+    const updates: Record<string, string | null> = { status }
 
     if (status === 'called') {
       updates.called_at = new Date().toISOString()
@@ -99,10 +114,39 @@ export default function QueueManager({ businessId }: QueueManagerProps) {
       updates.attended_at = new Date().toISOString()
     } else if (status === 'completed') {
       updates.completed_at = new Date().toISOString()
+    } else if (status === 'cancelled' || status === 'no_show') {
+      updates.completed_at = new Date().toISOString()
+      if (cancellationReason) {
+        updates.cancellation_reason = cancellationReason
+      }
     }
 
     await supabase.from('queue_entries').update(updates).eq('id', id)
     fetchQueue()
+  }
+
+  const openCancelModal = (entry: QueueEntry) => {
+    setCancellingEntry(entry)
+    setSelectedReason('')
+    setCustomReason('')
+    setCancelModalOpen(true)
+  }
+
+  const closeCancelModal = () => {
+    setCancelModalOpen(false)
+    setCancellingEntry(null)
+    setSelectedReason('')
+    setCustomReason('')
+  }
+
+  const confirmCancellation = async () => {
+    if (!cancellingEntry) return
+
+    const reason = selectedReason === 'Outro motivo' ? customReason : selectedReason
+    if (!reason.trim()) return
+
+    await updateStatus(cancellingEntry.id, 'cancelled', reason)
+    closeCancelModal()
   }
 
   const calculateWaitTime = (joinedAt: string): string => {
@@ -300,7 +344,7 @@ export default function QueueManager({ businessId }: QueueManagerProps) {
                       )}
 
                       {(entry.status === 'waiting' || entry.status === 'called') && (
-                        <Button onClick={() => updateStatus(entry.id, 'cancelled')} size="sm" variant="outline" className="border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 w-full sm:w-auto">
+                        <Button onClick={() => openCancelModal(entry)} size="sm" variant="outline" className="border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 w-full sm:w-auto">
                           <X className="w-4 h-4 mr-1 sm:mr-0" />
                           <span className="sm:hidden">Cancelar</span>
                         </Button>
@@ -313,6 +357,69 @@ export default function QueueManager({ businessId }: QueueManagerProps) {
           </div>
         )}
       </div>
+      {/* Cancellation Modal */}
+      {cancelModalOpen && cancellingEntry && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={closeCancelModal}
+        >
+          <div
+            className="bg-white dark:bg-zinc-900 rounded-xl p-6 w-full max-w-md border border-zinc-200 dark:border-zinc-800"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-4">
+              Cancelar atendimento
+            </h3>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4">
+              Por favor, selecione o motivo do cancelamento de <span className="font-medium text-zinc-900 dark:text-white">{cancellingEntry.customer_name}</span>:
+            </p>
+
+            <div className="space-y-2 mb-4">
+              {CANCELLATION_REASONS.map((reason) => (
+                <button
+                  key={reason}
+                  onClick={() => setSelectedReason(reason)}
+                  className={cn(
+                    "w-full text-left px-4 py-3 rounded-lg border transition-all text-sm",
+                    selectedReason === reason
+                      ? "border-blue-500 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-400"
+                      : "border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-900 dark:text-white"
+                  )}
+                >
+                  {reason}
+                </button>
+              ))}
+            </div>
+
+            {selectedReason === 'Outro motivo' && (
+              <textarea
+                value={customReason}
+                onChange={(e) => setCustomReason(e.target.value)}
+                placeholder="Descreva o motivo..."
+                className="w-full px-4 py-3 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white text-sm resize-none mb-4"
+                rows={3}
+              />
+            )}
+
+            <div className="flex gap-3">
+              <Button
+                onClick={closeCancelModal}
+                variant="outline"
+                className="flex-1 border-zinc-300 dark:border-zinc-700"
+              >
+                Voltar
+              </Button>
+              <Button
+                onClick={confirmCancellation}
+                disabled={!selectedReason || (selectedReason === 'Outro motivo' && !customReason.trim())}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+              >
+                Confirmar Cancelamento
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

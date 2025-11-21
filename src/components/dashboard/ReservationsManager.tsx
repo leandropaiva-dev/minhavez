@@ -24,6 +24,15 @@ interface ReservationsManagerProps {
   businessId: string
 }
 
+const CANCELLATION_REASONS = [
+  'Cliente não apareceu',
+  'Cliente pediu para cancelar',
+  'Mudança de planos',
+  'Reserva duplicada',
+  'Horário indisponível',
+  'Outro motivo',
+]
+
 export default function ReservationsManager({ businessId }: ReservationsManagerProps) {
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [loading, setLoading] = useState(true)
@@ -36,6 +45,12 @@ export default function ReservationsManager({ businessId }: ReservationsManagerP
     pending: 0,
     completedToday: 0,
   })
+
+  // Cancellation modal state
+  const [cancelModalOpen, setCancelModalOpen] = useState(false)
+  const [cancellingReservation, setCancellingReservation] = useState<Reservation | null>(null)
+  const [selectedReason, setSelectedReason] = useState('')
+  const [customReason, setCustomReason] = useState('')
 
   const fetchReservations = useCallback(async () => {
     const supabase = createClient()
@@ -184,10 +199,42 @@ export default function ReservationsManager({ businessId }: ReservationsManagerP
   }, [businessId, fetchReservations, fetchScheduleStatus])
 
 
-  const updateStatus = async (id: string, status: string) => {
+  const updateStatus = async (id: string, status: string, cancellationReason?: string) => {
     const supabase = createClient()
-    await supabase.from('reservations').update({ status }).eq('id', id)
+    const updates: Record<string, string | null> = { status }
+
+    if (status === 'cancelled' || status === 'no_show') {
+      if (cancellationReason) {
+        updates.cancellation_reason = cancellationReason
+      }
+    }
+
+    await supabase.from('reservations').update(updates).eq('id', id)
     fetchReservations()
+  }
+
+  const openCancelModal = (reservation: Reservation) => {
+    setCancellingReservation(reservation)
+    setSelectedReason('')
+    setCustomReason('')
+    setCancelModalOpen(true)
+  }
+
+  const closeCancelModal = () => {
+    setCancelModalOpen(false)
+    setCancellingReservation(null)
+    setSelectedReason('')
+    setCustomReason('')
+  }
+
+  const confirmCancellation = async () => {
+    if (!cancellingReservation) return
+
+    const reason = selectedReason === 'Outro motivo' ? customReason : selectedReason
+    if (!reason.trim()) return
+
+    await updateStatus(cancellingReservation.id, 'cancelled', reason)
+    closeCancelModal()
   }
 
   const statusConfig: Record<string, { label: string; color: string }> = {
@@ -385,7 +432,7 @@ export default function ReservationsManager({ businessId }: ReservationsManagerP
                       )}
 
                       {['pending', 'confirmed'].includes(reservation.status) && (
-                        <Button onClick={() => updateStatus(reservation.id, 'cancelled')} size="sm" variant="outline" className="border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 w-full sm:w-auto">
+                        <Button onClick={() => openCancelModal(reservation)} size="sm" variant="outline" className="border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 w-full sm:w-auto">
                           <X className="w-4 h-4 mr-1 sm:mr-0" />
                           <span className="sm:hidden">Cancelar</span>
                         </Button>
@@ -400,6 +447,70 @@ export default function ReservationsManager({ businessId }: ReservationsManagerP
           </div>
         </div>
       </div>
+
+      {/* Cancellation Modal */}
+      {cancelModalOpen && cancellingReservation && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={closeCancelModal}
+        >
+          <div
+            className="bg-white dark:bg-zinc-900 rounded-xl p-6 w-full max-w-md border border-zinc-200 dark:border-zinc-800"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-4">
+              Cancelar reserva
+            </h3>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4">
+              Por favor, selecione o motivo do cancelamento de <span className="font-medium text-zinc-900 dark:text-white">{cancellingReservation.customer_name}</span>:
+            </p>
+
+            <div className="space-y-2 mb-4">
+              {CANCELLATION_REASONS.map((reason) => (
+                <button
+                  key={reason}
+                  onClick={() => setSelectedReason(reason)}
+                  className={cn(
+                    "w-full text-left px-4 py-3 rounded-lg border transition-all text-sm",
+                    selectedReason === reason
+                      ? "border-blue-500 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-400"
+                      : "border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-900 dark:text-white"
+                  )}
+                >
+                  {reason}
+                </button>
+              ))}
+            </div>
+
+            {selectedReason === 'Outro motivo' && (
+              <textarea
+                value={customReason}
+                onChange={(e) => setCustomReason(e.target.value)}
+                placeholder="Descreva o motivo..."
+                className="w-full px-4 py-3 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white text-sm resize-none mb-4"
+                rows={3}
+              />
+            )}
+
+            <div className="flex gap-3">
+              <Button
+                onClick={closeCancelModal}
+                variant="outline"
+                className="flex-1 border-zinc-300 dark:border-zinc-700"
+              >
+                Voltar
+              </Button>
+              <Button
+                onClick={confirmCancellation}
+                disabled={!selectedReason || (selectedReason === 'Outro motivo' && !customReason.trim())}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+              >
+                Confirmar Cancelamento
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

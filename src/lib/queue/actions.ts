@@ -112,12 +112,17 @@ export async function getBusinessQueue(businessId: string) {
   return { data: entries }
 }
 
-export async function cancelQueueEntry(entryId: string) {
+export async function cancelQueueEntry(entryId: string, cancellationReason?: string) {
   const supabase = await createClient()
+
+  const updates: { status: string; cancellation_reason?: string } = { status: 'cancelled' }
+  if (cancellationReason) {
+    updates.cancellation_reason = cancellationReason
+  }
 
   const { error } = await supabase
     .from('queue_entries')
-    .update({ status: 'cancelled' })
+    .update(updates)
     .eq('id', entryId)
 
   if (error) {

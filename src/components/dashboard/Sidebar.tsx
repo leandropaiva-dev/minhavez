@@ -5,27 +5,33 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard,
-  Users,
+  History,
   Clock,
   BarChart3,
+  Calendar,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const menuItems = [
   {
     icon: LayoutDashboard,
-    label: 'Dashboard',
+    label: 'Visão Geral',
     href: '/dashboard',
   },
   {
     icon: Clock,
-    label: 'Fila Atual',
+    label: 'Fila',
     href: '/dashboard/fila',
   },
   {
-    icon: Users,
-    label: 'Clientes',
-    href: '/dashboard/clientes',
+    icon: Calendar,
+    label: 'Reservas',
+    href: '/dashboard/reservas',
+  },
+  {
+    icon: History,
+    label: 'Histórico',
+    href: '/dashboard/historico',
   },
   {
     icon: BarChart3,
