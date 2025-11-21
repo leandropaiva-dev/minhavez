@@ -1,14 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import SegmentMetrics from './SegmentMetrics'
-import QuickActionsPanel from './QuickActionsPanel'
-import RecentQueue from './RecentQueue'
-import MonthlyChart from './MonthlyChart'
-import MonthlyTarget from './MonthlyTarget'
+import RealtimeMetrics from './RealtimeMetrics'
+import AnalyticsChart from './AnalyticsChart'
+import GoalsPanel from './GoalsPanel'
+import QuickActions from './QuickActions'
 import QRCodeCard from './QRCodeCard'
-import { getCurrentBusinessSegment } from '@/lib/config/storage'
-import { DASHBOARD_CONFIGS } from '@/lib/config/dashboard-configs'
+import ReservationLinkCard from './ReservationLinkCard'
+import { createClient } from '@/lib/supabase/client'
 
 interface DynamicDashboardProps {
   businessId?: string
@@ -26,62 +25,67 @@ export default function DynamicDashboard({
   businessId,
   businessName,
   queueStats,
-  queueEntries = [],
 }: DynamicDashboardProps) {
-  const [config, setConfig] = useState(DASHBOARD_CONFIGS.outro)
+  const [todayReservations, setTodayReservations] = useState(0)
 
   useEffect(() => {
-    const segment = getCurrentBusinessSegment()
-    setConfig(DASHBOARD_CONFIGS[segment])
-    console.log('DynamicDashboard - businessId:', businessId, 'businessName:', businessName, 'entries:', queueEntries.length)
-  }, [businessId, businessName, queueEntries])
+    const fetchTodayReservations = async () => {
+      if (!businessId) return
 
-  // Map real data to metrics
-  const metricsData: Record<string, number | string> = {
-    queue_count: queueStats.currentQueue,
-    patients_waiting: queueStats.currentQueue,
-    clients_waiting: queueStats.currentQueue,
-    served_today: queueStats.todayAttended,
-    appointments_today: queueStats.todayAttended,
-    reservations_today: queueStats.todayAttended,
-    sessions_today: queueStats.todayAttended,
-    avg_wait_time: queueStats.avgWaitTime,
-    avg_service_time: queueStats.avgWaitTime,
-    tables_occupied: 0, // Mock - can be calculated later
-    doctors_available: 1, // Mock
-    chairs_occupied: 0, // Mock
-    stations_occupied: 0, // Mock
-    active_services: 0, // Mock
-    completed_sessions: queueStats.todayAttended,
-  }
+      const supabase = createClient()
+      const today = new Date().toISOString().split('T')[0]
+
+      const { data, error } = await supabase
+        .from('reservations')
+        .select('id', { count: 'exact' })
+        .eq('business_id', businessId)
+        .eq('reservation_date', today)
+
+      if (!error && data) {
+        setTodayReservations(data.length)
+      }
+    }
+
+    fetchTodayReservations()
+  }, [businessId])
 
   return (
-    <div className="space-y-6">
-      {/* Segment-specific Metrics */}
-      <SegmentMetrics metrics={config.metrics} realData={metricsData} />
+    <div className="space-y-4 sm:space-y-6">
+      {/* Row 1: Metrics with Real-time Updates */}
+      <RealtimeMetrics
+        businessId={businessId || ''}
+        initialStats={queueStats}
+        todayReservations={todayReservations}
+      />
 
-      {/* Charts and Actions Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-        <div className="lg:col-span-2 space-y-4 lg:space-y-6">
-          <MonthlyChart />
-          <QuickActionsPanel actions={config.quickActions} />
+      {/* Row 2: Analytics (2/3) + Goals (1/3) in desktop, stacked in mobile */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
+        <div className="lg:col-span-2">
+          <AnalyticsChart businessId={businessId || ''} />
         </div>
-        <div className="space-y-4 lg:space-y-6">
-          <MonthlyTarget
-            percentage={75.55}
-            target={20000}
-            revenue={20000}
-            today={3287}
-          />
+        <div>
+          <GoalsPanel businessId={businessId || ''} />
+        </div>
+      </div>
+
+      {/* Row 3: QR Codes (2/3) + Quick Actions (1/3) in desktop, stacked in mobile */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
+        <div>
           <QRCodeCard
             businessId={businessId || 'default'}
             businessName={businessName || 'MinhaVez'}
           />
         </div>
+        <div>
+          <ReservationLinkCard
+            businessId={businessId || 'default'}
+            businessName={businessName || 'MinhaVez'}
+          />
+        </div>
+        <div>
+          <QuickActions businessId={businessId || ''} />
+        </div>
       </div>
-
-      {/* Recent Queue with Real-time Updates */}
-      <RecentQueue entries={queueEntries} businessId={businessId || ''} />
     </div>
   )
 }

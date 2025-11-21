@@ -29,7 +29,8 @@
       "Bash(curl:*)",
       "Bash(npx shadcn@latest add https://magicui.design/r/animated-theme-toggler)",
       "Bash(npx shadcn@latest add:*)",
-      "Bash(npm run lint)"
+      "Bash(npm run lint)",
+      "Bash(if exist \"c:\\minhavez\\src\\app\\[slug]\\reserva\\page.tsx\" del \"c:\\minhavez\\src\\app\\[slug]\\reserva\\page.tsx\")"
     ],
     "deny": [],
     "ask": []

@@ -43,20 +43,23 @@ export default async function DashboardPage() {
     // Tempo médio de espera (calculado baseado em entradas concluídas hoje)
     const { data: completedToday } = await supabase
       .from('queue_entries')
-      .select('joined_at, attended_at')
+      .select('joined_at, attended_at, completed_at')
       .eq('business_id', business.id)
-      .eq('status', 'completed')
+      .in('status', ['completed', 'attending'])
       .gte('joined_at', today.toISOString())
-      .not('attended_at', 'is', null)
 
-    let avgWaitTime = 15 // padrão
+    let avgWaitTime = 0 // 0 se não houver atendimentos
     if (completedToday && completedToday.length > 0) {
-      const totalWaitMinutes = completedToday.reduce((sum, entry) => {
-        const joined = new Date(entry.joined_at).getTime()
-        const attended = new Date(entry.attended_at!).getTime()
-        return sum + (attended - joined) / 60000 // converter para minutos
-      }, 0)
-      avgWaitTime = Math.round(totalWaitMinutes / completedToday.length)
+      const validEntries = completedToday.filter(entry => entry.attended_at || entry.completed_at)
+      if (validEntries.length > 0) {
+        const totalWaitMinutes = validEntries.reduce((sum, entry) => {
+          const joined = new Date(entry.joined_at).getTime()
+          const endTime = entry.completed_at || entry.attended_at
+          const ended = new Date(endTime!).getTime()
+          return sum + (ended - joined) / 60000 // converter para minutos
+        }, 0)
+        avgWaitTime = Math.round(totalWaitMinutes / validEntries.length)
+      }
     }
 
     queueStats = {

@@ -1,10 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
-import QueueManager from '@/components/dashboard/QueueManager'
+import ReservationsManager from '@/components/dashboard/ReservationsManager'
 import { getBusiness } from '@/lib/onboarding/actions'
 
-export default async function QueuePage() {
+export default async function ReservationsPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -22,14 +22,14 @@ export default async function QueuePage() {
       <main className="p-4 lg:p-8">
         <div className="mb-6">
           <h1 className="text-2xl lg:text-3xl font-bold text-zinc-900 dark:text-white mb-2">
-            Fila
+            Reservas
           </h1>
           <p className="text-zinc-500 dark:text-zinc-400">
-            Gerencie a fila de atendimento em tempo real
+            Gerencie as reservas do seu negócio
           </p>
         </div>
 
-        {business?.id && <QueueManager businessId={business.id} />}
+        {business?.id && <ReservationsManager businessId={business.id} />}
       </main>
     </DashboardLayout>
   )

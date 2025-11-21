@@ -127,3 +127,57 @@ export async function cancelQueueEntry(entryId: string) {
   revalidatePath('/dashboard/fila')
   return { success: true }
 }
+
+export async function toggleQueueStatus(businessId: string) {
+  const supabase = await createClient()
+
+  // Get current status
+  const { data: business, error: fetchError } = await supabase
+    .from('businesses')
+    .select('is_queue_open')
+    .eq('id', businessId)
+    .single()
+
+  if (fetchError || !business) {
+    return { success: false, error: 'Business not found' }
+  }
+
+  // Toggle status
+  const newStatus = !business.is_queue_open
+
+  const { error: updateError } = await supabase
+    .from('businesses')
+    .update({ is_queue_open: newStatus })
+    .eq('id', businessId)
+
+  if (updateError) {
+    return { success: false, error: 'Failed to update queue status' }
+  }
+
+  revalidatePath('/dashboard')
+  revalidatePath(`/fila/${businessId}`)
+
+  return {
+    success: true,
+    isOpen: newStatus,
+    message: newStatus
+      ? 'Fila aberta com sucesso!'
+      : 'Fila encerrada. Novos clientes não poderão entrar.',
+  }
+}
+
+export async function getQueueStatus(businessId: string) {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from('businesses')
+    .select('is_queue_open')
+    .eq('id', businessId)
+    .single()
+
+  if (error || !data) {
+    return { isOpen: true } // Default to open if error
+  }
+
+  return { isOpen: data.is_queue_open }
+}
