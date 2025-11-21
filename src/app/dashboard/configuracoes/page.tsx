@@ -12,7 +12,7 @@ export default async function SettingsPage() {
     redirect('/auth')
   }
 
-  const { data: business } = await getBusiness()
+  await getBusiness()
 
   return (
     <DashboardLayout

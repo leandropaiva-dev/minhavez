@@ -91,13 +91,10 @@ export default function ReservationsManager({ businessId }: ReservationsManagerP
       completedToday: completedCount || 0,
     })
 
-    // Fetch schedule status
-    await fetchScheduleStatus()
-
     setLoading(false)
   }, [businessId])
 
-  const fetchScheduleStatus = async () => {
+  const fetchScheduleStatus = useCallback(async () => {
     const supabase = createClient()
 
     // Get current day and time
@@ -147,7 +144,7 @@ export default function ReservationsManager({ businessId }: ReservationsManagerP
         setScheduleStatus('Sem horários configurados')
       }
     }
-  }
+  }, [businessId])
 
   useEffect(() => {
     fetchReservations()
@@ -184,7 +181,7 @@ export default function ReservationsManager({ businessId }: ReservationsManagerP
       supabase.removeChannel(reservationsChannel)
       supabase.removeChannel(scheduleChannel)
     }
-  }, [businessId, fetchReservations])
+  }, [businessId, fetchReservations, fetchScheduleStatus])
 
 
   const updateStatus = async (id: string, status: string) => {

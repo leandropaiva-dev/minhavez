@@ -128,7 +128,7 @@ export default function QuickActions({ businessId }: QuickActionsProps) {
     },
   ]
 
-  const getVariantClasses = (variant: 'primary' | 'secondary' | 'danger') => {
+  const getVariantClasses = () => {
     // Todos os botões iguais
     return 'bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white border border-zinc-300 dark:border-zinc-700'
   }
@@ -159,9 +159,7 @@ export default function QuickActions({ businessId }: QuickActionsProps) {
                 key={action.id}
                 onClick={action.onClick}
                 disabled={action.disabled}
-                className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg border transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${getVariantClasses(
-                  action.variant
-                )}`}
+                className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg border transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${getVariantClasses()}`}
               >
                 <Icon className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                 <span className="text-[10px] sm:text-xs font-medium text-center leading-tight">

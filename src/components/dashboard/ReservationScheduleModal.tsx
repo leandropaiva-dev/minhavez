@@ -1,9 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { X, Plus, Trash2, Clock } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 interface ScheduleEntry {
@@ -39,13 +38,7 @@ export default function ReservationScheduleModal({
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchSchedules()
-    }
-  }, [isOpen, businessId])
-
-  const fetchSchedules = async () => {
+  const fetchSchedules = useCallback(async () => {
     setLoading(true)
     const supabase = createClient()
 
@@ -61,7 +54,13 @@ export default function ReservationScheduleModal({
       setSchedules(data)
     }
     setLoading(false)
-  }
+  }, [businessId])
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchSchedules()
+    }
+  }, [isOpen, businessId, fetchSchedules])
 
   const addSchedule = () => {
     setSchedules([

@@ -9,27 +9,6 @@ interface DataPoint {
   value: number
 }
 
-// Tipos auxiliares para as agregações
-type DateLike = string | Date
-
-interface QueueEntryWithStatus {
-  created_at: string
-  status?: string | null
-}
-
-interface ReservationWithStatus {
-  reservation_date: string
-  status?: string | null
-}
-
-interface QueueEntryWithTimes {
-  created_at: string
-  completed_at: string | null
-  // `called_at` existe mas não é usado no cálculo,
-  // então marcamos como opcional para não atrapalhar
-  called_at?: string | null
-}
-
 export function useAnalyticsData(
   businessId: string,
   metricType: MetricType,
@@ -73,7 +52,7 @@ export function useAnalyticsData(
 
       try {
         if (metricType === 'attendances') {
-          // Fetch queue entries that were completed / cancelled / no_show
+          // Fetch queue entries that were completed
           const { data: entries } = await supabase
             .from('queue_entries')
             .select('created_at, status')
@@ -84,11 +63,7 @@ export function useAnalyticsData(
             .order('created_at')
 
           if (entries) {
-            const aggregated = aggregateByDate<QueueEntryWithStatus>(
-              entries,
-              'created_at',
-              timeFilter
-            )
+            const aggregated = aggregateByDate(entries, 'created_at', timeFilter)
             setData(fillDateRange(aggregated, timeFilter))
           } else {
             setData(fillDateRange([], timeFilter))
@@ -105,10 +80,7 @@ export function useAnalyticsData(
             .order('created_at')
 
           if (entries) {
-            const aggregated = aggregateAvgTimeByDate(
-              entries as QueueEntryWithTimes[],
-              timeFilter
-            )
+            const aggregated = aggregateAvgTimeByDate(entries, timeFilter)
             setData(fillDateRange(aggregated, timeFilter))
           } else {
             setData(fillDateRange([], timeFilter))
@@ -124,11 +96,7 @@ export function useAnalyticsData(
             .order('reservation_date')
 
           if (reservations) {
-            const aggregated = aggregateByDate<ReservationWithStatus>(
-              reservations,
-              'reservation_date',
-              timeFilter
-            )
+            const aggregated = aggregateByDate(reservations, 'reservation_date', timeFilter)
             setData(fillDateRange(aggregated, timeFilter))
           } else {
             setData(fillDateRange([], timeFilter))
@@ -144,11 +112,7 @@ export function useAnalyticsData(
             .order('created_at')
 
           if (entries) {
-            const aggregated = aggregateByDate<QueueEntryWithStatus>(
-              entries,
-              'created_at',
-              timeFilter
-            )
+            const aggregated = aggregateByDate(entries, 'created_at', timeFilter)
             setData(fillDateRange(aggregated, timeFilter))
           } else {
             setData(fillDateRange([], timeFilter))
@@ -169,35 +133,26 @@ export function useAnalyticsData(
 }
 
 // Helper function to aggregate data by date or hour
-function aggregateByDate<T extends Record<string, unknown>>(
-  items: T[],
-  dateField: keyof T & string,
+function aggregateByDate(
+  items: Record<string, string>[],
+  dateField: string,
   timeFilter?: TimeFilter
 ): DataPoint[] {
-  const grouped = items.reduce<Record<string, number>>((acc, item) => {
-    const rawDate = item[dateField] as DateLike
-
-    // Garante que temos algo que dê pra criar uma Date
-    const date = new Date(rawDate)
+  const grouped = items.reduce((acc, item) => {
+    const date = new Date(item[dateField])
 
     // For 24h, group by hour
-    const key =
-      timeFilter === '24h'
-        ? date
-            .toLocaleTimeString('pt-BR', {
-              hour: '2-digit',
-              minute: '2-digit',
-            })
-            .slice(0, 2) + 'h'
-        : date.toLocaleDateString('pt-BR', {
-            day: '2-digit',
-            month: '2-digit',
-          })
+    const key = timeFilter === '24h'
+      ? date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }).slice(0, 2) + 'h'
+      : date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
 
-    acc[key] = (acc[key] ?? 0) + 1
+    if (!acc[key]) {
+      acc[key] = 0
+    }
+    acc[key]++
 
     return acc
-  }, {})
+  }, {} as Record<string, number>)
 
   return Object.entries(grouped).map(([date, value]) => ({
     date,
@@ -206,34 +161,18 @@ function aggregateByDate<T extends Record<string, unknown>>(
 }
 
 // Helper function to calculate average time by date or hour
-function aggregateAvgTimeByDate(
-  items: QueueEntryWithTimes[],
-  timeFilter?: TimeFilter
-): DataPoint[] {
-  const grouped = items.reduce<
-    Record<string, { total: number; count: number }>
-  >((acc, item) => {
+function aggregateAvgTimeByDate(items: { created_at: string; completed_at: string | null }[], timeFilter?: TimeFilter): DataPoint[] {
+  const grouped = items.reduce((acc, item) => {
     if (!item.created_at || !item.completed_at) return acc
 
     const date = new Date(item.created_at)
 
     // For 24h, group by hour
-    const key =
-      timeFilter === '24h'
-        ? date
-            .toLocaleTimeString('pt-BR', {
-              hour: '2-digit',
-              minute: '2-digit',
-            })
-            .slice(0, 2) + 'h'
-        : date.toLocaleDateString('pt-BR', {
-            day: '2-digit',
-            month: '2-digit',
-          })
+    const key = timeFilter === '24h'
+      ? date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }).slice(0, 2) + 'h'
+      : date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
 
-    const waitTime =
-      new Date(item.completed_at).getTime() -
-      new Date(item.created_at).getTime()
+    const waitTime = new Date(item.completed_at).getTime() - new Date(item.created_at).getTime()
     const waitMinutes = Math.round(waitTime / 1000 / 60)
 
     if (!acc[key]) {
@@ -243,7 +182,7 @@ function aggregateAvgTimeByDate(
     acc[key].count++
 
     return acc
-  }, {})
+  }, {} as Record<string, { total: number; count: number }>)
 
   return Object.entries(grouped).map(([date, { total, count }]) => ({
     date,
@@ -252,7 +191,10 @@ function aggregateAvgTimeByDate(
 }
 
 // Helper function to fill date range with empty values
-function fillDateRange(data: DataPoint[], timeFilter: TimeFilter): DataPoint[] {
+function fillDateRange(
+  data: DataPoint[],
+  timeFilter: TimeFilter
+): DataPoint[] {
   const endDate = new Date()
   const startDate = new Date()
 
@@ -278,17 +220,17 @@ function fillDateRange(data: DataPoint[], timeFilter: TimeFilter): DataPoint[] {
   const currentDate = new Date(startDate)
 
   // Create map of existing data
-  const dataMap = new Map<string, number>(data.map(d => [d.date, d.value]))
+  const dataMap = new Map(data.map(d => [d.date, d.value]))
 
   // For 24h, fill by hour
   if (timeFilter === '24h') {
     const hours: DataPoint[] = []
     while (currentDate <= endDate) {
-      const key = `${currentDate.getHours().toString().padStart(2, '0')}h`
+      const key = currentDate.getHours().toString().padStart(2, '0') + 'h'
       if (!hours.find(d => d.date === key)) {
         hours.push({
           date: key,
-          value: dataMap.get(key) ?? 0,
+          value: dataMap.get(key) || 0,
         })
       }
       currentDate.setHours(currentDate.getHours() + 1)
@@ -296,9 +238,7 @@ function fillDateRange(data: DataPoint[], timeFilter: TimeFilter): DataPoint[] {
 
     // Reorder so current hour is last
     const currentHour = endDate.getHours()
-    const currentHourIndex = hours.findIndex(
-      h => parseInt(h.date, 10) === currentHour
-    )
+    const currentHourIndex = hours.findIndex(h => parseInt(h.date) === currentHour)
     if (currentHourIndex !== -1) {
       const beforeCurrent = hours.slice(currentHourIndex + 1)
       const afterCurrent = hours.slice(0, currentHourIndex + 1)
@@ -309,13 +249,10 @@ function fillDateRange(data: DataPoint[], timeFilter: TimeFilter): DataPoint[] {
   } else {
     // For other periods, fill by date
     while (currentDate <= endDate) {
-      const key = currentDate.toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-      })
+      const key = currentDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
       allDates.push({
         date: key,
-        value: dataMap.get(key) ?? 0,
+        value: dataMap.get(key) || 0,
       })
       currentDate.setDate(currentDate.getDate() + 1)
     }
