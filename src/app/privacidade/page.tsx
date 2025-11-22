@@ -112,12 +112,12 @@ export default function PrivacidadePage() {
 
         {/* CTA */}
         <div className="mt-12 pt-8 border-t border-zinc-800">
-          <a
+          <Link
             href="/auth?mode=signup"
             className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 bg-blue-600 hover:bg-blue-700 text-white h-10 px-4 py-2"
           >
             Começar Grátis
-          </a>
+          </Link>
         </div>
       </div>
     </div>

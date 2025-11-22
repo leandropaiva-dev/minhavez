@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { User, CreditCard, LogOut, ChevronDown, Settings } from 'lucide-react'
+import { User, CreditCard, LogOut, ChevronDown } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
@@ -88,17 +88,6 @@ export default function UserDropdown({ userName, userEmail }: UserDropdownProps)
             >
               <User className="w-4 h-4" />
               <span>Meu Perfil</span>
-            </button>
-
-            <button
-              onClick={() => {
-                setIsOpen(false)
-                router.push('/dashboard/configuracoes')
-              }}
-              className="w-full flex items-center gap-3 px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-            >
-              <Settings className="w-4 h-4" />
-              <span>Configurações do Perfil</span>
             </button>
 
             <button

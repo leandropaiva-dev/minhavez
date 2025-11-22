@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { useRef, useEffect, useState } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import Link from 'next/link'
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger)
@@ -138,12 +139,12 @@ export default function Pricing() {
               ))}
             </ul>
 
-            <a
+            <Link
               href="/auth?mode=signup"
               className="inline-flex items-center justify-center w-full mt-6 md:mt-8 rounded-md text-sm md:text-base font-medium transition-all border border-zinc-700 bg-transparent text-white hover:border-zinc-600 h-10 px-4 py-2 hover:scale-105"
             >
               Cadastrar
-            </a>
+            </Link>
           </motion.div>
 
           {/* Plano Pro */}
@@ -196,12 +197,12 @@ export default function Pricing() {
                 ))}
               </ul>
 
-              <a
+              <Link
                 href="/auth?mode=signup"
                 className="inline-flex items-center justify-center w-full mt-6 md:mt-8 rounded-md text-sm md:text-base font-medium transition-colors bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/20 text-white h-10 px-4 py-2"
               >
                 Cadastrar
-              </a>
+              </Link>
             </div>
           </motion.div>
         </div>

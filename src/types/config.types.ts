@@ -18,14 +18,22 @@ export interface CustomField {
   order: number
 }
 
+export interface FormFieldsConfig {
+  phone: { enabled: boolean; required: boolean }
+  email: { enabled: boolean; required: boolean }
+  partySize: { enabled: boolean; required: boolean }
+  notes: { enabled: boolean; required: boolean }
+}
+
 export interface QueueFormConfig {
   businessId?: string
-  fields: {
-    phone: { enabled: boolean; required: boolean }
-    email: { enabled: boolean; required: boolean }
-    partySize: { enabled: boolean; required: boolean }
-    notes: { enabled: boolean; required: boolean }
-  }
+  fields: FormFieldsConfig
+  customFields: CustomField[]
+}
+
+export interface ReservationFormConfig {
+  businessId?: string
+  fields: FormFieldsConfig
   customFields: CustomField[]
 }
 

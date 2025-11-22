@@ -1,5 +1,6 @@
 import type {
   QueueFormConfig,
+  ReservationFormConfig,
   SegmentConfig,
   OnboardingProgress,
   BusinessSegment,
@@ -7,6 +8,7 @@ import type {
 
 const STORAGE_KEYS = {
   QUEUE_FORM_CONFIG: 'minhavez_queue_form_config',
+  RESERVATION_FORM_CONFIG: 'minhavez_reservation_form_config',
   SEGMENT_CONFIG: 'minhavez_segment_config',
   ONBOARDING_PROGRESS: 'minhavez_onboarding_progress',
 } as const
@@ -41,6 +43,39 @@ export function getDefaultQueueFormConfig(): QueueFormConfig {
       phone: { enabled: true, required: true },
       email: { enabled: true, required: false },
       partySize: { enabled: true, required: false },
+      notes: { enabled: true, required: false },
+    },
+    customFields: [],
+  }
+}
+
+// Reservation Form Config
+export function saveReservationFormConfig(config: ReservationFormConfig): void {
+  if (!isBrowser()) return
+  try {
+    localStorage.setItem(STORAGE_KEYS.RESERVATION_FORM_CONFIG, JSON.stringify(config))
+  } catch (error) {
+    console.error('Failed to save reservation form config:', error)
+  }
+}
+
+export function getReservationFormConfig(): ReservationFormConfig | null {
+  if (!isBrowser()) return null
+  try {
+    const data = localStorage.getItem(STORAGE_KEYS.RESERVATION_FORM_CONFIG)
+    return data ? JSON.parse(data) : null
+  } catch (error) {
+    console.error('Failed to get reservation form config:', error)
+    return null
+  }
+}
+
+export function getDefaultReservationFormConfig(): ReservationFormConfig {
+  return {
+    fields: {
+      phone: { enabled: true, required: true },
+      email: { enabled: true, required: false },
+      partySize: { enabled: true, required: true },
       notes: { enabled: true, required: false },
     },
     customFields: [],

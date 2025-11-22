@@ -2,6 +2,7 @@
 
 import { RotatingText } from '@/components/ui/rotating-text'
 import Image from 'next/image'
+import Link from 'next/link'
 import { Sparkles } from 'lucide-react'
 import { motion } from 'framer-motion'
 
@@ -46,18 +47,18 @@ export default function Hero() {
         </motion.p>
 
         <div className="mt-8 md:mt-10 flex flex-col sm:flex-row gap-3 md:gap-4 justify-center px-4">
-          <a
+          <Link
             href="/auth?mode=signup"
             className="inline-flex items-center justify-center rounded-md text-base font-medium transition-colors bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/20 text-white px-6 md:px-8 py-3 w-full sm:w-auto"
           >
             Cadastrar
-          </a>
-          <a
+          </Link>
+          <Link
             href="/auth?mode=login"
             className="inline-flex items-center justify-center rounded-md text-base font-medium transition-all border border-zinc-700 text-white hover:bg-transparent hover:border-zinc-600 bg-transparent px-6 md:px-8 py-3 w-full sm:w-auto hover:scale-105"
           >
             Entrar
-          </a>
+          </Link>
         </div>
 
         <motion.div

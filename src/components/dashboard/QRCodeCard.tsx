@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { QrCode, Download, Copy, Check, ExternalLink } from 'lucide-react'
 import QRCodeLib from 'qrcode'
+import Link from 'next/link'
 
 interface QRCodeCardProps {
   businessId: string
@@ -90,7 +91,7 @@ export default function QRCodeCard({ businessId, businessName }: QRCodeCardProps
           </div>
           <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 text-center">
             <p className="text-yellow-500 text-sm">
-              ⚠️ Complete o onboarding em <a href="/onboarding" className="underline">/onboarding</a> para gerar seu QR code
+              ⚠️ Complete o onboarding em <Link href="/onboarding" className="underline">/onboarding</Link> para gerar seu QR code
             </p>
           </div>
         </div>

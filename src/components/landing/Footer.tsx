@@ -30,9 +30,9 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href="/auth?mode=signup" className="text-zinc-400 hover:text-white transition text-sm">
+                <Link href="/auth?mode=signup" className="text-zinc-400 hover:text-white transition text-sm">
                   Começar Grátis
-                </a>
+                </Link>
               </li>
             </ul>
           </div>

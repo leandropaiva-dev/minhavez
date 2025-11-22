@@ -9,6 +9,8 @@ import {
   Clock,
   BarChart3,
   Calendar,
+  Settings,
+  Link2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -37,6 +39,16 @@ const menuItems = [
     icon: BarChart3,
     label: 'Relatórios',
     href: '/dashboard/relatorios',
+  },
+  {
+    icon: Link2,
+    label: 'Minha Página',
+    href: '/dashboard/minha-pagina',
+  },
+  {
+    icon: Settings,
+    label: 'Configurações',
+    href: '/dashboard/configuracoes',
   },
 ]
 
