@@ -12,7 +12,7 @@ export default async function ReportsPage() {
     redirect('/auth')
   }
 
-  const business = await getBusiness()
+  const { data: business } = await getBusiness()
 
   if (!business) {
     redirect('/onboarding')
