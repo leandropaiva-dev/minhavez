@@ -1,6 +1,6 @@
 'use client'
 
-import { Users, Clock, TrendingUp } from 'lucide-react'
+import { Users, Clock, TrendingUp } from 'react-feather'
 import { cn } from '@/lib/utils'
 
 interface MetricCardProps {

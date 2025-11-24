@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Clock, Users, MapPin, Phone, CheckCircle2, XCircle, AlertCircle, Share2, Copy, Check } from 'lucide-react'
+import { Clock, Users, MapPin, Phone, CheckCircle, XCircle, AlertCircle, Share2, Copy, Check } from 'react-feather'
 import { Button } from '@/components/ui/button'
 import { cancelQueueEntry } from '@/lib/queue/actions'
 
@@ -234,7 +234,7 @@ export default function QueueWaitView({ entry: initialEntry, currentPosition: in
         }
       case 'completed':
         return {
-          icon: <CheckCircle2 className="w-12 h-12 text-green-500" />,
+          icon: <CheckCircle className="w-12 h-12 text-green-500" />,
           title: 'Atendimento concluído',
           color: 'green',
         }

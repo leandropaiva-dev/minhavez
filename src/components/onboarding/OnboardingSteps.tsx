@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { CreditCard, Building2, CheckCircle2, AlertCircle } from 'lucide-react'
+import { CreditCard, Briefcase, CheckCircle, AlertCircle } from 'react-feather'
 import { saveBusinessInfo, completeOnboarding } from '@/lib/onboarding/actions'
 
 interface User {
@@ -106,7 +106,7 @@ export default function OnboardingSteps({ user }: OnboardingStepsProps) {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
             <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6">
-              <Building2 className="w-8 h-8 text-blue-500 mx-auto mb-3" />
+              <Briefcase className="w-8 h-8 text-blue-500 mx-auto mb-3" />
               <h3 className="font-semibold text-white mb-2">1. Seu Negócio</h3>
               <p className="text-sm text-zinc-400">Configure as informações básicas</p>
             </div>
@@ -116,7 +116,7 @@ export default function OnboardingSteps({ user }: OnboardingStepsProps) {
               <p className="text-sm text-zinc-400">14 dias grátis, cancele quando quiser</p>
             </div>
             <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6">
-              <CheckCircle2 className="w-8 h-8 text-blue-500 mx-auto mb-3" />
+              <CheckCircle className="w-8 h-8 text-blue-500 mx-auto mb-3" />
               <h3 className="font-semibold text-white mb-2">3. Pronto!</h3>
               <p className="text-sm text-zinc-400">Comece a gerenciar filas</p>
             </div>

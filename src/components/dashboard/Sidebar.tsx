@@ -4,19 +4,20 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
-  LayoutDashboard,
-  History,
+  Layout,
+  Clock as History,
   Clock,
-  BarChart3,
+  BarChart2,
   Calendar,
   Settings,
   Link2,
-} from 'lucide-react'
+  Edit3,
+} from 'react-feather'
 import { cn } from '@/lib/utils'
 
 const menuItems = [
   {
-    icon: LayoutDashboard,
+    icon: Layout,
     label: 'Visão Geral',
     href: '/dashboard',
   },
@@ -36,14 +37,19 @@ const menuItems = [
     href: '/dashboard/historico',
   },
   {
-    icon: BarChart3,
+    icon: BarChart2,
     label: 'Relatórios',
     href: '/dashboard/relatorios',
   },
   {
     icon: Link2,
-    label: 'Minha Página',
-    href: '/dashboard/minha-pagina',
+    label: 'Página de Links',
+    href: '/dashboard/links',
+  },
+  {
+    icon: Edit3,
+    label: 'Formulários Públicos',
+    href: '/dashboard/formularios',
   },
   {
     icon: Settings,

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { X, Target } from 'lucide-react'
+import { X, Target } from 'react-feather'
 import { createClient } from '@/lib/supabase/client'
 import type { GoalType, PeriodType } from '@/types/database.types'
 

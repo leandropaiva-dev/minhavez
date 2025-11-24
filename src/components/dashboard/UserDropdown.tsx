@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { User, CreditCard, LogOut, ChevronDown } from 'lucide-react'
+import { User, CreditCard, LogOut, ChevronDown } from 'react-feather'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 

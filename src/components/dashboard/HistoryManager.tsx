@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Search, Calendar, Clock, Users, XCircle, CheckCircle, Loader2, Eye, X, Phone, Mail, FileText, UserCheck, LogIn, LogOut, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Search, Calendar, Clock, Users, XCircle, CheckCircle, Loader, Eye, X, Phone, Mail, FileText, UserCheck, LogIn, LogOut, ChevronLeft, ChevronRight } from 'react-feather'
 import { createClient } from '@/lib/supabase/client'
 import {
   Select,
@@ -467,7 +467,7 @@ export default function HistoryManager({ businessId }: HistoryManagerProps) {
       <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center p-12">
-            <Loader2 className="w-8 h-8 text-zinc-500 animate-spin" />
+            <Loader className="w-8 h-8 text-zinc-500 animate-spin" />
           </div>
         ) : (
           <>
@@ -647,7 +647,7 @@ export default function HistoryManager({ businessId }: HistoryManagerProps) {
             <div className="p-4 sm:p-6">
               {detailsLoading ? (
                 <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-8 h-8 text-zinc-500 animate-spin" />
+                  <Loader className="w-8 h-8 text-zinc-500 animate-spin" />
                 </div>
               ) : queueDetails ? (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">

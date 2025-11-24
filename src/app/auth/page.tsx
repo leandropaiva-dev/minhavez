@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import LoginForm from '@/components/auth/LoginForm'
 import SignupForm from '@/components/auth/SignupForm'
 import AuthSidebar from '@/components/auth/AuthSidebar'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft } from 'react-feather'
 
 function AuthContent() {
   const searchParams = useSearchParams()

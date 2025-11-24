@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Plus, Pencil, Trash2 } from 'lucide-react'
+import { Plus, Edit2 as Pencil, Trash2 } from 'react-feather'
 import FieldToggle from '../form-config/FieldToggle'
 import CustomFieldBuilder from '../form-config/CustomFieldBuilder'
 import FormPreview from '../form-config/FormPreview'

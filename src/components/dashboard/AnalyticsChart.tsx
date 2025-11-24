@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { TrendingUp, Loader2 } from 'lucide-react'
+import { TrendingUp, Loader } from 'react-feather'
 import {
   Select,
   SelectContent,
@@ -93,7 +93,7 @@ export default function AnalyticsChart({ businessId }: AnalyticsChartProps) {
         <div className="flex-1 min-h-0 overflow-hidden">
           {loading ? (
             <div className="h-full flex items-center justify-center">
-              <Loader2 className="w-8 h-8 text-zinc-500 dark:text-zinc-400 animate-spin" />
+              <Loader className="w-8 h-8 text-zinc-500 dark:text-zinc-400 animate-spin" />
             </div>
           ) : data.length === 0 ? (
             <div className="h-full flex items-center justify-center">

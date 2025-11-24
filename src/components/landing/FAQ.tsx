@@ -7,7 +7,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion'
 import { motion } from 'framer-motion'
-import { HelpCircle } from 'lucide-react'
+import { HelpCircle } from 'react-feather'
 
 export default function FAQ() {
   const faqs = [

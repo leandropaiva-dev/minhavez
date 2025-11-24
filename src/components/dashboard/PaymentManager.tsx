@@ -1,6 +1,6 @@
 'use client'
 
-import { CreditCard, Calendar, CheckCircle, AlertTriangle, Clock, ExternalLink } from 'lucide-react'
+import { CreditCard, Calendar, CheckCircle, AlertTriangle, Clock, ExternalLink } from 'react-feather'
 import { Button } from '@/components/ui/button'
 
 interface PaymentManagerProps {

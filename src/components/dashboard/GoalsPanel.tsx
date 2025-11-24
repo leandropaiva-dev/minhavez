@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Target, Plus, TrendingUp, TrendingDown, Loader2 } from 'lucide-react'
+import { Target, Plus, TrendingUp, TrendingDown, Loader } from 'react-feather'
 import type { PeriodType, GoalType } from '@/types/database.types'
 import {
   Select,
@@ -124,7 +124,7 @@ export default function GoalsPanel({ businessId }: GoalsPanelProps) {
         <div className="flex-1 flex items-center justify-center overflow-hidden">
           {loading ? (
             <div className="flex items-center justify-center">
-              <Loader2 className="w-8 h-8 text-zinc-500 dark:text-zinc-400 animate-spin" />
+              <Loader className="w-8 h-8 text-zinc-500 dark:text-zinc-400 animate-spin" />
             </div>
           ) : !currentGoal ? (
             <div className="flex flex-col items-center justify-center text-center">

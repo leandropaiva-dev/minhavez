@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Calendar, Clock, Users, Phone, Mail, MessageSquare, CheckCircle } from 'lucide-react'
+import { Calendar, Clock, Users, Phone, Mail, MessageSquare, CheckCircle } from 'react-feather'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 

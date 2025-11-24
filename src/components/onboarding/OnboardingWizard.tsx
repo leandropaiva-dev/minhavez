@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Check } from 'lucide-react'
+import { Check } from 'react-feather'
 import BasicInfoStep from './steps/BasicInfoStep'
 import SegmentConfigStep from './steps/SegmentConfigStep'
 import FormConfigStep from './steps/FormConfigStep'

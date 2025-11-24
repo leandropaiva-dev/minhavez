@@ -1,6 +1,6 @@
 'use client'
 
-import { Check, Zap } from 'lucide-react'
+import { Check, Zap } from 'react-feather'
 import { motion } from 'framer-motion'
 import { useRef, useEffect, useState } from 'react'
 import { gsap } from 'gsap'

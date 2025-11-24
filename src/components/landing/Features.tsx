@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { motion } from 'framer-motion'
-import { Clock, QrCode, LayoutDashboard } from 'lucide-react'
+import { Clock, Code, Layout } from 'react-feather'
 import { useRef, useEffect } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
@@ -156,7 +156,7 @@ export default function Features() {
               className="order-1 md:order-2 text-left"
             >
               <div className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-purple-600/10 border border-purple-600/20 mb-4 md:mb-6">
-                <QrCode className="w-4 h-4 md:w-5 md:h-5 text-purple-600" />
+                <Code className="w-4 h-4 md:w-5 md:h-5 text-purple-600" />
                 <span className="text-purple-400 font-semibold text-sm md:text-base">QR Code</span>
               </div>
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 md:mb-6 bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
@@ -196,7 +196,7 @@ export default function Features() {
               className="text-left"
             >
               <div className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-blue-600/10 border border-blue-600/20 mb-4 md:mb-6">
-                <LayoutDashboard className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
+                <Layout className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
                 <span className="text-blue-400 font-semibold text-sm md:text-base">Dashboard</span>
               </div>
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 md:mb-6 bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">

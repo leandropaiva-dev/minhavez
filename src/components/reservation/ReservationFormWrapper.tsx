@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { CheckCircle } from 'lucide-react'
+import { CheckCircle } from 'react-feather'
 import { createClient } from '@/lib/supabase/client'
 import DynamicReservationForm from './DynamicReservationForm'
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { MoreVertical } from 'lucide-react'
+import { MoreVertical } from 'react-feather'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'

@@ -22,7 +22,7 @@ import {
   formatPhone,
 } from '@/lib/utils/document-validation'
 import type { BasicInfo } from '@/types/config.types'
-import { MapPin, ChevronDown } from 'lucide-react'
+import { MapPin, ChevronDown } from 'react-feather'
 
 interface BasicInfoStepProps {
   onNext: (data: BasicInfo) => void

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { X, Plus, Trash2, Clock } from 'lucide-react'
+import { X, Plus, Trash2, Clock } from 'react-feather'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 

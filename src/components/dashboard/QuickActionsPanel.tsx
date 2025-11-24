@@ -1,6 +1,6 @@
 'use client'
 
-import * as Icons from 'lucide-react'
+import * as Icons from 'react-feather'
 import { Button } from '@/components/ui/button'
 import type { QuickAction } from '@/types/config.types'
 

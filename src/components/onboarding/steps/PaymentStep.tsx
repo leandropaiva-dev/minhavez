@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { CreditCard, Check, AlertCircle } from 'lucide-react'
+import { CreditCard, Check, AlertCircle } from 'react-feather'
 import { saveBusinessInfo } from '@/lib/onboarding/actions'
 import { getOnboardingProgress } from '@/lib/config/storage'
 import type { BusinessData } from '@/lib/onboarding/actions'

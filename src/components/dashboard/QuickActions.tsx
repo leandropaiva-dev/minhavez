@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { XCircle, Phone, UserPlus, Eye, Calendar, History, Settings, FileText } from 'lucide-react'
+import { XCircle, Phone, UserPlus, Eye, Calendar, Clock, Settings, FileText } from 'react-feather'
 import { useRouter } from 'next/navigation'
 import { toggleQueueStatus } from '@/lib/queue/actions'
 
@@ -108,7 +108,7 @@ export default function QuickActions({ businessId }: QuickActionsProps) {
     {
       id: 'view-history',
       label: 'Histórico',
-      icon: History,
+      icon: Clock,
       onClick: handleViewHistory,
       variant: 'secondary' as const,
     },

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { Save, Check, Plus, Pencil, Trash2 } from 'lucide-react'
+import { Save, Check, Plus, Edit2, Trash2 } from 'react-feather'
 import FieldToggle from '../onboarding/form-config/FieldToggle'
 import CustomFieldBuilder from '../onboarding/form-config/CustomFieldBuilder'
 import FormPreview from '../onboarding/form-config/FormPreview'
@@ -248,7 +248,7 @@ export default function ConfigurationsTabs() {
                         variant="outline"
                         onClick={() => handleEditCustomField(field)}
                       >
-                        <Pencil className="w-4 h-4" />
+                        <Edit2 className="w-4 h-4" />
                       </Button>
                       <Button
                         size="sm"

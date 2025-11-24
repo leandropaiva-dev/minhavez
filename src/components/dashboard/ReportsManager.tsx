@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Calendar, Users, Clock, CheckCircle, XCircle, TrendingUp, TrendingDown, Loader2 } from 'lucide-react'
+import { Calendar, Users, Clock, CheckCircle, XCircle, TrendingUp, TrendingDown, Loader } from 'react-feather'
 import { createClient } from '@/lib/supabase/client'
 import {
   Select,
@@ -326,7 +326,7 @@ export default function ReportsManager({ businessId }: ReportsManagerProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-8 h-8 text-zinc-500 animate-spin" />
+        <Loader className="w-8 h-8 text-zinc-500 animate-spin" />
       </div>
     )
   }

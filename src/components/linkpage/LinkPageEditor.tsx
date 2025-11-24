@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Eye, Plus, Save, Check, Trash2, GripVertical, ExternalLink, Image as ImageIcon, Palette, Type, Link as LinkIconLucide } from 'lucide-react'
+import { Plus, Save, Check, Trash2, MoreVertical, ExternalLink, Image as ImageIcon, Sliders as Palette, Type, Link as LinkIconLucide, Smartphone, Tablet, Monitor } from 'react-feather'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -10,7 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { createClient } from '@/lib/supabase/client'
 import LinkPagePreview from './LinkPagePreview'
 import AddLinkModal from './AddLinkModal'
-import type { LinkPage, LinkPageLink, LinkPageTheme, BackgroundType, ButtonStyle, GradientDirection } from '@/types/linkpage.types'
+import ImageUploader from './ImageUploader'
+import type { LinkPage, LinkPageLink, LinkPageTheme, BackgroundType, ButtonStyle, GradientDirection, BackgroundImageSize } from '@/types/linkpage.types'
 import { LINK_PAGE_THEMES } from '@/types/linkpage.types'
 
 interface LinkPageEditorProps {
@@ -48,10 +49,10 @@ export default function LinkPageEditor({
   const [links, setLinks] = useState<Partial<LinkPageLink>[]>(initialLinks || [])
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
-  const [showPreview, setShowPreview] = useState(false)
   const [addLinkOpen, setAddLinkOpen] = useState(false)
   const [editingLink, setEditingLink] = useState<Partial<LinkPageLink> | null>(null)
   const [slugError, setSlugError] = useState('')
+  const [previewDevice, setPreviewDevice] = useState<'mobile' | 'tablet' | 'desktop'>('mobile')
 
   // Generate slug from business name on first load
   useEffect(() => {
@@ -134,6 +135,8 @@ export default function LinkPageEditor({
               url: link.url,
               icon: link.icon,
               link_type: link.link_type,
+              icon_style: link.icon_style || 'default',
+              icon_color: link.icon_color,
               custom_color: link.custom_color,
               custom_text_color: link.custom_text_color,
               thumbnail_url: link.thumbnail_url,
@@ -150,6 +153,8 @@ export default function LinkPageEditor({
               url: link.url || '',
               icon: link.icon,
               link_type: link.link_type || 'custom',
+              icon_style: link.icon_style || 'default',
+              icon_color: link.icon_color,
               custom_color: link.custom_color,
               custom_text_color: link.custom_text_color,
               thumbnail_url: link.thumbnail_url,
@@ -169,8 +174,10 @@ export default function LinkPageEditor({
 
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
-    } catch (error) {
-      console.error('Error saving:', error)
+    } catch (error: unknown) {
+      const err = error as { message?: string; details?: string; hint?: string }
+      console.error('Error saving:', err?.message || err, err?.details, err?.hint)
+      alert(`Erro ao salvar: ${err?.message || 'Erro desconhecido'}`)
     } finally {
       setSaving(false)
     }
@@ -221,9 +228,9 @@ export default function LinkPageEditor({
   const pageUrl = linkPage.slug ? `${typeof window !== 'undefined' ? window.location.origin : ''}/${linkPage.slug}` : ''
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="flex flex-col lg:grid lg:grid-cols-2 gap-6">
       {/* Editor */}
-      <div className="space-y-6">
+      <div className="space-y-6 order-2 lg:order-1">
         <Tabs defaultValue="content" className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-6">
             <TabsTrigger value="content" className="gap-2">
@@ -293,23 +300,25 @@ export default function LinkPageEditor({
                 Imagens
               </h3>
 
-              <div>
-                <Label className="text-zinc-700 dark:text-zinc-300">URL do Avatar</Label>
-                <Input
-                  value={linkPage.avatar_url || ''}
-                  onChange={(e) => setLinkPage(prev => ({ ...prev, avatar_url: e.target.value }))}
-                  placeholder="https://exemplo.com/avatar.jpg"
-                  className="mt-2"
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <ImageUploader
+                  label="Avatar"
+                  value={linkPage.avatar_url || null}
+                  onChange={(url) => setLinkPage(prev => ({ ...prev, avatar_url: url }))}
+                  businessId={businessId}
+                  folder="avatars"
+                  aspectRatio="aspect-square"
+                  maxWidth="max-w-[150px]"
                 />
-              </div>
 
-              <div>
-                <Label className="text-zinc-700 dark:text-zinc-300">URL da Capa</Label>
-                <Input
-                  value={linkPage.cover_url || ''}
-                  onChange={(e) => setLinkPage(prev => ({ ...prev, cover_url: e.target.value }))}
-                  placeholder="https://exemplo.com/cover.jpg"
-                  className="mt-2"
+                <ImageUploader
+                  label="Capa"
+                  value={linkPage.cover_url || null}
+                  onChange={(url) => setLinkPage(prev => ({ ...prev, cover_url: url }))}
+                  businessId={businessId}
+                  folder="covers"
+                  aspectRatio="aspect-[3/1]"
+                  maxWidth="max-w-[200px]"
                 />
               </div>
             </div>
@@ -466,15 +475,18 @@ export default function LinkPageEditor({
               )}
 
               {linkPage.background_type === 'image' && (
-                <div>
-                  <Label className="text-zinc-700 dark:text-zinc-300">URL da Imagem de Fundo</Label>
-                  <Input
-                    value={linkPage.background_image_url || ''}
-                    onChange={(e) => setLinkPage(prev => ({ ...prev, background_image_url: e.target.value }))}
-                    placeholder="https://exemplo.com/fundo.jpg"
-                    className="mt-2"
-                  />
-                </div>
+                <ImageUploader
+                  label="Imagem de Fundo"
+                  value={linkPage.background_image_url || null}
+                  onChange={(url) => setLinkPage(prev => ({ ...prev, background_image_url: url }))}
+                  businessId={businessId}
+                  folder="backgrounds"
+                  aspectRatio="aspect-[9/16]"
+                  showSizeOptions
+                  imageSize={(linkPage.background_image_size as BackgroundImageSize) || 'cover'}
+                  onImageSizeChange={(size) => setLinkPage(prev => ({ ...prev, background_image_size: size }))}
+                  maxWidth="max-w-[180px]"
+                />
               )}
             </div>
 
@@ -585,7 +597,7 @@ export default function LinkPageEditor({
                         className="cursor-grab text-zinc-400 hover:text-zinc-600"
                         onDragStart={() => {}}
                       >
-                        <GripVertical className="w-5 h-5" />
+                        <MoreVertical className="w-5 h-5" />
                       </button>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-zinc-900 dark:text-white truncate">{link.title}</p>
@@ -621,14 +633,6 @@ export default function LinkPageEditor({
             {saved ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
             {saved ? 'Salvo!' : saving ? 'Salvando...' : 'Salvar'}
           </Button>
-          <Button
-            variant="outline"
-            onClick={() => setShowPreview(true)}
-            className="lg:hidden gap-2"
-          >
-            <Eye className="w-4 h-4" />
-            Preview
-          </Button>
           {linkPage.id && pageUrl && (
             <Button variant="outline" asChild className="gap-2">
               <a href={pageUrl} target="_blank" rel="noopener noreferrer">
@@ -641,43 +645,127 @@ export default function LinkPageEditor({
       </div>
 
       {/* Preview */}
-      <div className="hidden lg:block sticky top-4 h-fit">
-        <div className="bg-zinc-900 rounded-xl p-4 border border-zinc-800">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-sm text-zinc-400">Preview</span>
-            {pageUrl && (
+      <div className="order-1 lg:order-2 lg:sticky lg:top-4 h-fit">
+        <div className="bg-white dark:bg-zinc-900 rounded-xl p-3 sm:p-4 border border-zinc-200 dark:border-zinc-800">
+          {/* Header with device selector */}
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Preview</span>
+            <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg p-1">
+              <button
+                onClick={() => setPreviewDevice('mobile')}
+                className={`p-1.5 rounded-md transition-colors ${
+                  previewDevice === 'mobile'
+                    ? 'bg-white dark:bg-zinc-700 shadow-sm text-blue-600 dark:text-blue-400'
+                    : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300'
+                }`}
+                title="Celular"
+              >
+                <Smartphone className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setPreviewDevice('tablet')}
+                className={`p-1.5 rounded-md transition-colors ${
+                  previewDevice === 'tablet'
+                    ? 'bg-white dark:bg-zinc-700 shadow-sm text-blue-600 dark:text-blue-400'
+                    : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300'
+                }`}
+                title="Tablet"
+              >
+                <Tablet className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setPreviewDevice('desktop')}
+                className={`p-1.5 rounded-md transition-colors ${
+                  previewDevice === 'desktop'
+                    ? 'bg-white dark:bg-zinc-700 shadow-sm text-blue-600 dark:text-blue-400'
+                    : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300'
+                }`}
+                title="Desktop"
+              >
+                <Monitor className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Link to page */}
+          {pageUrl && (
+            <div className="mb-3 text-center">
               <a
                 href={pageUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-blue-500 hover:text-blue-400 flex items-center gap-1"
+                className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 inline-flex items-center gap-1"
               >
-                {pageUrl}
-                <ExternalLink className="w-3 h-3" />
+                <span className="truncate max-w-[180px]">{linkPage.slug}</span>
+                <ExternalLink className="w-3 h-3 flex-shrink-0" />
               </a>
+            </div>
+          )}
+
+          {/* Device Mockup */}
+          <div className="flex justify-center">
+            {/* Mobile Mockup */}
+            {previewDevice === 'mobile' && (
+              <div className="relative">
+                {/* Phone frame */}
+                <div className="relative bg-zinc-900 rounded-[2.5rem] p-2 shadow-xl">
+                  {/* Notch */}
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-6 bg-zinc-900 rounded-b-2xl z-10" />
+                  {/* Screen */}
+                  <div className="relative bg-black rounded-[2rem] overflow-hidden w-[240px] h-[520px]">
+                    {/* Status bar */}
+                    <div className="absolute top-0 left-0 right-0 h-6 bg-black/50 z-20 flex items-center justify-between px-6 text-white text-[10px]">
+                      <span>9:41</span>
+                      <div className="flex items-center gap-1">
+                        <div className="w-4 h-2 border border-white rounded-sm">
+                          <div className="w-3 h-1 bg-white rounded-sm m-[1px]" />
+                        </div>
+                      </div>
+                    </div>
+                    {/* Content */}
+                    <div className="h-full pt-6">
+                      <LinkPagePreview linkPage={linkPage as LinkPage} links={links as LinkPageLink[]} />
+                    </div>
+                  </div>
+                </div>
+              </div>
             )}
-          </div>
-          <div className="aspect-[9/16] max-h-[600px] rounded-lg overflow-hidden border border-zinc-700">
-            <LinkPagePreview linkPage={linkPage as LinkPage} links={links as LinkPageLink[]} />
+
+            {/* Tablet Mockup */}
+            {previewDevice === 'tablet' && (
+              <div className="relative">
+                {/* Tablet frame */}
+                <div className="relative bg-zinc-900 rounded-[1.5rem] p-3 shadow-xl">
+                  {/* Camera */}
+                  <div className="absolute top-3 left-1/2 -translate-x-1/2 w-2 h-2 bg-zinc-700 rounded-full" />
+                  {/* Screen */}
+                  <div className="relative bg-black rounded-xl overflow-hidden w-[320px] h-[450px]">
+                    <LinkPagePreview linkPage={linkPage as LinkPage} links={links as LinkPageLink[]} />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Desktop Mockup */}
+            {previewDevice === 'desktop' && (
+              <div className="relative w-full max-w-[400px]">
+                {/* Monitor frame */}
+                <div className="relative bg-zinc-900 rounded-xl p-2 shadow-xl">
+                  {/* Screen */}
+                  <div className="relative bg-black rounded-lg overflow-hidden w-full aspect-[16/10]">
+                    <LinkPagePreview linkPage={linkPage as LinkPage} links={links as LinkPageLink[]} />
+                  </div>
+                </div>
+                {/* Stand */}
+                <div className="flex flex-col items-center">
+                  <div className="w-16 h-6 bg-zinc-800 rounded-b-lg" />
+                  <div className="w-24 h-2 bg-zinc-700 rounded-full mt-1" />
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
-
-      {/* Mobile Preview Modal */}
-      {showPreview && (
-        <div className="fixed inset-0 bg-black/80 z-50 lg:hidden flex items-center justify-center p-4">
-          <div className="w-full max-w-sm">
-            <div className="flex justify-end mb-2">
-              <Button variant="ghost" size="sm" onClick={() => setShowPreview(false)}>
-                Fechar
-              </Button>
-            </div>
-            <div className="aspect-[9/16] rounded-lg overflow-hidden border border-zinc-700">
-              <LinkPagePreview linkPage={linkPage as LinkPage} links={links as LinkPageLink[]} />
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Add/Edit Link Modal */}
       <AddLinkModal

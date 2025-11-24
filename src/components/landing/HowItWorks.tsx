@@ -1,13 +1,13 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Scan, Clock, Smartphone, LayoutDashboard } from 'lucide-react'
+import { Aperture, Clock, Smartphone, Layout } from 'react-feather'
 
 export default function HowItWorks() {
   const steps = [
     {
       number: 1,
-      icon: Scan,
+      icon: Aperture,
       title: 'Cliente chega',
       description: 'Escaneia o QR Code na entrada (sem app, sem cadastro demorado).',
       color: 'blue'
@@ -28,7 +28,7 @@ export default function HowItWorks() {
     },
     {
       number: 4,
-      icon: LayoutDashboard,
+      icon: Layout,
       title: 'Você gerencia no dashboard',
       description: 'Chame o próximo cliente e acompanhe métricas de espera, desistências e picos de movimento.',
       color: 'purple'

@@ -2,6 +2,8 @@ export type BackgroundType = 'solid' | 'gradient' | 'image'
 export type ButtonStyle = 'rounded' | 'pill' | 'square'
 export type GradientDirection = 'to bottom' | 'to right' | 'to bottom right' | 'to top right'
 export type LinkType = 'custom' | 'queue' | 'reservation' | 'whatsapp' | 'instagram' | 'facebook' | 'tiktok' | 'youtube' | 'menu' | 'location' | 'email' | 'phone'
+export type BackgroundImageSize = 'cover' | 'repeat'
+export type IconStyle = 'default' | 'outline' | 'filled' | 'minimal' | 'circle'
 
 export interface SocialLinks {
   instagram?: string
@@ -28,6 +30,7 @@ export interface LinkPage {
   background_gradient_end: string | null
   background_gradient_direction: GradientDirection
   background_image_url: string | null
+  background_image_size: BackgroundImageSize
   button_style: ButtonStyle
   button_color: string
   button_text_color: string
@@ -47,6 +50,8 @@ export interface LinkPageLink {
   url: string
   icon: string | null
   link_type: LinkType
+  icon_style: IconStyle
+  icon_color: string | null
   custom_color: string | null
   custom_text_color: string | null
   thumbnail_url: string | null
@@ -70,6 +75,7 @@ export interface LinkPageInsert {
   background_gradient_end?: string
   background_gradient_direction?: GradientDirection
   background_image_url?: string
+  background_image_size?: BackgroundImageSize
   button_style?: ButtonStyle
   button_color?: string
   button_text_color?: string
@@ -92,6 +98,7 @@ export interface LinkPageUpdate {
   background_gradient_end?: string | null
   background_gradient_direction?: GradientDirection
   background_image_url?: string | null
+  background_image_size?: BackgroundImageSize
   button_style?: ButtonStyle
   button_color?: string
   button_text_color?: string
@@ -108,6 +115,8 @@ export interface LinkPageLinkInsert {
   url: string
   icon?: string
   link_type?: LinkType
+  icon_style?: IconStyle
+  icon_color?: string
   custom_color?: string
   custom_text_color?: string
   thumbnail_url?: string
@@ -120,6 +129,8 @@ export interface LinkPageLinkUpdate {
   url?: string
   icon?: string | null
   link_type?: LinkType
+  icon_style?: IconStyle
+  icon_color?: string | null
   custom_color?: string | null
   custom_text_color?: string | null
   thumbnail_url?: string | null

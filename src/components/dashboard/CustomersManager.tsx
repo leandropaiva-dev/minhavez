@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Search, MoreVertical, Mail, Phone, Calendar, TrendingUp } from 'lucide-react'
+import { Plus, Search, MoreVertical, Mail, Phone, Calendar, TrendingUp } from 'react-feather'
 import { Button } from '@/components/ui/button'
 
 interface Customer {

@@ -1,6 +1,6 @@
 'use client'
 
-import * as Icons from 'lucide-react'
+import * as Icons from 'react-feather'
 import type { DashboardMetric } from '@/types/config.types'
 
 interface SegmentMetricsProps {

@@ -1,12 +1,20 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Users, Calendar, MessageCircle, Instagram, Facebook, Youtube, MapPin, Mail, Phone, Music2, Link as LinkIcon, UtensilsCrossed, X } from 'lucide-react'
+import { Users, Calendar, MessageCircle, Instagram, Facebook, Youtube, MapPin, Mail, Phone, Music, Link as LinkIcon, Coffee, X, Circle, Square } from 'react-feather'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import type { LinkPageLink, LinkType } from '@/types/linkpage.types'
+import type { LinkPageLink, LinkType, IconStyle } from '@/types/linkpage.types'
+
+const ICON_STYLES: { value: IconStyle; label: string; description: string }[] = [
+  { value: 'default', label: 'Padrão', description: 'Estilo normal' },
+  { value: 'outline', label: 'Contorno', description: 'Apenas linhas' },
+  { value: 'filled', label: 'Preenchido', description: 'Fundo sólido' },
+  { value: 'minimal', label: 'Minimalista', description: 'Sem fundo' },
+  { value: 'circle', label: 'Círculo', description: 'Fundo circular' },
+]
 
 interface AddLinkModalProps {
   open: boolean
@@ -23,8 +31,8 @@ const LINK_TYPES: { type: LinkType; label: string; icon: React.ReactNode; descri
   { type: 'instagram', label: 'Instagram', icon: <Instagram className="w-5 h-5" />, description: 'Link do seu perfil', needsUrl: true },
   { type: 'facebook', label: 'Facebook', icon: <Facebook className="w-5 h-5" />, description: 'Link da página ou perfil', needsUrl: true },
   { type: 'youtube', label: 'YouTube', icon: <Youtube className="w-5 h-5" />, description: 'Link do canal ou vídeo', needsUrl: true },
-  { type: 'tiktok', label: 'TikTok', icon: <Music2 className="w-5 h-5" />, description: 'Link do perfil', needsUrl: true },
-  { type: 'menu', label: 'Cardápio', icon: <UtensilsCrossed className="w-5 h-5" />, description: 'Link do cardápio ou menu', needsUrl: true },
+  { type: 'tiktok', label: 'TikTok', icon: <Music className="w-5 h-5" />, description: 'Link do perfil', needsUrl: true },
+  { type: 'menu', label: 'Cardápio', icon: <Coffee className="w-5 h-5" />, description: 'Link do cardápio ou menu', needsUrl: true },
   { type: 'location', label: 'Localização', icon: <MapPin className="w-5 h-5" />, description: 'Link do Google Maps', needsUrl: true },
   { type: 'email', label: 'Email', icon: <Mail className="w-5 h-5" />, description: 'Endereço de email', needsUrl: true },
   { type: 'phone', label: 'Telefone', icon: <Phone className="w-5 h-5" />, description: 'Número de telefone', needsUrl: true },
@@ -40,6 +48,9 @@ export default function AddLinkModal({ open, onOpenChange, onSave, editLink }: A
   const [customTextColor, setCustomTextColor] = useState('')
   const [thumbnailUrl, setThumbnailUrl] = useState('')
   const [useCustomColors, setUseCustomColors] = useState(false)
+  const [iconStyle, setIconStyle] = useState<IconStyle>('default')
+  const [iconColor, setIconColor] = useState('')
+  const [useCustomIcon, setUseCustomIcon] = useState(false)
 
   useEffect(() => {
     if (editLink) {
@@ -50,6 +61,9 @@ export default function AddLinkModal({ open, onOpenChange, onSave, editLink }: A
       setCustomTextColor(editLink.custom_text_color || '')
       setThumbnailUrl(editLink.thumbnail_url || '')
       setUseCustomColors(!!editLink.custom_color)
+      setIconStyle((editLink.icon_style as IconStyle) || 'default')
+      setIconColor(editLink.icon_color || '')
+      setUseCustomIcon(!!editLink.icon_style && editLink.icon_style !== 'default')
       setStep('details')
     } else {
       setLinkType('custom')
@@ -59,6 +73,9 @@ export default function AddLinkModal({ open, onOpenChange, onSave, editLink }: A
       setCustomTextColor('')
       setThumbnailUrl('')
       setUseCustomColors(false)
+      setIconStyle('default')
+      setIconColor('')
+      setUseCustomIcon(false)
       setStep('type')
     }
   }, [editLink, open])
@@ -78,6 +95,8 @@ export default function AddLinkModal({ open, onOpenChange, onSave, editLink }: A
       title,
       url,
       link_type: linkType,
+      icon_style: useCustomIcon ? iconStyle : 'default',
+      icon_color: useCustomIcon && iconColor ? iconColor : undefined,
       custom_color: useCustomColors ? customColor : undefined,
       custom_text_color: useCustomColors ? customTextColor : undefined,
       thumbnail_url: thumbnailUrl || undefined,
@@ -203,11 +222,109 @@ export default function AddLinkModal({ open, onOpenChange, onSave, editLink }: A
                 <p className="text-xs text-zinc-500 mt-1">Exibe uma miniatura ao lado do título</p>
               </div>
 
+              {/* Icon Style */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-zinc-700 dark:text-zinc-300">Personalizar ícone</Label>
+                    <p className="text-xs text-zinc-500">Alterar estilo e cor do ícone</p>
+                  </div>
+                  <Switch
+                    checked={useCustomIcon}
+                    onCheckedChange={setUseCustomIcon}
+                  />
+                </div>
+
+                {useCustomIcon && (
+                  <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl space-y-4">
+                    {/* Icon Style Selector */}
+                    <div>
+                      <Label className="text-zinc-700 dark:text-zinc-300 text-xs mb-2 block">Estilo do Ícone</Label>
+                      <div className="grid grid-cols-5 gap-2">
+                        {ICON_STYLES.map((style) => (
+                          <button
+                            key={style.value}
+                            type="button"
+                            onClick={() => setIconStyle(style.value)}
+                            className={`flex flex-col items-center gap-1 p-2 rounded-lg border transition-all ${
+                              iconStyle === style.value
+                                ? 'border-blue-500 bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                                : 'border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-600'
+                            }`}
+                            title={style.description}
+                          >
+                            {/* Icon Preview */}
+                            <div className={`w-6 h-6 flex items-center justify-center ${
+                              style.value === 'filled' ? 'bg-current rounded' :
+                              style.value === 'circle' ? 'bg-current rounded-full' :
+                              style.value === 'outline' ? 'border-2 border-current rounded' :
+                              ''
+                            }`}>
+                              {style.value === 'filled' || style.value === 'circle' ? (
+                                <Square className="w-3 h-3 text-white" />
+                              ) : style.value === 'outline' ? (
+                                <Circle className="w-3 h-3" />
+                              ) : (
+                                <Square className="w-3 h-3" />
+                              )}
+                            </div>
+                            <span className="text-[10px]">{style.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Icon Color */}
+                    <div>
+                      <Label className="text-zinc-700 dark:text-zinc-300 text-xs">Cor do Ícone</Label>
+                      <div className="flex gap-2 mt-2">
+                        <input
+                          type="color"
+                          value={iconColor || '#3b82f6'}
+                          onChange={(e) => setIconColor(e.target.value)}
+                          className="w-10 h-8 rounded cursor-pointer"
+                        />
+                        <Input
+                          value={iconColor}
+                          onChange={(e) => setIconColor(e.target.value)}
+                          placeholder="#3b82f6"
+                          className="flex-1 text-xs"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Preview */}
+                    <div className="flex items-center gap-2 p-3 bg-white dark:bg-zinc-900 rounded-lg">
+                      <span className="text-xs text-zinc-500">Preview:</span>
+                      <div
+                        className={`w-8 h-8 flex items-center justify-center ${
+                          iconStyle === 'filled' ? 'rounded-lg' :
+                          iconStyle === 'circle' ? 'rounded-full' :
+                          iconStyle === 'outline' ? 'rounded-lg border-2' :
+                          ''
+                        }`}
+                        style={{
+                          backgroundColor: (iconStyle === 'filled' || iconStyle === 'circle') ? (iconColor || '#3b82f6') : 'transparent',
+                          borderColor: iconStyle === 'outline' ? (iconColor || '#3b82f6') : undefined,
+                        }}
+                      >
+                        {selectedType?.icon && (
+                          <div style={{ color: (iconStyle === 'filled' || iconStyle === 'circle') ? '#fff' : (iconColor || '#3b82f6') }}>
+                            {selectedType.icon}
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-sm text-zinc-700 dark:text-zinc-300">{title || selectedType?.label}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Custom Colors */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label className="text-zinc-700 dark:text-zinc-300">Cores personalizadas</Label>
+                    <Label className="text-zinc-700 dark:text-zinc-300">Cores do botão</Label>
                     <p className="text-xs text-zinc-500">Usar cores diferentes do tema</p>
                   </div>
                   <Switch

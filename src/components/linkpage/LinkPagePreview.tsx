@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { Users, Calendar, MessageCircle, Instagram, Facebook, Youtube, MapPin, Mail, Phone, Music2, Link as LinkIcon, UtensilsCrossed } from 'lucide-react'
+import { Users, Calendar, MessageCircle, Instagram, Facebook, Youtube, MapPin, Mail, Phone, Music, Link as LinkIcon, Coffee } from 'react-feather'
 import type { LinkPage, LinkPageLink, LinkType } from '@/types/linkpage.types'
 
 interface LinkPagePreviewProps {
@@ -19,9 +19,9 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   MapPin,
   Mail,
   Phone,
-  Music2,
+  Music,
   Link: LinkIcon,
-  UtensilsCrossed,
+  Coffee,
 }
 
 const TYPE_TO_ICON: Record<LinkType, string> = {
@@ -31,9 +31,9 @@ const TYPE_TO_ICON: Record<LinkType, string> = {
   whatsapp: 'MessageCircle',
   instagram: 'Instagram',
   facebook: 'Facebook',
-  tiktok: 'Music2',
+  tiktok: 'Music',
   youtube: 'Youtube',
-  menu: 'UtensilsCrossed',
+  menu: 'Coffee',
   location: 'MapPin',
   email: 'Mail',
   phone: 'Phone',
@@ -42,6 +42,17 @@ const TYPE_TO_ICON: Record<LinkType, string> = {
 export default function LinkPagePreview({ linkPage, links }: LinkPagePreviewProps) {
   const getBackgroundStyle = () => {
     if (linkPage.background_type === 'image' && linkPage.background_image_url) {
+      const imageSize = linkPage.background_image_size || 'cover'
+
+      if (imageSize === 'repeat') {
+        return {
+          backgroundImage: `url(${linkPage.background_image_url})`,
+          backgroundSize: 'auto',
+          backgroundPosition: 'top left',
+          backgroundRepeat: 'repeat',
+        }
+      }
+
       return {
         backgroundImage: `url(${linkPage.background_image_url})`,
         backgroundSize: 'cover',
@@ -101,10 +112,6 @@ export default function LinkPagePreview({ linkPage, links }: LinkPagePreviewProp
       className="h-full w-full overflow-auto flex flex-col"
       style={getBackgroundStyle()}
     >
-      {/* Overlay for image background */}
-      {linkPage.background_type === 'image' && (
-        <div className="absolute inset-0 bg-black/50" />
-      )}
 
       <div className="flex-1 flex flex-col items-center px-3 py-4 relative z-10">
         <div className="w-full max-w-[200px]">
@@ -215,7 +222,7 @@ export default function LinkPagePreview({ linkPage, links }: LinkPagePreviewProp
                 className="flex items-center gap-2 w-full p-2 text-xs"
                 style={getButtonStyle(link)}
               >
-                {link.thumbnail_url ? (
+                {link.thumbnail_url && link.thumbnail_url.startsWith('http') ? (
                   <div className="w-6 h-6 rounded overflow-hidden flex-shrink-0 relative">
                     <Image
                       src={link.thumbnail_url}

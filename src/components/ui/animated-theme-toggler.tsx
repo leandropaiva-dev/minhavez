@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { Moon, Sun } from "lucide-react"
+import { Moon, Sun } from "react-feather"
 import { flushSync } from "react-dom"
 
 import { cn } from "@/lib/utils"

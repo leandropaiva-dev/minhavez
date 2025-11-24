@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
-import QueueWaitView from '@/components/queue/QueueWaitView'
+import QueueWaitViewWithStyles from '@/components/queue/QueueWaitViewWithStyles'
+import type { PageCustomization } from '@/types/page-customization.types'
 
 interface PageProps {
   params: Promise<{
@@ -27,6 +28,22 @@ export default async function QueueWaitPage({ params }: PageProps) {
     notFound()
   }
 
+  // Determina o tipo de página baseado no status
+  let pageType: 'queue_wait' | 'queue_attending' | 'queue_completed' = 'queue_wait'
+  if (entry.status === 'called' || entry.status === 'attending') {
+    pageType = 'queue_attending'
+  } else if (entry.status === 'completed') {
+    pageType = 'queue_completed'
+  }
+
+  // Busca customização
+  const { data: customization } = await supabase
+    .from('page_customizations')
+    .select('*')
+    .eq('business_id', businessId)
+    .eq('page_type', pageType)
+    .single()
+
   // Calcula posição atual na fila
   const { count } = await supabase
     .from('queue_entries')
@@ -39,10 +56,11 @@ export default async function QueueWaitPage({ params }: PageProps) {
   const estimatedWaitTime = count ? count * 15 : 0
 
   return (
-    <QueueWaitView
+    <QueueWaitViewWithStyles
       entry={entry}
       currentPosition={currentPosition}
       estimatedWaitTime={estimatedWaitTime}
+      customization={customization as PageCustomization | null}
     />
   )
 }

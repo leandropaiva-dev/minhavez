@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Users, Calendar, MessageCircle, Instagram, Facebook, Youtube, MapPin, Mail, Phone, Music2, Link as LinkIcon, UtensilsCrossed, ExternalLink } from 'lucide-react'
+import { Users, Calendar, MessageCircle, Instagram, Facebook, Youtube, MapPin, Mail, Phone, Music, Link as LinkIcon, Coffee, ExternalLink } from 'react-feather'
 import { incrementLinkClick } from '@/lib/linkpage/actions'
 import type { LinkPage, LinkPageLink, LinkType } from '@/types/linkpage.types'
 
@@ -23,9 +23,9 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   MapPin,
   Mail,
   Phone,
-  Music2,
+  Music,
   Link: LinkIcon,
-  UtensilsCrossed,
+  Coffee,
 }
 
 const TYPE_TO_ICON: Record<LinkType, string> = {
@@ -35,9 +35,9 @@ const TYPE_TO_ICON: Record<LinkType, string> = {
   whatsapp: 'MessageCircle',
   instagram: 'Instagram',
   facebook: 'Facebook',
-  tiktok: 'Music2',
+  tiktok: 'Music',
   youtube: 'Youtube',
-  menu: 'UtensilsCrossed',
+  menu: 'Coffee',
   location: 'MapPin',
   email: 'Mail',
   phone: 'Phone',
@@ -48,6 +48,17 @@ export default function LinkPageView({ linkPage, links, businessId }: LinkPageVi
 
   const getBackgroundStyle = () => {
     if (linkPage.background_type === 'image' && linkPage.background_image_url) {
+      const imageSize = linkPage.background_image_size || 'cover'
+
+      if (imageSize === 'repeat') {
+        return {
+          backgroundImage: `url(${linkPage.background_image_url})`,
+          backgroundSize: 'auto',
+          backgroundPosition: 'top left',
+          backgroundRepeat: 'repeat',
+        }
+      }
+
       return {
         backgroundImage: `url(${linkPage.background_image_url})`,
         backgroundSize: 'cover',
@@ -142,10 +153,6 @@ export default function LinkPageView({ linkPage, links, businessId }: LinkPageVi
       className="min-h-screen flex flex-col"
       style={getBackgroundStyle()}
     >
-      {/* Overlay para imagem de fundo */}
-      {linkPage.background_type === 'image' && (
-        <div className="fixed inset-0 bg-black/50 -z-10" />
-      )}
 
       <main className="flex-1 flex flex-col items-center px-4 py-8 sm:py-12">
         <div className="w-full max-w-md">
@@ -280,7 +287,7 @@ export default function LinkPageView({ linkPage, links, businessId }: LinkPageVi
                   className="flex items-center gap-3 w-full p-4 transition-all hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
                   style={getButtonStyle(link)}
                 >
-                  {link.thumbnail_url ? (
+                  {link.thumbnail_url && link.thumbnail_url.startsWith('http') ? (
                     <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 relative">
                       <Image
                         src={link.thumbnail_url}

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { QrCode, Download, Copy, Check, ExternalLink } from 'lucide-react'
+import { Grid, Download, Copy, Check, ExternalLink } from 'react-feather'
 import QRCodeLib from 'qrcode'
 import Link from 'next/link'
 
@@ -82,7 +82,7 @@ export default function QRCodeCard({ businessId, businessName }: QRCodeCardProps
         <div className="relative bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 sm:p-6">
           <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
             <div className="p-2 bg-yellow-600/10 rounded-lg flex-shrink-0">
-              <QrCode className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />
+              <Grid className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />
             </div>
             <div className="min-w-0">
               <h3 className="text-base sm:text-lg font-semibold text-zinc-900 dark:text-white truncate">Fila Pública</h3>
@@ -104,30 +104,30 @@ export default function QRCodeCard({ businessId, businessName }: QRCodeCardProps
       {/* Blur effect */}
       <div className="absolute inset-0 bg-gradient-to-r from-zinc-700/10 to-zinc-600/10 rounded-xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-      <div className="relative bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 sm:p-6 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all duration-300 hover:shadow-lg hover:shadow-zinc-700/5 h-full flex flex-col overflow-hidden">
+      <div className="relative bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 sm:p-5 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all duration-300 hover:shadow-lg hover:shadow-zinc-700/5 h-full flex flex-col">
         {/* Header */}
-        <div className="flex items-center gap-2 mb-3 flex-shrink-0">
-          <div className="p-2 bg-zinc-100 dark:bg-zinc-800 rounded-lg flex-shrink-0">
-            <QrCode className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-500 dark:text-zinc-400" />
+        <div className="flex items-center gap-2 mb-2 flex-shrink-0">
+          <div className="p-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-lg flex-shrink-0">
+            <Grid className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
           </div>
           <div className="min-w-0">
-            <h3 className="text-base sm:text-lg font-semibold text-zinc-900 dark:text-white truncate">QR Code</h3>
+            <h3 className="text-sm font-semibold text-zinc-900 dark:text-white truncate">QR Code</h3>
             <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">Fila pública</p>
           </div>
         </div>
 
         {/* QR Code Display */}
-        <div className="flex-1 flex items-center justify-center py-2 overflow-hidden">
+        <div className="flex-1 flex items-center justify-center">
           <div className="bg-white rounded-lg p-2">
             <canvas
               ref={canvasRef}
-              className="w-32 h-32 sm:w-36 sm:h-36"
+              style={{ width: '120px', height: '120px' }}
             />
           </div>
         </div>
 
         {/* Actions */}
-        <div className="flex gap-2 flex-shrink-0 mt-4">
+        <div className="flex gap-2 flex-shrink-0 mt-3">
           <button
             onClick={handleCopyLink}
             className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white border border-zinc-300 dark:border-zinc-700 rounded-lg transition-colors text-xs font-medium"

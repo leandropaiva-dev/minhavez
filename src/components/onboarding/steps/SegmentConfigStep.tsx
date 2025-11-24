@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
-import { X } from 'lucide-react'
+import { X } from 'react-feather'
 import type { BusinessSegment, SegmentConfig } from '@/types/config.types'
 import { SEGMENT_LABELS, SEGMENT_QUESTIONS } from '@/lib/config/segment-configs'
 

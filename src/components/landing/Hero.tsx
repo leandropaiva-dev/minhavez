@@ -3,7 +3,7 @@
 import { RotatingText } from '@/components/ui/rotating-text'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Sparkles } from 'lucide-react'
+import { Star } from 'react-feather'
 import { motion } from 'framer-motion'
 
 export default function Hero() {
@@ -16,7 +16,7 @@ export default function Hero() {
           transition={{ duration: 0.5 }}
           className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-800/50 text-zinc-300 text-xs md:text-sm border border-zinc-700/50"
         >
-          <Sparkles className="w-3 h-3 md:w-4 md:h-4" />
+          <Star className="w-3 h-3 md:w-4 md:h-4" />
           <span className="whitespace-nowrap">14 dias grátis, sem cartão</span>
         </motion.div>
 

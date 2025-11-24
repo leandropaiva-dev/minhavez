@@ -32,7 +32,10 @@
       "Bash(npm run lint)",
       "Bash(if exist \"c:\\minhavez\\src\\app\\[slug]\\reserva\\page.tsx\" del \"c:\\minhavez\\src\\app\\[slug]\\reserva\\page.tsx\")",
       "Bash(mkdir:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(if exist \"c:\\minhavez\\.next\" rmdir /s /q \"c:\\minhavez\\.next\")",
+      "Bash(npm uninstall:*)",
+      "Bash(cmd /c \"rmdir /s /q c:\\minhavez\\.next\")"
     ],
     "deny": [],
     "ask": []

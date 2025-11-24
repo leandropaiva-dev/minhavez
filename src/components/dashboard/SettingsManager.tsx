@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Save, Building2, Bell, CreditCard, Shield, LogOut, Check } from 'lucide-react'
+import { Save, Briefcase, Bell, CreditCard, Shield, LogOut, Check } from 'react-feather'
 import { Button } from '@/components/ui/button'
 import { signOut } from '@/lib/auth/actions'
 import { saveBusinessInfo } from '@/lib/onboarding/actions'
@@ -70,7 +70,7 @@ export default function SettingsManager({ business, user }: SettingsManagerProps
   }
 
   const tabs = [
-    { id: 'business', label: 'Negócio', icon: Building2 },
+    { id: 'business', label: 'Negócio', icon: Briefcase },
     { id: 'notifications', label: 'Notificações', icon: Bell },
     { id: 'billing', label: 'Pagamento', icon: CreditCard },
     { id: 'security', label: 'Segurança', icon: Shield },

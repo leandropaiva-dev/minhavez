@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Users, Phone, Mail, MessageSquare, AlertCircle } from 'lucide-react'
+import { Users, Phone, Mail, MessageSquare, AlertCircle } from 'react-feather'
 import { joinQueue } from '@/lib/queue/actions'
 
 interface JoinQueueFormProps {

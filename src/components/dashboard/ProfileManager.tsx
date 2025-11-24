@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { User, Mail, Lock, Save, Check, Eye, EyeOff, Building2, MapPin, Phone, Tag } from 'lucide-react'
+import { User, Mail, Lock, Save, Check, Eye, EyeOff, Home, MapPin, Phone, Tag } from 'react-feather'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -158,7 +158,7 @@ export default function ProfileManager({ userName, userEmail, business }: Profil
             Pessoal
           </TabsTrigger>
           <TabsTrigger value="business" className="gap-2" disabled={!business}>
-            <Building2 className="w-4 h-4 hidden sm:block" />
+            <Home className="w-4 h-4 hidden sm:block" />
             Estabelecimento
           </TabsTrigger>
           <TabsTrigger value="security" className="gap-2">
@@ -198,7 +198,7 @@ export default function ProfileManager({ userName, userEmail, business }: Profil
           <div className="space-y-6">
             <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 space-y-4">
               <h3 className="text-lg font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
-                <Building2 className="w-5 h-5" />
+                <Home className="w-5 h-5" />
                 Dados do Estabelecimento
               </h3>
               <div>

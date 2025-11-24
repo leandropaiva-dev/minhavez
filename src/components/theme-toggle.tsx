@@ -1,6 +1,6 @@
 'use client'
 
-import { Moon, Sun } from 'lucide-react'
+import { Moon, Sun } from 'react-feather'
 import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
 

@@ -5,15 +5,15 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   Menu,
-  LayoutDashboard,
-  History,
+  Layout,
   Clock,
-  BarChart3,
+  Clock as History,
+  BarChart2,
   Calendar,
   Settings,
   Link2,
   LogOut,
-} from 'lucide-react'
+} from 'react-feather'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { AnimatedThemeToggler } from '@/components/ui/animated-theme-toggler'
 import { createClient } from '@/lib/supabase/client'
@@ -26,7 +26,7 @@ interface MobileMenuProps {
 
 const menuItems = [
   {
-    icon: LayoutDashboard,
+    icon: Layout,
     label: 'Visão Geral',
     href: '/dashboard',
   },
@@ -46,7 +46,7 @@ const menuItems = [
     href: '/dashboard/historico',
   },
   {
-    icon: BarChart3,
+    icon: BarChart2,
     label: 'Relatórios',
     href: '/dashboard/relatorios',
   },

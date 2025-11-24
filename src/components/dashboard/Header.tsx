@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Search } from 'lucide-react'
+import { Search } from 'react-feather'
 import { AnimatedThemeToggler } from '@/components/ui/animated-theme-toggler'
 import UserDropdown from './UserDropdown'
 import MobileMenu from './MobileMenu'
