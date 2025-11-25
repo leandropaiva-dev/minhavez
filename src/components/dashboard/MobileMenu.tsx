@@ -12,6 +12,7 @@ import {
   Calendar,
   Settings,
   Link2,
+  Edit3,
   LogOut,
 } from 'react-feather'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
@@ -52,8 +53,13 @@ const menuItems = [
   },
   {
     icon: Link2,
-    label: 'Minha Página',
-    href: '/dashboard/minha-pagina',
+    label: 'Página de Links',
+    href: '/dashboard/links',
+  },
+  {
+    icon: Edit3,
+    label: 'Formulários Públicos',
+    href: '/dashboard/formularios',
   },
   {
     icon: Settings,
