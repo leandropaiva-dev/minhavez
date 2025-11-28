@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import type { PageType, PageCustomization } from '@/types/page-customization.types'
+import type { PageType } from '@/types/page-customization.types'
 import { ReactNode } from 'react'
 import Link from 'next/link'
 

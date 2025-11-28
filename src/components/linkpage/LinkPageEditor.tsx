@@ -203,12 +203,13 @@ export default function LinkPageEditor({
     setLinks(prev => prev.filter(l => l !== link))
   }
 
-  const _handleReorder = (dragIndex: number, dropIndex: number) => {
-    const newLinks = [...links]
-    const [dragged] = newLinks.splice(dragIndex, 1)
-    newLinks.splice(dropIndex, 0, dragged)
-    setLinks(newLinks.map((l, i) => ({ ...l, position: i })))
-  }
+  // Function reserved for future drag-and-drop reordering feature
+  // const handleReorder = (dragIndex: number, dropIndex: number) => {
+  //   const newLinks = [...links]
+  //   const [dragged] = newLinks.splice(dragIndex, 1)
+  //   newLinks.splice(dropIndex, 0, dragged)
+  //   setLinks(newLinks.map((l, i) => ({ ...l, position: i })))
+  // }
 
   const applyTheme = (theme: LinkPageTheme) => {
     setLinkPage(prev => ({

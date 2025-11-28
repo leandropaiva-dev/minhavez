@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
-import { Calendar, Clock, Users, Phone, Mail, MessageSquare, CheckCircle } from 'react-feather'
+import { useState, useEffect } from 'react'
+import { Calendar, Clock, Users, Phone, Mail, MessageSquare, CheckCircle, Star, ExternalLink } from 'react-feather'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
+import type { PageCustomization } from '@/types/page-customization.types'
 
 interface ReservationFormProps {
   businessId: string
@@ -22,6 +23,42 @@ export default function ReservationForm({ businessId }: ReservationFormProps) {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
+  const [confirmCustomization, setConfirmCustomization] = useState<PageCustomization | null>(null)
+  const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null)
+
+  // Fetch confirmation page customization when success
+  useEffect(() => {
+    if (success) {
+      const supabase = createClient()
+      supabase
+        .from('page_customizations')
+        .select('*')
+        .eq('business_id', businessId)
+        .eq('page_type', 'reservation_confirm')
+        .single()
+        .then(({ data }) => {
+          if (data) {
+            setConfirmCustomization(data)
+            // Start auto-redirect countdown if enabled
+            if (data.auto_redirect_enabled && data.auto_redirect_url) {
+              setRedirectCountdown(data.auto_redirect_delay || 5)
+            }
+          }
+        })
+    }
+  }, [success, businessId])
+
+  // Handle auto-redirect countdown
+  useEffect(() => {
+    if (redirectCountdown !== null && redirectCountdown > 0) {
+      const timer = setTimeout(() => {
+        setRedirectCountdown(redirectCountdown - 1)
+      }, 1000)
+      return () => clearTimeout(timer)
+    } else if (redirectCountdown === 0 && confirmCustomization?.auto_redirect_url) {
+      window.location.href = confirmCustomization.auto_redirect_url
+    }
+  }, [redirectCountdown, confirmCustomization])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -88,22 +125,72 @@ export default function ReservationForm({ businessId }: ReservationFormProps) {
 
   if (success) {
     return (
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-8 sm:p-12 text-center">
-        <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-          <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-8 sm:p-12">
+        <div className="text-center mb-6">
+          <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+            <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
+          </div>
+          <h2 className="text-2xl font-bold text-zinc-900 dark:text-white mb-2">
+            Reserva Solicitada!
+          </h2>
+          <p className="text-zinc-600 dark:text-zinc-400">
+            Sua reserva foi enviada com sucesso. Você receberá uma confirmação em breve.
+          </p>
         </div>
-        <h2 className="text-2xl font-bold text-zinc-900 dark:text-white mb-2">
-          Reserva Solicitada!
-        </h2>
-        <p className="text-zinc-600 dark:text-zinc-400 mb-6">
-          Sua reserva foi enviada com sucesso. Você receberá uma confirmação em breve.
-        </p>
-        <button
-          onClick={() => setSuccess(false)}
-          className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-        >
-          Fazer Outra Reserva
-        </button>
+
+        {/* Thank you message */}
+        {confirmCustomization?.thank_you_message && (
+          <div className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 mb-6 text-center">
+            <p className="text-zinc-900 dark:text-white whitespace-pre-wrap">
+              {confirmCustomization.thank_you_message}
+            </p>
+          </div>
+        )}
+
+        <div className="space-y-3">
+          {/* Review button */}
+          {confirmCustomization?.review_link && (
+            <button
+              onClick={() => window.open(confirmCustomization.review_link!, '_blank')}
+              className="w-full px-6 py-3 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+            >
+              <Star className="w-5 h-5" />
+              {confirmCustomization.review_button_text || 'Avaliar Atendimento'}
+            </button>
+          )}
+
+          {/* CTA button */}
+          {confirmCustomization?.cta_link && confirmCustomization?.cta_button_text && (
+            <button
+              onClick={() => window.open(confirmCustomization.cta_link!, '_blank')}
+              className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+            >
+              {confirmCustomization.cta_icon === 'star' && <Star className="w-5 h-5" />}
+              {confirmCustomization.cta_icon === 'external-link' && <ExternalLink className="w-5 h-5" />}
+              {confirmCustomization.cta_button_text}
+            </button>
+          )}
+
+          {/* Auto-redirect countdown */}
+          {redirectCountdown !== null && redirectCountdown > 0 && (
+            <div className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 text-center">
+              <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                Redirecionando em <span className="text-blue-600 dark:text-blue-400 font-bold">{redirectCountdown}</span> segundo{redirectCountdown !== 1 ? 's' : ''}...
+              </p>
+            </div>
+          )}
+
+          {/* Back to form button */}
+          <button
+            onClick={() => {
+              setSuccess(false)
+              setRedirectCountdown(null)
+            }}
+            className="w-full px-6 py-3 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white rounded-lg font-medium transition-colors"
+          >
+            Fazer Outra Reserva
+          </button>
+        </div>
       </div>
     )
   }

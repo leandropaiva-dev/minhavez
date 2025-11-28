@@ -63,21 +63,31 @@ export function useBusinessGoals(
       try {
         switch (goalType) {
           case 'attendance': {
-            // Total completed + attending queue entries in period
-            const { count } = await supabase
+            // Total completed from BOTH queue AND reservations
+            // Filter by completion date, not entry date
+            const { count: queueCount } = await supabase
               .from('queue_entries')
               .select('*', { count: 'exact', head: true })
               .eq('business_id', businessId)
-              .in('status', ['completed', 'attending'])
-              .gte('joined_at', startDate.toISOString())
-              .lte('joined_at', endDate.toISOString())
-            currentValue = count || 0
+              .eq('status', 'completed')
+              .gte('completed_at', startDate.toISOString())
+              .lte('completed_at', endDate.toISOString())
+
+            const { count: reservationCount } = await supabase
+              .from('reservations')
+              .select('*', { count: 'exact', head: true })
+              .eq('business_id', businessId)
+              .in('status', ['completed', 'seated', 'arrived'])
+              .gte('reservation_date', startDate.toISOString().split('T')[0])
+              .lte('reservation_date', endDate.toISOString().split('T')[0])
+
+            currentValue = (queueCount || 0) + (reservationCount || 0)
             break
           }
 
           case 'avg_time': {
-            // Average wait time in period
-            const { data: entries } = await supabase
+            // Average wait time from BOTH queue AND reservations
+            const { data: queueEntries } = await supabase
               .from('queue_entries')
               .select('joined_at, attended_at, completed_at')
               .eq('business_id', businessId)
@@ -85,17 +95,41 @@ export function useBusinessGoals(
               .gte('joined_at', startDate.toISOString())
               .lte('joined_at', endDate.toISOString())
 
-            if (entries && entries.length > 0) {
-              const validEntries = entries.filter(entry => entry.attended_at || entry.completed_at)
-              if (validEntries.length > 0) {
-                const totalMinutes = validEntries.reduce((sum, entry) => {
-                  const joined = new Date(entry.joined_at).getTime()
-                  const endTime = entry.completed_at || entry.attended_at
-                  const ended = new Date(endTime!).getTime()
-                  return sum + (ended - joined) / 60000
-                }, 0)
-                currentValue = Math.round(totalMinutes / validEntries.length)
-              }
+            const { data: reservationEntries } = await supabase
+              .from('reservations')
+              .select('created_at, updated_at')
+              .eq('business_id', businessId)
+              .eq('status', 'completed')
+              .gte('reservation_date', startDate.toISOString().split('T')[0])
+              .lte('reservation_date', endDate.toISOString().split('T')[0])
+
+            let totalMinutes = 0
+            let totalCount = 0
+
+            // Calculate queue wait times
+            if (queueEntries && queueEntries.length > 0) {
+              const validQueue = queueEntries.filter(entry => entry.attended_at || entry.completed_at)
+              validQueue.forEach(entry => {
+                const joined = new Date(entry.joined_at).getTime()
+                const endTime = entry.completed_at || entry.attended_at
+                const ended = new Date(endTime!).getTime()
+                totalMinutes += (ended - joined) / 60000
+                totalCount++
+              })
+            }
+
+            // Calculate reservation processing times
+            if (reservationEntries && reservationEntries.length > 0) {
+              reservationEntries.forEach(entry => {
+                const created = new Date(entry.created_at).getTime()
+                const updated = new Date(entry.updated_at).getTime()
+                totalMinutes += (updated - created) / 60000
+                totalCount++
+              })
+            }
+
+            if (totalCount > 0) {
+              currentValue = Math.round(totalMinutes / totalCount)
             }
             break
           }
@@ -127,14 +161,14 @@ export function useBusinessGoals(
           }
 
           case 'queue_served': {
-            // Completed + attending queue entries in period
+            // Completed queue entries in period (filter by completion date)
             const { count } = await supabase
               .from('queue_entries')
               .select('*', { count: 'exact', head: true })
               .eq('business_id', businessId)
-              .in('status', ['completed', 'attending'])
-              .gte('joined_at', startDate.toISOString())
-              .lte('joined_at', endDate.toISOString())
+              .eq('status', 'completed')
+              .gte('completed_at', startDate.toISOString())
+              .lte('completed_at', endDate.toISOString())
             currentValue = count || 0
             break
           }

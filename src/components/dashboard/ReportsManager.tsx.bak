@@ -50,11 +50,6 @@ interface StatusData {
   [key: string]: string | number
 }
 
-interface WeekdayData {
-  dia: string
-  clientes: number
-}
-
 interface Stats {
   totalClientes: number
   totalCompletados: number
@@ -62,21 +57,11 @@ interface Stats {
   tempoMedioEspera: number
   mediaDiaria: number
   taxaConversao: number
-  horasPico: string
-  diaSemanaPopular: string
-  tempoTotalAtendimento: number
   comparacaoClientes: number
   comparacaoTempo: number
   comparacaoConversao: number
   comparacaoMedia: number
 }
-
-const COLORS = {
-  completed: '#10b981',
-  cancelled: '#ef4444',
-}
-
-const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
 export default function ReportsManager({ businessId }: ReportsManagerProps) {
   const [period, setPeriod] = useState<PeriodFilter>('30d')
@@ -90,9 +75,6 @@ export default function ReportsManager({ businessId }: ReportsManagerProps) {
     tempoMedioEspera: 0,
     mediaDiaria: 0,
     taxaConversao: 0,
-    horasPico: '-',
-    diaSemanaPopular: '-',
-    tempoTotalAtendimento: 0,
     comparacaoClientes: 0,
     comparacaoTempo: 0,
     comparacaoConversao: 0,
@@ -101,7 +83,6 @@ export default function ReportsManager({ businessId }: ReportsManagerProps) {
 
   const [dailyData, setDailyData] = useState<DailyData[]>([])
   const [hourlyData, setHourlyData] = useState<HourlyData[]>([])
-  const [weekdayData, setWeekdayData] = useState<WeekdayData[]>([])
   const [statusData, setStatusData] = useState<StatusData[]>([])
 
   const fetchReportData = useCallback(async () => {
@@ -124,7 +105,7 @@ export default function ReportsManager({ businessId }: ReportsManagerProps) {
     // Fetch queue entries for current period
     const queueQuery = supabase
       .from('queue_entries')
-      .select('id, status, joined_at, called_at, attended_at, completed_at, party_size')
+      .select('id, status, joined_at, called_at, attended_at, completed_at')
       .eq('business_id', businessId)
       .gte('joined_at', startStr)
       .lte('joined_at', endStr)
@@ -132,7 +113,7 @@ export default function ReportsManager({ businessId }: ReportsManagerProps) {
     // Fetch queue entries for previous period (comparison)
     const prevQueueQuery = supabase
       .from('queue_entries')
-      .select('id, status, joined_at, called_at, attended_at, completed_at, party_size')
+      .select('id, status, joined_at, called_at, attended_at, completed_at')
       .eq('business_id', businessId)
       .gte('joined_at', prevStartStr)
       .lt('joined_at', startStr)
@@ -140,7 +121,7 @@ export default function ReportsManager({ businessId }: ReportsManagerProps) {
     // Fetch reservations for current period
     const reservationsQuery = supabase
       .from('reservations')
-      .select('id, status, reservation_date, reservation_time, created_at, updated_at, party_size')
+      .select('id, status, reservation_date, reservation_time, created_at, updated_at')
       .eq('business_id', businessId)
       .gte('reservation_date', startDate.toISOString().split('T')[0])
       .lte('reservation_date', endDate.toISOString().split('T')[0])
@@ -148,7 +129,7 @@ export default function ReportsManager({ businessId }: ReportsManagerProps) {
     // Fetch reservations for previous period
     const prevReservationsQuery = supabase
       .from('reservations')
-      .select('id, status, reservation_date, reservation_time, created_at, updated_at, party_size')
+      .select('id, status, reservation_date, reservation_time, created_at, updated_at')
       .eq('business_id', businessId)
       .gte('reservation_date', prevStartDate.toISOString().split('T')[0])
       .lt('reservation_date', startDate.toISOString().split('T')[0])
@@ -166,56 +147,48 @@ export default function ReportsManager({ businessId }: ReportsManagerProps) {
     ])
 
     // Process current period data
-    const currentEntries: { date: string; status: string; waitTime: number; type: 'queue' | 'reservation'; hour: number; weekday: number; partySize: number }[] = []
+    const currentEntries: { date: string; status: string; waitTime: number; type: 'queue' | 'reservation' }[] = []
 
     if (typeFilter === 'all' || typeFilter === 'queue') {
       queueData?.forEach(entry => {
-        const joinedDate = new Date(entry.joined_at)
         const waitTime = entry.called_at && entry.joined_at
           ? (new Date(entry.called_at).getTime() - new Date(entry.joined_at).getTime()) / 60000
           : 0
         currentEntries.push({
-          date: joinedDate.toISOString().split('T')[0],
+          date: new Date(entry.joined_at).toISOString().split('T')[0],
           status: entry.status,
           waitTime,
           type: 'queue',
-          hour: joinedDate.getHours(),
-          weekday: joinedDate.getDay(),
-          partySize: entry.party_size || 1,
         })
       })
     }
 
     if (typeFilter === 'all' || typeFilter === 'reservation') {
       reservationsData?.forEach(entry => {
-        const reservationDate = new Date(entry.reservation_date)
         currentEntries.push({
           date: entry.reservation_date,
           status: entry.status,
           waitTime: 0,
           type: 'reservation',
-          hour: parseInt(entry.reservation_time.split(':')[0]),
-          weekday: reservationDate.getDay(),
-          partySize: entry.party_size || 1,
         })
       })
     }
 
     // Process previous period data for comparison
-    const prevEntries: { status: string; waitTime: number; partySize: number }[] = []
+    const prevEntries: { status: string; waitTime: number }[] = []
 
     if (typeFilter === 'all' || typeFilter === 'queue') {
       prevQueueData?.forEach(entry => {
         const waitTime = entry.called_at && entry.joined_at
           ? (new Date(entry.called_at).getTime() - new Date(entry.joined_at).getTime()) / 60000
           : 0
-        prevEntries.push({ status: entry.status, waitTime, partySize: entry.party_size || 1 })
+        prevEntries.push({ status: entry.status, waitTime })
       })
     }
 
     if (typeFilter === 'all' || typeFilter === 'reservation') {
       prevReservationsData?.forEach(entry => {
-        prevEntries.push({ status: entry.status, waitTime: 0, partySize: entry.party_size || 1 })
+        prevEntries.push({ status: entry.status, waitTime: 0 })
       })
     }
 
@@ -231,29 +204,6 @@ export default function ReportsManager({ businessId }: ReportsManagerProps) {
       ? Math.round((totalCompletados / totalClientes) * 1000) / 10
       : 0
     const mediaDiaria = Math.round(totalClientes / days)
-
-    // Find peak hours
-    const hourMap = new Map<number, number>()
-    currentEntries.forEach(e => {
-      hourMap.set(e.hour, (hourMap.get(e.hour) || 0) + 1)
-    })
-    const peakHours = Array.from(hourMap.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 2)
-      .map(([hour]) => `${hour}h`)
-      .join(', ')
-
-    // Find most popular weekday
-    const weekdayMap = new Map<number, number>()
-    currentEntries.forEach(e => {
-      weekdayMap.set(e.weekday, (weekdayMap.get(e.weekday) || 0) + 1)
-    })
-    const mostPopularDay = Array.from(weekdayMap.entries())
-      .sort((a, b) => b[1] - a[1])[0]
-    const diaSemanaPopular = mostPopularDay ? WEEKDAYS[mostPopularDay[0]] : '-'
-
-    // Calculate total attendance time
-    const tempoTotalAtendimento = Math.round(waitTimes.reduce((a, b) => a + b, 0))
 
     // Calculate previous period stats for comparison
     const prevTotalClientes = prevEntries.length
@@ -288,9 +238,6 @@ export default function ReportsManager({ businessId }: ReportsManagerProps) {
       tempoMedioEspera,
       mediaDiaria,
       taxaConversao,
-      horasPico: peakHours || '-',
-      diaSemanaPopular,
-      tempoTotalAtendimento,
       comparacaoClientes,
       comparacaoTempo,
       comparacaoConversao,
@@ -330,17 +277,26 @@ export default function ReportsManager({ businessId }: ReportsManagerProps) {
     })
 
     dailyChartData.reverse()
+    // Limit to last 14 days for readability
     setDailyData(dailyChartData.slice(-14))
 
-    // Generate hourly data
+    // Generate hourly data (only for queue entries)
     const hourlyMap = new Map<number, number>()
     for (let i = 8; i <= 22; i++) {
       hourlyMap.set(i, 0)
     }
 
-    currentEntries.forEach(entry => {
-      if (hourlyMap.has(entry.hour)) {
-        hourlyMap.set(entry.hour, (hourlyMap.get(entry.hour) || 0) + 1)
+    queueData?.forEach(entry => {
+      const hour = new Date(entry.joined_at).getHours()
+      if (hourlyMap.has(hour)) {
+        hourlyMap.set(hour, (hourlyMap.get(hour) || 0) + 1)
+      }
+    })
+
+    reservationsData?.forEach(entry => {
+      const hour = parseInt(entry.reservation_time.split(':')[0])
+      if (hourlyMap.has(hour)) {
+        hourlyMap.set(hour, (hourlyMap.get(hour) || 0) + 1)
       }
     })
 
@@ -354,18 +310,10 @@ export default function ReportsManager({ businessId }: ReportsManagerProps) {
 
     setHourlyData(hourlyChartData)
 
-    // Generate weekday data
-    const weekdayChartData: WeekdayData[] = WEEKDAYS.map((dia, index) => ({
-      dia,
-      clientes: weekdayMap.get(index) || 0,
-    }))
-
-    setWeekdayData(weekdayChartData)
-
     // Status distribution
     setStatusData([
-      { name: 'Concluídos', value: totalCompletados, color: COLORS.completed },
-      { name: 'Cancelados', value: totalCancelados, color: COLORS.cancelled },
+      { name: 'Concluídos', value: totalCompletados, color: '#3b82f6' },
+      { name: 'Cancelados', value: totalCancelados, color: '#ef4444' },
     ])
 
     setLoading(false)
@@ -412,12 +360,12 @@ export default function ReportsManager({ businessId }: ReportsManagerProps) {
         </div>
       </div>
 
-      {/* KPIs - Row 1 */}
+      {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 sm:p-4">
           <div className="flex items-center justify-between mb-2 sm:mb-3">
-            <div className="p-1.5 sm:p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
-              <Users className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" />
+            <div className="p-1.5 sm:p-2 bg-zinc-100 dark:bg-zinc-800 rounded-lg">
+              <Users className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-600 dark:text-zinc-400" />
             </div>
             {stats.comparacaoClientes !== 0 && (
               <div className={`flex items-center gap-1 text-[10px] sm:text-xs ${stats.comparacaoClientes >= 0 ? 'text-green-500' : 'text-red-500'}`}>
@@ -432,8 +380,8 @@ export default function ReportsManager({ businessId }: ReportsManagerProps) {
 
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 sm:p-4">
           <div className="flex items-center justify-between mb-2 sm:mb-3">
-            <div className="p-1.5 sm:p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
-              <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 dark:text-green-400" />
+            <div className="p-1.5 sm:p-2 bg-zinc-100 dark:bg-zinc-800 rounded-lg">
+              <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-600 dark:text-zinc-400" />
             </div>
             {stats.comparacaoConversao !== 0 && (
               <div className={`flex items-center gap-1 text-[10px] sm:text-xs ${stats.comparacaoConversao >= 0 ? 'text-green-500' : 'text-red-500'}`}>
@@ -446,29 +394,6 @@ export default function ReportsManager({ businessId }: ReportsManagerProps) {
           <p className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white">{stats.taxaConversao}%</p>
         </div>
 
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 sm:p-4">
-          <div className="flex items-center justify-between mb-2 sm:mb-3">
-            <div className="p-1.5 sm:p-2 bg-red-100 dark:bg-red-900/20 rounded-lg">
-              <XCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 dark:text-red-400" />
-            </div>
-          </div>
-          <p className="text-zinc-500 dark:text-zinc-400 text-[10px] sm:text-xs mb-0.5">Total Cancelados</p>
-          <p className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white">{stats.totalCancelados}</p>
-        </div>
-
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 sm:p-4">
-          <div className="flex items-center justify-between mb-2 sm:mb-3">
-            <div className="p-1.5 sm:p-2 bg-zinc-100 dark:bg-zinc-800 rounded-lg">
-              <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-600 dark:text-zinc-400" />
-            </div>
-          </div>
-          <p className="text-zinc-500 dark:text-zinc-400 text-[10px] sm:text-xs mb-0.5">Horários de Pico</p>
-          <p className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white">{stats.horasPico}</p>
-        </div>
-      </div>
-
-      {/* KPIs - Row 2 */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 sm:p-4">
           <div className="flex items-center justify-between mb-2 sm:mb-3">
             <div className="p-1.5 sm:p-2 bg-zinc-100 dark:bg-zinc-800 rounded-lg">
@@ -500,26 +425,6 @@ export default function ReportsManager({ businessId }: ReportsManagerProps) {
           <p className="text-zinc-500 dark:text-zinc-400 text-[10px] sm:text-xs mb-0.5">Média Diária</p>
           <p className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white">{stats.mediaDiaria}</p>
         </div>
-
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 sm:p-4">
-          <div className="flex items-center justify-between mb-2 sm:mb-3">
-            <div className="p-1.5 sm:p-2 bg-zinc-100 dark:bg-zinc-800 rounded-lg">
-              <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-600 dark:text-zinc-400" />
-            </div>
-          </div>
-          <p className="text-zinc-500 dark:text-zinc-400 text-[10px] sm:text-xs mb-0.5">Dia Mais Popular</p>
-          <p className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white">{stats.diaSemanaPopular}</p>
-        </div>
-
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 sm:p-4">
-          <div className="flex items-center justify-between mb-2 sm:mb-3">
-            <div className="p-1.5 sm:p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
-              <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 dark:text-green-400" />
-            </div>
-          </div>
-          <p className="text-zinc-500 dark:text-zinc-400 text-[10px] sm:text-xs mb-0.5">Total Concluídos</p>
-          <p className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white">{stats.totalCompletados}</p>
-        </div>
       </div>
 
       {/* Charts Row 1 */}
@@ -527,7 +432,7 @@ export default function ReportsManager({ businessId }: ReportsManagerProps) {
         {/* Daily Customers Chart */}
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 sm:p-6">
           <h3 className="text-zinc-900 dark:text-white font-semibold text-sm sm:text-base mb-3 sm:mb-4">
-            Clientes por Dia (últimos 14 dias)
+            Clientes por Dia
           </h3>
           {dailyData.length > 0 ? (
             <div className="w-full overflow-x-auto -mx-2 sm:mx-0">
@@ -608,40 +513,6 @@ export default function ReportsManager({ businessId }: ReportsManagerProps) {
 
       {/* Charts Row 2 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        {/* Weekday Distribution */}
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 sm:p-6">
-          <h3 className="text-zinc-900 dark:text-white font-semibold text-sm sm:text-base mb-3 sm:mb-4">
-            Distribuição por Dia da Semana
-          </h3>
-          {weekdayData.some(d => d.clientes > 0) ? (
-            <div className="w-full overflow-x-auto -mx-2 sm:mx-0">
-              <div className="min-w-[300px] px-2 sm:px-0">
-                <ResponsiveContainer width="100%" height={220}>
-                  <BarChart data={weekdayData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e4e4e7" className="dark:stroke-zinc-800" />
-                    <XAxis dataKey="dia" stroke="#71717a" fontSize={10} />
-                    <YAxis stroke="#71717a" fontSize={10} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'var(--tooltip-bg, #18181b)',
-                        border: '1px solid var(--tooltip-border, #27272a)',
-                        borderRadius: '8px',
-                        color: 'var(--tooltip-color, #fff)',
-                      }}
-                      labelStyle={{ color: 'var(--tooltip-color, #fff)' }}
-                    />
-                    <Bar dataKey="clientes" fill="#10b981" radius={[4, 4, 0, 0]} name="Clientes" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-[220px] text-zinc-500 dark:text-zinc-400 text-sm">
-              Sem dados para o período selecionado
-            </div>
-          )}
-        </div>
-
         {/* Status Distribution */}
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 sm:p-6">
           <h3 className="text-zinc-900 dark:text-white font-semibold text-sm sm:text-base mb-3 sm:mb-4">
@@ -697,59 +568,51 @@ export default function ReportsManager({ businessId }: ReportsManagerProps) {
             </div>
           )}
         </div>
-      </div>
 
-      {/* Summary Stats */}
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 sm:p-6">
-        <h3 className="text-zinc-900 dark:text-white font-semibold text-sm sm:text-base mb-3 sm:mb-4">
-          Resumo do Período
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg">
-            <div className="flex items-center gap-3">
-              <CheckCircle className="w-5 h-5 text-green-500" />
-              <span className="text-sm text-zinc-700 dark:text-zinc-300">Atendimentos Concluídos</span>
+        {/* Summary Stats */}
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 sm:p-6">
+          <h3 className="text-zinc-900 dark:text-white font-semibold text-sm sm:text-base mb-3 sm:mb-4">
+            Resumo do Período
+          </h3>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <CheckCircle className="w-5 h-5 text-blue-500" />
+                <span className="text-sm text-zinc-700 dark:text-zinc-300">Atendimentos Concluídos</span>
+              </div>
+              <span className="text-lg font-bold text-zinc-900 dark:text-white">{stats.totalCompletados}</span>
             </div>
-            <span className="text-lg font-bold text-zinc-900 dark:text-white">{stats.totalCompletados}</span>
-          </div>
 
-          <div className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg">
-            <div className="flex items-center gap-3">
-              <XCircle className="w-5 h-5 text-red-500" />
-              <span className="text-sm text-zinc-700 dark:text-zinc-300">Atendimentos Cancelados</span>
+            <div className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <XCircle className="w-5 h-5 text-red-500" />
+                <span className="text-sm text-zinc-700 dark:text-zinc-300">Atendimentos Cancelados</span>
+              </div>
+              <span className="text-lg font-bold text-zinc-900 dark:text-white">{stats.totalCancelados}</span>
             </div>
-            <span className="text-lg font-bold text-zinc-900 dark:text-white">{stats.totalCancelados}</span>
-          </div>
 
-          <div className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg">
-            <div className="flex items-center gap-3">
-              <Clock className="w-5 h-5 text-zinc-500" />
-              <span className="text-sm text-zinc-700 dark:text-zinc-300">Tempo Total de Espera</span>
+            <div className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <Clock className="w-5 h-5 text-zinc-500" />
+                <span className="text-sm text-zinc-700 dark:text-zinc-300">Tempo Total de Espera</span>
+              </div>
+              <span className="text-lg font-bold text-zinc-900 dark:text-white">
+                {stats.tempoMedioEspera * stats.totalClientes > 60
+                  ? `${Math.round(stats.tempoMedioEspera * stats.totalClientes / 60)}h`
+                  : `${stats.tempoMedioEspera * stats.totalClientes}min`
+                }
+              </span>
             </div>
-            <span className="text-lg font-bold text-zinc-900 dark:text-white">
-              {stats.tempoTotalAtendimento > 60
-                ? `${Math.round(stats.tempoTotalAtendimento / 60)}h`
-                : `${stats.tempoTotalAtendimento}min`
-              }
-            </span>
-          </div>
 
-          <div className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg">
-            <div className="flex items-center gap-3">
-              <Users className="w-5 h-5 text-zinc-500" />
-              <span className="text-sm text-zinc-700 dark:text-zinc-300">Pico de Clientes (dia)</span>
+            <div className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <Users className="w-5 h-5 text-zinc-500" />
+                <span className="text-sm text-zinc-700 dark:text-zinc-300">Pico de Clientes (dia)</span>
+              </div>
+              <span className="text-lg font-bold text-zinc-900 dark:text-white">
+                {dailyData.length > 0 ? Math.max(...dailyData.map(d => d.clientes)) : 0}
+              </span>
             </div>
-            <span className="text-lg font-bold text-zinc-900 dark:text-white">
-              {dailyData.length > 0 ? Math.max(...dailyData.map(d => d.clientes)) : 0}
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg">
-            <div className="flex items-center gap-3">
-              <Calendar className="w-5 h-5 text-zinc-500" />
-              <span className="text-sm text-zinc-700 dark:text-zinc-300">Dia Mais Popular</span>
-            </div>
-            <span className="text-lg font-bold text-zinc-900 dark:text-white">{stats.diaSemanaPopular}</span>
           </div>
         </div>
       </div>

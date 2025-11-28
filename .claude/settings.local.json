@@ -35,7 +35,10 @@
       "Bash(npx tsc:*)",
       "Bash(if exist \"c:\\minhavez\\.next\" rmdir /s /q \"c:\\minhavez\\.next\")",
       "Bash(npm uninstall:*)",
-      "Bash(cmd /c \"rmdir /s /q c:\\minhavez\\.next\")"
+      "Bash(cmd /c \"rmdir /s /q c:\\minhavez\\.next\")",
+      "Bash(dir:*)",
+      "Bash(del \"C:\\minhavez\\src\\components\\dashboard\\ReportsManager.tsx\")",
+      "Bash(cmd /c \"taskkill /F /PID 10508 && timeout /t 2 /nobreak > nul && if exist c:\\minhavez\\.next rmdir /s /q c:\\minhavez\\.next\")"
     ],
     "deny": [],
     "ask": []

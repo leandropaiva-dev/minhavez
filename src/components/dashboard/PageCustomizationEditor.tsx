@@ -9,7 +9,8 @@ import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { createClient } from '@/lib/supabase/client'
 import ImageUploader from '@/components/linkpage/ImageUploader'
-import type { PageCustomization, PageType, DEFAULT_PAGE_CUSTOMIZATION } from '@/types/page-customization.types'
+import type { PageCustomization, PageType } from '@/types/page-customization.types'
+import { DEFAULT_PAGE_CUSTOMIZATION } from '@/types/page-customization.types'
 
 interface PageCustomizationEditorProps {
   businessId: string
@@ -32,28 +33,7 @@ const BUTTON_STYLE_OPTIONS = [
   { value: 'square', label: 'Quadrado' },
 ]
 
-const DEFAULT_VALUES: Omit<PageCustomization, 'id' | 'business_id' | 'page_type' | 'created_at' | 'updated_at'> = {
-  logo_url: null,
-  show_business_name: true,
-  custom_title: null,
-  custom_subtitle: null,
-  background_type: 'solid',
-  background_color: '#000000',
-  background_gradient_start: null,
-  background_gradient_end: null,
-  background_gradient_direction: null,
-  background_image_url: null,
-  primary_color: '#3b82f6',
-  text_color: '#ffffff',
-  button_style: 'rounded',
-  button_color: '#3b82f6',
-  button_text_color: '#ffffff',
-  card_background: '#18181b',
-  card_border_color: '#27272a',
-  card_border_radius: 'xl',
-  show_powered_by: true,
-  custom_css: null,
-}
+const DEFAULT_VALUES = DEFAULT_PAGE_CUSTOMIZATION
 
 export default function PageCustomizationEditor({
   businessId,
@@ -68,6 +48,7 @@ export default function PageCustomizationEditor({
 
   useEffect(() => {
     loadCustomization()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [businessId, pageType])
 
   const loadCustomization = async () => {
@@ -172,10 +153,13 @@ export default function PageCustomizationEditor({
         {/* Editor */}
         <div className="space-y-6">
           <Tabs defaultValue="branding" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-4">
+            <TabsList className={`grid w-full ${(pageType === 'queue_completed' || pageType === 'reservation_confirm') ? 'grid-cols-4' : 'grid-cols-3'} mb-4`}>
               <TabsTrigger value="branding">Marca</TabsTrigger>
               <TabsTrigger value="colors">Cores</TabsTrigger>
               <TabsTrigger value="style">Estilo</TabsTrigger>
+              {(pageType === 'queue_completed' || pageType === 'reservation_confirm') && (
+                <TabsTrigger value="review">Review</TabsTrigger>
+              )}
             </TabsList>
 
             {/* Branding Tab */}
@@ -471,6 +455,113 @@ export default function PageCustomizationEditor({
                 </div>
               </div>
             </TabsContent>
+
+            {/* Review/Feedback Tab (only for completion pages) */}
+            {(pageType === 'queue_completed' || pageType === 'reservation_confirm') && (
+              <TabsContent value="review" className="space-y-4">
+                <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 space-y-4">
+                  <div>
+                    <Label className="text-zinc-700 dark:text-zinc-300">Mensagem de Agradecimento</Label>
+                    <textarea
+                      value={customization.thank_you_message || ''}
+                      onChange={(e) => setCustomization(prev => ({ ...prev, thank_you_message: e.target.value }))}
+                      placeholder="Obrigado por nos visitar! Esperamos vê-lo novamente em breve."
+                      className="w-full mt-2 p-3 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-black text-zinc-900 dark:text-white text-sm min-h-[80px]"
+                    />
+                    <p className="text-xs text-zinc-500 mt-1">Mensagem personalizada exibida após conclusão</p>
+                  </div>
+
+                  <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4">
+                    <h4 className="text-sm font-medium text-zinc-900 dark:text-white mb-3">Link de Avaliação/Review</h4>
+
+                    <div>
+                      <Label className="text-zinc-700 dark:text-zinc-300 text-sm">URL da Avaliação</Label>
+                      <Input
+                        value={customization.review_link || ''}
+                        onChange={(e) => setCustomization(prev => ({ ...prev, review_link: e.target.value }))}
+                        placeholder="https://g.page/r/..."
+                        className="mt-2"
+                      />
+                      <p className="text-xs text-zinc-500 mt-1">Ex: Google Reviews, Facebook, TripAdvisor</p>
+                    </div>
+
+                    <div className="mt-3">
+                      <Label className="text-zinc-700 dark:text-zinc-300 text-sm">Texto do Botão</Label>
+                      <Input
+                        value={customization.review_button_text || 'Avaliar Atendimento'}
+                        onChange={(e) => setCustomization(prev => ({ ...prev, review_button_text: e.target.value }))}
+                        placeholder="Avaliar Atendimento"
+                        className="mt-2"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4">
+                    <h4 className="text-sm font-medium text-zinc-900 dark:text-white mb-3">Call-to-Action Adicional</h4>
+
+                    <div>
+                      <Label className="text-zinc-700 dark:text-zinc-300 text-sm">URL do CTA</Label>
+                      <Input
+                        value={customization.cta_link || ''}
+                        onChange={(e) => setCustomization(prev => ({ ...prev, cta_link: e.target.value }))}
+                        placeholder="https://instagram.com/..."
+                        className="mt-2"
+                      />
+                      <p className="text-xs text-zinc-500 mt-1">Link para Instagram, WhatsApp, site, etc.</p>
+                    </div>
+
+                    <div className="mt-3">
+                      <Label className="text-zinc-700 dark:text-zinc-300 text-sm">Texto do Botão CTA</Label>
+                      <Input
+                        value={customization.cta_button_text || ''}
+                        onChange={(e) => setCustomization(prev => ({ ...prev, cta_button_text: e.target.value }))}
+                        placeholder="Siga-nos no Instagram"
+                        className="mt-2"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4">
+                    <h4 className="text-sm font-medium text-zinc-900 dark:text-white mb-3">Redirecionamento Automático</h4>
+
+                    <div className="flex items-center gap-2 mb-3">
+                      <Switch
+                        checked={customization.auto_redirect_enabled || false}
+                        onCheckedChange={(checked) => setCustomization(prev => ({ ...prev, auto_redirect_enabled: checked }))}
+                      />
+                      <Label className="text-zinc-700 dark:text-zinc-300 text-sm">Ativar redirecionamento automático</Label>
+                    </div>
+
+                    {customization.auto_redirect_enabled && (
+                      <>
+                        <div>
+                          <Label className="text-zinc-700 dark:text-zinc-300 text-sm">URL de Destino</Label>
+                          <Input
+                            value={customization.auto_redirect_url || ''}
+                            onChange={(e) => setCustomization(prev => ({ ...prev, auto_redirect_url: e.target.value }))}
+                            placeholder="https://seusite.com"
+                            className="mt-2"
+                          />
+                        </div>
+
+                        <div className="mt-3">
+                          <Label className="text-zinc-700 dark:text-zinc-300 text-sm">Delay (segundos)</Label>
+                          <Input
+                            type="number"
+                            min="1"
+                            max="30"
+                            value={customization.auto_redirect_delay || 5}
+                            onChange={(e) => setCustomization(prev => ({ ...prev, auto_redirect_delay: parseInt(e.target.value) || 5 }))}
+                            className="mt-2"
+                          />
+                          <p className="text-xs text-zinc-500 mt-1">Tempo antes de redirecionar (1-30 segundos)</p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </TabsContent>
+            )}
           </Tabs>
 
           {/* Save Button */}

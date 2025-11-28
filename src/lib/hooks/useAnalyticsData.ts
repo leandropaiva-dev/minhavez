@@ -53,7 +53,7 @@ export function useAnalyticsData(
       try {
         if (metricType === 'attendances') {
           // Fetch queue entries that were completed
-          const { data: entries } = await supabase
+          const { data: queueEntries } = await supabase
             .from('queue_entries')
             .select('created_at, status')
             .eq('business_id', businessId)
@@ -62,15 +62,39 @@ export function useAnalyticsData(
             .lte('created_at', endDate.toISOString())
             .order('created_at')
 
-          if (entries) {
-            const aggregated = aggregateByDate(entries, 'created_at', timeFilter)
+          // Fetch reservations
+          const { data: reservationEntries } = await supabase
+            .from('reservations')
+            .select('reservation_date, status')
+            .eq('business_id', businessId)
+            .gte('reservation_date', startDate.toISOString().split('T')[0])
+            .lte('reservation_date', endDate.toISOString().split('T')[0])
+            .order('reservation_date')
+
+          // Combine both queue and reservations
+          const combinedEntries: Record<string, string>[] = []
+
+          if (queueEntries) {
+            queueEntries.forEach(entry => {
+              combinedEntries.push({ created_at: entry.created_at, status: entry.status })
+            })
+          }
+
+          if (reservationEntries) {
+            reservationEntries.forEach(entry => {
+              combinedEntries.push({ created_at: entry.reservation_date, status: entry.status })
+            })
+          }
+
+          if (combinedEntries.length > 0) {
+            const aggregated = aggregateByDate(combinedEntries, 'created_at', timeFilter)
             setData(fillDateRange(aggregated, timeFilter))
           } else {
             setData(fillDateRange([], timeFilter))
           }
         } else if (metricType === 'avg_time') {
           // Fetch queue entries with wait times
-          const { data: entries } = await supabase
+          const { data: queueEntries } = await supabase
             .from('queue_entries')
             .select('created_at, called_at, completed_at')
             .eq('business_id', businessId)
@@ -79,8 +103,39 @@ export function useAnalyticsData(
             .lte('created_at', endDate.toISOString())
             .order('created_at')
 
-          if (entries) {
-            const aggregated = aggregateAvgTimeByDate(entries, timeFilter)
+          // Fetch reservations with processing times
+          const { data: reservationEntries } = await supabase
+            .from('reservations')
+            .select('reservation_date, created_at, updated_at')
+            .eq('business_id', businessId)
+            .eq('status', 'completed')
+            .gte('reservation_date', startDate.toISOString().split('T')[0])
+            .lte('reservation_date', endDate.toISOString().split('T')[0])
+            .order('reservation_date')
+
+          // Combine both sources for avg time calculation
+          const combinedTimes: { created_at: string; completed_at: string | null }[] = []
+
+          if (queueEntries) {
+            queueEntries.forEach(entry => {
+              combinedTimes.push({
+                created_at: entry.created_at,
+                completed_at: entry.completed_at
+              })
+            })
+          }
+
+          if (reservationEntries) {
+            reservationEntries.forEach(entry => {
+              combinedTimes.push({
+                created_at: entry.created_at,
+                completed_at: entry.updated_at
+              })
+            })
+          }
+
+          if (combinedTimes.length > 0) {
+            const aggregated = aggregateAvgTimeByDate(combinedTimes, timeFilter)
             setData(fillDateRange(aggregated, timeFilter))
           } else {
             setData(fillDateRange([], timeFilter))

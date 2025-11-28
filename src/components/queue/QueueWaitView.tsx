@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Clock, Users, MapPin, Phone, CheckCircle, XCircle, AlertCircle, Share2, Copy, Check } from 'react-feather'
+import { Clock, Users, MapPin, Phone, CheckCircle, XCircle, AlertCircle, Share2, Copy, Check, Star, ExternalLink } from 'react-feather'
 import { Button } from '@/components/ui/button'
 import { cancelQueueEntry } from '@/lib/queue/actions'
+import type { PageCustomization } from '@/types/page-customization.types'
 
 interface QueueWaitViewProps {
   entry: {
@@ -40,6 +41,8 @@ export default function QueueWaitView({ entry: initialEntry, currentPosition: in
   const [cancelModalOpen, setCancelModalOpen] = useState(false)
   const [selectedReason, setSelectedReason] = useState('')
   const [customReason, setCustomReason] = useState('')
+  const [completionCustomization, setCompletionCustomization] = useState<PageCustomization | null>(null)
+  const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null)
 
   const CUSTOMER_CANCEL_REASONS = [
     'Não posso mais esperar',
@@ -49,6 +52,40 @@ export default function QueueWaitView({ entry: initialEntry, currentPosition: in
   ]
 
   const currentUrl = typeof window !== 'undefined' ? window.location.href : ''
+
+  // Fetch completion page customization when status is completed
+  useEffect(() => {
+    if (entry.status === 'completed') {
+      const supabase = createClient()
+      supabase
+        .from('page_customizations')
+        .select('*')
+        .eq('business_id', entry.business_id)
+        .eq('page_type', 'queue_completed')
+        .single()
+        .then(({ data }) => {
+          if (data) {
+            setCompletionCustomization(data)
+            // Start auto-redirect countdown if enabled
+            if (data.auto_redirect_enabled && data.auto_redirect_url) {
+              setRedirectCountdown(data.auto_redirect_delay || 5)
+            }
+          }
+        })
+    }
+  }, [entry.status, entry.business_id])
+
+  // Handle auto-redirect countdown
+  useEffect(() => {
+    if (redirectCountdown !== null && redirectCountdown > 0) {
+      const timer = setTimeout(() => {
+        setRedirectCountdown(redirectCountdown - 1)
+      }, 1000)
+      return () => clearTimeout(timer)
+    } else if (redirectCountdown === 0 && completionCustomization?.auto_redirect_url) {
+      window.location.href = completionCustomization.auto_redirect_url
+    }
+  }, [redirectCountdown, completionCustomization])
 
   // Solicita permissão para notificações
   useEffect(() => {
@@ -391,7 +428,60 @@ export default function QueueWaitView({ entry: initialEntry, currentPosition: in
             </>
           )}
 
-          {(entry.status === 'completed' || entry.status === 'cancelled') && (
+          {entry.status === 'completed' && (
+            <>
+              {/* Thank you message */}
+              {completionCustomization?.thank_you_message && (
+                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-4">
+                  <p className="text-white text-center whitespace-pre-wrap">
+                    {completionCustomization.thank_you_message}
+                  </p>
+                </div>
+              )}
+
+              {/* Review button */}
+              {completionCustomization?.review_link && (
+                <Button
+                  onClick={() => window.open(completionCustomization.review_link!, '_blank')}
+                  className="w-full bg-yellow-600 hover:bg-yellow-700 text-white mb-3"
+                >
+                  <Star className="w-4 h-4 mr-2" />
+                  {completionCustomization.review_button_text || 'Avaliar Atendimento'}
+                </Button>
+              )}
+
+              {/* CTA button */}
+              {completionCustomization?.cta_link && completionCustomization?.cta_button_text && (
+                <Button
+                  onClick={() => window.open(completionCustomization.cta_link!, '_blank')}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white mb-3"
+                >
+                  {completionCustomization.cta_icon === 'star' && <Star className="w-4 h-4 mr-2" />}
+                  {completionCustomization.cta_icon === 'external-link' && <ExternalLink className="w-4 h-4 mr-2" />}
+                  {completionCustomization.cta_button_text}
+                </Button>
+              )}
+
+              {/* Auto-redirect countdown */}
+              {redirectCountdown !== null && redirectCountdown > 0 && (
+                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 mb-3 text-center">
+                  <p className="text-sm text-zinc-400">
+                    Redirecionando em <span className="text-blue-500 font-bold">{redirectCountdown}</span> segundo{redirectCountdown !== 1 ? 's' : ''}...
+                  </p>
+                </div>
+              )}
+
+              {/* Back to queue button */}
+              <Button
+                onClick={() => router.push(`/fila/${entry.business_id}`)}
+                className="w-full bg-zinc-800 hover:bg-zinc-700 text-white"
+              >
+                Voltar para a Fila
+              </Button>
+            </>
+          )}
+
+          {entry.status === 'cancelled' && (
             <Button
               onClick={() => router.push(`/fila/${entry.business_id}`)}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white"

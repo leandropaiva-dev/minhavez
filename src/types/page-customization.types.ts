@@ -35,6 +35,17 @@ export interface PageCustomization {
   show_powered_by: boolean
   custom_css: string | null
 
+  // Review/Feedback fields (for queue_completed & reservation_confirm)
+  review_link: string | null
+  review_button_text: string | null
+  thank_you_message: string | null
+  cta_link: string | null
+  cta_button_text: string | null
+  cta_icon: string | null
+  auto_redirect_enabled: boolean
+  auto_redirect_url: string | null
+  auto_redirect_delay: number
+
   created_at: string
   updated_at: string
 }
@@ -62,6 +73,15 @@ export interface PageCustomizationInsert {
   card_border_radius?: 'sm' | 'md' | 'lg' | 'xl' | '2xl'
   show_powered_by?: boolean
   custom_css?: string
+  review_link?: string
+  review_button_text?: string
+  thank_you_message?: string
+  cta_link?: string
+  cta_button_text?: string
+  cta_icon?: string
+  auto_redirect_enabled?: boolean
+  auto_redirect_url?: string
+  auto_redirect_delay?: number
 }
 
 export const DEFAULT_PAGE_CUSTOMIZATION: Omit<PageCustomization, 'id' | 'business_id' | 'page_type' | 'created_at' | 'updated_at'> = {
@@ -85,6 +105,15 @@ export const DEFAULT_PAGE_CUSTOMIZATION: Omit<PageCustomization, 'id' | 'busines
   card_border_radius: 'xl',
   show_powered_by: true,
   custom_css: null,
+  review_link: null,
+  review_button_text: 'Avaliar Atendimento',
+  thank_you_message: null,
+  cta_link: null,
+  cta_button_text: null,
+  cta_icon: 'star',
+  auto_redirect_enabled: false,
+  auto_redirect_url: null,
+  auto_redirect_delay: 5,
 }
 
 export const PAGE_TYPE_LABELS: Record<PageType, { title: string; description: string }> = {

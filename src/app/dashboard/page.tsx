@@ -29,42 +29,73 @@ export default async function DashboardPage() {
       .eq('business_id', business.id)
       .eq('status', 'waiting')
 
-    // Atendidos hoje
+    // Atendidos hoje - FILA + RESERVAS
     const today = new Date()
     today.setHours(0, 0, 0, 0)
+    const todayStr = today.toISOString().split('T')[0]
 
-    const { count: todayAttended } = await supabase
+    const { count: queueAttended } = await supabase
       .from('queue_entries')
       .select('*', { count: 'exact', head: true })
       .eq('business_id', business.id)
       .in('status', ['completed', 'attending'])
       .gte('joined_at', today.toISOString())
 
-    // Tempo médio de espera (calculado baseado em entradas concluídas hoje)
-    const { data: completedToday } = await supabase
+    const { count: reservationsCompleted } = await supabase
+      .from('reservations')
+      .select('*', { count: 'exact', head: true })
+      .eq('business_id', business.id)
+      .in('status', ['completed', 'seated', 'arrived'])
+      .eq('reservation_date', todayStr)
+
+    const todayAttended = (queueAttended || 0) + (reservationsCompleted || 0)
+
+    // Tempo médio de espera - FILA + RESERVAS
+    const { data: completedQueue } = await supabase
       .from('queue_entries')
       .select('joined_at, attended_at, completed_at')
       .eq('business_id', business.id)
       .in('status', ['completed', 'attending'])
       .gte('joined_at', today.toISOString())
 
-    let avgWaitTime = 0 // 0 se não houver atendimentos
-    if (completedToday && completedToday.length > 0) {
-      const validEntries = completedToday.filter(entry => entry.attended_at || entry.completed_at)
-      if (validEntries.length > 0) {
-        const totalWaitMinutes = validEntries.reduce((sum, entry) => {
-          const joined = new Date(entry.joined_at).getTime()
-          const endTime = entry.completed_at || entry.attended_at
-          const ended = new Date(endTime!).getTime()
-          return sum + (ended - joined) / 60000 // converter para minutos
-        }, 0)
-        avgWaitTime = Math.round(totalWaitMinutes / validEntries.length)
-      }
+    const { data: completedReservations } = await supabase
+      .from('reservations')
+      .select('created_at, updated_at')
+      .eq('business_id', business.id)
+      .eq('status', 'completed')
+      .eq('reservation_date', todayStr)
+
+    let avgWaitTime = 0
+    let totalMinutes = 0
+    let totalCount = 0
+
+    if (completedQueue && completedQueue.length > 0) {
+      const validEntries = completedQueue.filter(entry => entry.attended_at || entry.completed_at)
+      validEntries.forEach(entry => {
+        const joined = new Date(entry.joined_at).getTime()
+        const endTime = entry.completed_at || entry.attended_at
+        const ended = new Date(endTime!).getTime()
+        totalMinutes += (ended - joined) / 60000
+        totalCount++
+      })
+    }
+
+    if (completedReservations && completedReservations.length > 0) {
+      completedReservations.forEach(entry => {
+        const created = new Date(entry.created_at).getTime()
+        const updated = new Date(entry.updated_at).getTime()
+        totalMinutes += (updated - created) / 60000
+        totalCount++
+      })
+    }
+
+    if (totalCount > 0) {
+      avgWaitTime = Math.round(totalMinutes / totalCount)
     }
 
     queueStats = {
       currentQueue: currentQueue || 0,
-      todayAttended: todayAttended || 0,
+      todayAttended,
       avgWaitTime,
     }
   }
