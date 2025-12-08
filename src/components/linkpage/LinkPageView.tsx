@@ -1,16 +1,18 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Users, Calendar, MessageCircle, Instagram, Facebook, Youtube, MapPin, Mail, Phone, Music, Link as LinkIcon, Coffee, ExternalLink } from 'react-feather'
 import { incrementLinkClick } from '@/lib/linkpage/actions'
+import { trackPageView, trackLinkClick } from '@/lib/analytics/track'
 import type { LinkPage, LinkPageLink, LinkType } from '@/types/linkpage.types'
 
 interface LinkPageViewProps {
   linkPage: LinkPage
   links: LinkPageLink[]
   businessId?: string
+  enableTracking?: boolean
 }
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -43,8 +45,15 @@ const TYPE_TO_ICON: Record<LinkType, string> = {
   phone: 'Phone',
 }
 
-export default function LinkPageView({ linkPage, links, businessId }: LinkPageViewProps) {
+export default function LinkPageView({ linkPage, links, businessId, enableTracking = false }: LinkPageViewProps) {
   const [clickedLinks, setClickedLinks] = useState<Set<string>>(new Set())
+
+  // Track page view
+  useEffect(() => {
+    if (enableTracking && businessId) {
+      trackPageView(businessId, `/${linkPage.slug}`)
+    }
+  }, [enableTracking, businessId, linkPage.slug])
 
   const getBackgroundStyle = () => {
     if (linkPage.background_type === 'image' && linkPage.background_image_url) {
@@ -101,6 +110,12 @@ export default function LinkPageView({ linkPage, links, businessId }: LinkPageVi
     if (!clickedLinks.has(link.id)) {
       setClickedLinks(prev => new Set(prev).add(link.id))
       await incrementLinkClick(link.id)
+
+      // Track link click in analytics
+      if (enableTracking && businessId) {
+        const linkUrl = getLinkUrl(link)
+        trackLinkClick(businessId, linkUrl, link.title)
+      }
     }
   }
 

@@ -25,16 +25,34 @@ export interface FormFieldsConfig {
   notes: { enabled: boolean; required: boolean }
 }
 
+export interface ServiceOption {
+  id: string
+  name: string
+  description?: string
+  imageUrl?: string
+  duration?: number // em minutos
+  price?: number
+  order: number
+}
+
 export interface QueueFormConfig {
   businessId?: string
+  enableServiceSelection: boolean // true = com seleção de serviços, false = só formulário
+  serviceSelectionRequired: boolean // true = obrigatório, false = opcional
+  services: ServiceOption[]
   fields: FormFieldsConfig
   customFields: CustomField[]
+  currency?: 'BRL' | 'EUR' // Moeda baseada no país do negócio
 }
 
 export interface ReservationFormConfig {
   businessId?: string
+  enableServiceSelection: boolean // true = com seleção de serviços, false = só formulário
+  serviceSelectionRequired: boolean // true = obrigatório, false = opcional
+  services: ServiceOption[]
   fields: FormFieldsConfig
   customFields: CustomField[]
+  currency?: 'BRL' | 'EUR' // Moeda baseada no país do negócio
 }
 
 export interface SegmentQuestion {

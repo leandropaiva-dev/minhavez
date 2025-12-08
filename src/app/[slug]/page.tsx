@@ -91,6 +91,7 @@ export default async function LinkPageRoute({ params }: PageProps) {
       linkPage={linkPage}
       links={links || []}
       businessId={business?.id}
+      enableTracking={true}
     />
   )
 }

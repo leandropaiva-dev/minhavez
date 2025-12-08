@@ -11,16 +11,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import type { QueueFormConfig } from '@/types/config.types'
+import type { QueueFormConfig, ReservationFormConfig } from '@/types/config.types'
 
 interface FormPreviewProps {
-  config: QueueFormConfig
+  config: QueueFormConfig | ReservationFormConfig
 }
 
 export default function FormPreview({ config }: FormPreviewProps) {
   const sortedCustomFields = [...config.customFields].sort(
     (a, b) => a.order - b.order
   )
+
+  const isReservationConfig = 'enableServiceSelection' in config
+  const sortedServices = isReservationConfig && config.enableServiceSelection
+    ? [...config.services].sort((a, b) => a.order - b.order)
+    : []
 
   return (
     <div className="border border-zinc-800 rounded-lg p-6 bg-zinc-950">
@@ -29,6 +34,44 @@ export default function FormPreview({ config }: FormPreviewProps) {
       </h3>
 
       <div className="space-y-4 opacity-60 pointer-events-none">
+        {/* Service Selection - Only for reservation forms */}
+        {isReservationConfig && config.enableServiceSelection && sortedServices.length > 0 && (
+          <div>
+            <Label className="text-zinc-300">Escolha o Serviço *</Label>
+            <div className="grid grid-cols-1 gap-2 mt-2">
+              {sortedServices.slice(0, 3).map((service) => (
+                <div
+                  key={service.id}
+                  className="border border-zinc-700 rounded-lg p-3 flex items-center gap-3 hover:border-zinc-600 transition-colors cursor-pointer"
+                >
+                  {service.imageUrl && (
+                    <img
+                      src={service.imageUrl}
+                      alt={service.name}
+                      className="w-16 h-16 object-cover rounded"
+                    />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white font-medium text-sm">{service.name}</p>
+                    {service.description && (
+                      <p className="text-zinc-400 text-xs truncate">{service.description}</p>
+                    )}
+                    <div className="flex gap-2 text-xs text-zinc-400 mt-1">
+                      {service.duration && <span>{service.duration}min</span>}
+                      {service.price && <span>R$ {service.price.toFixed(2)}</span>}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {sortedServices.length > 3 && (
+                <p className="text-xs text-zinc-500 text-center">
+                  +{sortedServices.length - 3} outros serviços
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Customer Name - Always visible */}
         <div>
           <Label className="text-zinc-300">Nome *</Label>

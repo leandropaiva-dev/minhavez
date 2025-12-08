@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import QueueFormWrapper from '@/components/queue/QueueFormWrapper'
 import CustomizedPageWrapper from '@/components/public/CustomizedPageWrapper'
+import PageTracker from '@/components/analytics/PageTracker'
 
 interface PageProps {
   params: Promise<{
@@ -40,6 +41,7 @@ export default async function QueuePage({ params }: PageProps) {
       pageType="queue_form"
       businessName={business.name}
     >
+      <PageTracker businessId={businessId} pageType="queue" pagePath={`/fila/${businessId}`} />
       {/* Queue Status Card */}
       <div className="rounded-2xl p-6 mb-6" style={{
         backgroundColor: 'var(--card-bg)',

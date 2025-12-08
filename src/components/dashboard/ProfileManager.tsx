@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { createClient } from '@/lib/supabase/client'
 import { getSegmentConfig, saveSegmentConfig } from '@/lib/config/storage'
+import ProfilePictureUpload from '../profile/ProfilePictureUpload'
 import type { SegmentConfig, BusinessSegment } from '@/types/config.types'
 
 interface ProfileManagerProps {
@@ -20,6 +21,7 @@ interface ProfileManagerProps {
     phone: string | null
     address: string | null
     business_type: string | null
+    profile_picture_url?: string | null
   } | null
 }
 
@@ -48,6 +50,7 @@ export default function ProfileManager({ userName, userEmail, business }: Profil
   const [businessName, setBusinessName] = useState(business?.name || '')
   const [businessPhone, setBusinessPhone] = useState(business?.phone || '')
   const [businessAddress, setBusinessAddress] = useState(business?.address || '')
+  const [profilePictureUrl, setProfilePictureUrl] = useState(business?.profile_picture_url || null)
   const [savingBusiness, setSavingBusiness] = useState(false)
   const [businessSaved, setBusinessSaved] = useState(false)
 
@@ -196,6 +199,20 @@ export default function ProfileManager({ userName, userEmail, business }: Profil
         {/* Business Tab */}
         <TabsContent value="business">
           <div className="space-y-6">
+            {/* Profile Picture Section */}
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-6 text-center">
+                Foto de Perfil
+              </h3>
+              {business?.id && (
+                <ProfilePictureUpload
+                  currentImageUrl={profilePictureUrl}
+                  businessId={business.id}
+                  onUploadComplete={(url) => setProfilePictureUrl(url)}
+                />
+              )}
+            </div>
+
             <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 space-y-4">
               <h3 className="text-lg font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
                 <Home className="w-5 h-5" />

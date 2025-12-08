@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils'
 interface MobileMenuProps {
   userName?: string
   userEmail?: string
+  profilePictureUrl?: string | null
 }
 
 const menuItems = [

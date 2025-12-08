@@ -122,6 +122,7 @@ export default async function DashboardPage() {
     <DashboardLayout
       userName={user.user_metadata?.name}
       userEmail={user.email}
+      profilePictureUrl={business?.profile_picture_url}
     >
       <main className="p-4 lg:p-8">
         {!business && (

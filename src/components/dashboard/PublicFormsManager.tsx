@@ -71,25 +71,7 @@ export default function PublicFormsManager({ businessId }: PublicFormsManagerPro
                   </p>
                 </div>
 
-                <Tabs defaultValue="fields" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2 mb-4">
-                    <TabsTrigger value="fields">Campos</TabsTrigger>
-                    <TabsTrigger value="appearance">Aparência</TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="fields">
-                    <ConfigurationsTabs />
-                  </TabsContent>
-
-                  <TabsContent value="appearance">
-                    <PageCustomizationEditor
-                      businessId={businessId}
-                      pageType="queue_form"
-                      title="Formulário de Fila"
-                      description="Página onde clientes entram na fila"
-                    />
-                  </TabsContent>
-                </Tabs>
+                <ConfigurationsTabs formType="queue" businessId={businessId} />
               </div>
             </TabsContent>
 
@@ -181,25 +163,7 @@ export default function PublicFormsManager({ businessId }: PublicFormsManagerPro
                   </p>
                 </div>
 
-                <Tabs defaultValue="fields" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2 mb-4">
-                    <TabsTrigger value="fields">Campos</TabsTrigger>
-                    <TabsTrigger value="appearance">Aparência</TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="fields">
-                    <ConfigurationsTabs />
-                  </TabsContent>
-
-                  <TabsContent value="appearance">
-                    <PageCustomizationEditor
-                      businessId={businessId}
-                      pageType="reservation_form"
-                      title="Formulário de Reserva"
-                      description="Página onde clientes fazem reservas"
-                    />
-                  </TabsContent>
-                </Tabs>
+                <ConfigurationsTabs formType="reservation" businessId={businessId} />
               </div>
             </TabsContent>
 

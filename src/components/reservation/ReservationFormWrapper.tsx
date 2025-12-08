@@ -1,9 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { CheckCircle } from 'react-feather'
 import { createClient } from '@/lib/supabase/client'
 import DynamicReservationForm from './DynamicReservationForm'
+import { getPublicFormConfig } from '@/lib/config/form-config-api'
+import type { ReservationFormConfig } from '@/types/config.types'
 
 interface ReservationFormWrapperProps {
   businessId: string
@@ -17,10 +19,27 @@ export default function ReservationFormWrapper({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [config, setConfig] = useState<ReservationFormConfig | null>(null)
+  const [configLoading, setConfigLoading] = useState(true)
   const [reservationDetails, setReservationDetails] = useState<{
     date: string
     time: string
   } | null>(null)
+
+  useEffect(() => {
+    async function loadConfig() {
+      try {
+        const formConfig = await getPublicFormConfig(businessId, 'reservation')
+        setConfig(formConfig as ReservationFormConfig)
+      } catch (err) {
+        console.error('Error loading form config:', err)
+      } finally {
+        setConfigLoading(false)
+      }
+    }
+
+    loadConfig()
+  }, [businessId])
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleSubmit = async (formData: Record<string, any>) => {
@@ -123,6 +142,14 @@ export default function ReservationFormWrapper({
     )
   }
 
+  if (configLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
+
   return (
     <div>
       {error && (
@@ -130,7 +157,7 @@ export default function ReservationFormWrapper({
           <p className="text-red-400 text-sm">{error}</p>
         </div>
       )}
-      <DynamicReservationForm onSubmit={handleSubmit} loading={loading} />
+      {config && <DynamicReservationForm onSubmit={handleSubmit} loading={loading} config={config} />}
     </div>
   )
 }

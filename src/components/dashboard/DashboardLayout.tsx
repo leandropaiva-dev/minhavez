@@ -6,18 +6,20 @@ import Header from './Header'
 interface DashboardLayoutProps {
   userName?: string
   userEmail?: string
+  profilePictureUrl?: string | null
   children: React.ReactNode
 }
 
 export default function DashboardLayout({
   userName,
   userEmail,
+  profilePictureUrl,
   children,
 }: DashboardLayoutProps) {
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-black">
       {/* Header - Full width, fixed at top */}
-      <Header userName={userName} userEmail={userEmail} />
+      <Header userName={userName} userEmail={userEmail} profilePictureUrl={profilePictureUrl} />
 
       {/* Sidebar - Desktop Only */}
       <div className="hidden lg:block">

@@ -11,6 +11,17 @@ export default async function SettingsPage() {
     redirect('/auth')
   }
 
+  // Get user's business
+  const { data: business } = await supabase
+    .from('businesses')
+    .select('id')
+    .eq('user_id', user.id)
+    .single()
+
+  if (!business) {
+    redirect('/dashboard')
+  }
+
   return (
     <DashboardLayout
       userName={user.user_metadata?.name}
@@ -26,7 +37,7 @@ export default async function SettingsPage() {
           </p>
         </div>
 
-        <ConfigurationsTabs />
+        <ConfigurationsTabs businessId={business.id} />
       </main>
     </DashboardLayout>
   )

@@ -39,6 +39,9 @@ export function getQueueFormConfig(): QueueFormConfig | null {
 
 export function getDefaultQueueFormConfig(): QueueFormConfig {
   return {
+    enableServiceSelection: false,
+    serviceSelectionRequired: false,
+    services: [],
     fields: {
       phone: { enabled: true, required: true },
       email: { enabled: true, required: false },
@@ -72,6 +75,9 @@ export function getReservationFormConfig(): ReservationFormConfig | null {
 
 export function getDefaultReservationFormConfig(): ReservationFormConfig {
   return {
+    enableServiceSelection: false,
+    serviceSelectionRequired: false,
+    services: [],
     fields: {
       phone: { enabled: true, required: true },
       email: { enabled: true, required: false },

@@ -10,9 +10,10 @@ import MobileMenu from './MobileMenu'
 interface HeaderProps {
   userName?: string
   userEmail?: string
+  profilePictureUrl?: string | null
 }
 
-export default function Header({ userName, userEmail }: HeaderProps) {
+export default function Header({ userName, userEmail, profilePictureUrl }: HeaderProps) {
   const [searchOpen, setSearchOpen] = useState(false)
 
   // Keyboard shortcut for search (Cmd+K / Ctrl+K)
@@ -83,11 +84,11 @@ export default function Header({ userName, userEmail }: HeaderProps) {
           <div className="w-px h-6 bg-zinc-200 dark:bg-zinc-800 mx-1" />
 
           {/* User Dropdown */}
-          <UserDropdown userName={userName} userEmail={userEmail} />
+          <UserDropdown userName={userName} userEmail={userEmail} profilePictureUrl={profilePictureUrl} />
           </div>
 
           {/* Mobile: Hamburger Menu */}
-          <MobileMenu userName={userName} userEmail={userEmail} />
+          <MobileMenu userName={userName} userEmail={userEmail} profilePictureUrl={profilePictureUrl} />
         </div>
       </div>
     </header>

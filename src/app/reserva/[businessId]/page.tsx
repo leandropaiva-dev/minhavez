@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import ReservationFormWrapper from '@/components/reservation/ReservationFormWrapper'
 import CustomizedPageWrapper from '@/components/public/CustomizedPageWrapper'
+import PageTracker from '@/components/analytics/PageTracker'
 
 export default async function ReservationPage({
   params,
@@ -27,6 +28,7 @@ export default async function ReservationPage({
       pageType="reservation_form"
       businessName={business.name}
     >
+      <PageTracker businessId={businessId} pageType="reservation" pagePath={`/reserva/${businessId}`} />
       {/* Reservation Form Card */}
       <div className="rounded-2xl p-6 sm:p-8" style={{
         backgroundColor: 'var(--card-bg)',

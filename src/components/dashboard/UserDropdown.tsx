@@ -8,9 +8,10 @@ import { useRouter } from 'next/navigation'
 interface UserDropdownProps {
   userName?: string
   userEmail?: string
+  profilePictureUrl?: string | null
 }
 
-export default function UserDropdown({ userName, userEmail }: UserDropdownProps) {
+export default function UserDropdown({ userName, userEmail, profilePictureUrl }: UserDropdownProps) {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
@@ -56,8 +57,12 @@ export default function UserDropdown({ userName, userEmail }: UserDropdownProps)
         className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-zinc-800/50 dark:hover:bg-zinc-800 transition-colors"
       >
         {/* Avatar */}
-        <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center flex-shrink-0">
-          <span className="text-white font-semibold text-sm">{getInitials(userName)}</span>
+        <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0 overflow-hidden">
+          {profilePictureUrl ? (
+            <img src={profilePictureUrl} alt="Foto de perfil" className="w-full h-full object-cover" />
+          ) : (
+            <span className="text-white font-semibold text-sm">{getInitials(userName)}</span>
+          )}
         </div>
 
         {/* Chevron */}

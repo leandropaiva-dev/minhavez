@@ -5,22 +5,29 @@ import { Button } from '@/components/ui/button'
 import { Save, Check, Plus, Edit2, Trash2 } from 'react-feather'
 import FieldToggle from '../onboarding/form-config/FieldToggle'
 import CustomFieldBuilder from '../onboarding/form-config/CustomFieldBuilder'
+import ServiceBuilder from '../onboarding/form-config/ServiceBuilder'
 import FormPreview from '../onboarding/form-config/FormPreview'
-import {
-  getQueueFormConfig,
-  saveQueueFormConfig,
-  getReservationFormConfig,
-  saveReservationFormConfig,
-  getDefaultQueueFormConfig,
-  getDefaultReservationFormConfig,
-} from '@/lib/config/storage'
-import type { QueueFormConfig, ReservationFormConfig, CustomField, FormFieldsConfig } from '@/types/config.types'
+import { getDefaultQueueFormConfig, getDefaultReservationFormConfig } from '@/lib/config/storage'
+import { getFormConfig, saveFormConfig } from '@/lib/config/form-config-api'
+import { getBusiness } from '@/lib/onboarding/actions'
+import { getCurrencyFromCountry, formatCurrency } from '@/lib/utils/currency'
+import type { QueueFormConfig, ReservationFormConfig, CustomField, FormFieldsConfig, ServiceOption } from '@/types/config.types'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
 
 type FormType = 'queue' | 'reservation'
 
-export default function ConfigurationsTabs() {
-  const [activeFormType, setActiveFormType] = useState<FormType>('queue')
+interface ConfigurationsTabsProps {
+  formType?: FormType
+  businessId: string
+}
+
+export default function ConfigurationsTabs({ formType = 'queue', businessId }: ConfigurationsTabsProps) {
+  const activeFormType = formType
   const [saved, setSaved] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [currency, setCurrency] = useState<'BRL' | 'EUR'>('BRL')
 
   // Queue Form Config State
   const [queueFormConfig, setQueueFormConfig] = useState<QueueFormConfig>(
@@ -34,31 +41,55 @@ export default function ConfigurationsTabs() {
 
   const [builderOpen, setBuilderOpen] = useState(false)
   const [editingField, setEditingField] = useState<CustomField | undefined>()
+  const [serviceBuilderOpen, setServiceBuilderOpen] = useState(false)
+  const [editingService, setEditingService] = useState<ServiceOption | undefined>()
 
   useEffect(() => {
-    const savedQueueFormConfig = getQueueFormConfig()
-    if (savedQueueFormConfig) {
-      setQueueFormConfig(savedQueueFormConfig)
+    async function loadConfigs() {
+      setLoading(true)
+      try {
+        const [queueConfig, reservationConfig, businessData] = await Promise.all([
+          getFormConfig(businessId, 'queue'),
+          getFormConfig(businessId, 'reservation'),
+          getBusiness(),
+        ])
+
+        // Set currency from business country
+        if (businessData.data?.country) {
+          const businessCurrency = getCurrencyFromCountry(businessData.data.country)
+          setCurrency(businessCurrency)
+        }
+
+        setQueueFormConfig({ ...queueConfig, currency } as QueueFormConfig)
+        setReservationFormConfig({ ...reservationConfig, currency } as ReservationFormConfig)
+      } catch (error) {
+        console.error('Error loading form configs:', error)
+      } finally {
+        setLoading(false)
+      }
     }
 
-    const savedReservationFormConfig = getReservationFormConfig()
-    if (savedReservationFormConfig) {
-      setReservationFormConfig(savedReservationFormConfig)
-    }
-  }, [])
+    loadConfigs()
+  }, [businessId])
 
   // Get current form config based on active type
   const currentFormConfig = activeFormType === 'queue' ? queueFormConfig : reservationFormConfig
   const setCurrentFormConfig = activeFormType === 'queue' ? setQueueFormConfig : setReservationFormConfig
 
-  const handleSaveFormConfig = () => {
-    if (activeFormType === 'queue') {
-      saveQueueFormConfig(queueFormConfig)
-    } else {
-      saveReservationFormConfig(reservationFormConfig)
+
+  const handleSaveFormConfig = async () => {
+    setSaving(true)
+    try {
+      const config = activeFormType === 'queue' ? queueFormConfig : reservationFormConfig
+      await saveFormConfig(businessId, activeFormType, config)
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    } catch (error) {
+      console.error('Error saving form config:', error)
+      alert('Erro ao salvar configurações. Tente novamente.')
+    } finally {
+      setSaving(false)
     }
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
   }
 
   // Form config handlers
@@ -124,35 +155,235 @@ export default function ConfigurationsTabs() {
     }
   }
 
+  const handleAddService = () => {
+    setEditingService(undefined)
+    setServiceBuilderOpen(true)
+  }
+
+  const handleEditService = (service: ServiceOption) => {
+    setEditingService(service)
+    setServiceBuilderOpen(true)
+  }
+
+  const handleDeleteService = (serviceId: string) => {
+    if (activeFormType === 'reservation') {
+      setReservationFormConfig({
+        ...reservationFormConfig,
+        services: reservationFormConfig.services.filter((s) => s.id !== serviceId),
+      })
+    } else if (activeFormType === 'queue') {
+      setQueueFormConfig({
+        ...queueFormConfig,
+        services: queueFormConfig.services.filter((s) => s.id !== serviceId),
+      })
+    }
+  }
+
+  const handleSaveService = (service: ServiceOption) => {
+    if (activeFormType === 'reservation') {
+      if (editingService) {
+        setReservationFormConfig({
+          ...reservationFormConfig,
+          services: reservationFormConfig.services.map((s) =>
+            s.id === service.id ? service : s
+          ),
+        })
+      } else {
+        setReservationFormConfig({
+          ...reservationFormConfig,
+          services: [
+            ...reservationFormConfig.services,
+            { ...service, order: reservationFormConfig.services.length },
+          ],
+        })
+      }
+    } else if (activeFormType === 'queue') {
+      if (editingService) {
+        setQueueFormConfig({
+          ...queueFormConfig,
+          services: queueFormConfig.services.map((s) =>
+            s.id === service.id ? service : s
+          ),
+        })
+      } else {
+        setQueueFormConfig({
+          ...queueFormConfig,
+          services: [
+            ...queueFormConfig.services,
+            { ...service, order: queueFormConfig.services.length },
+          ],
+        })
+      }
+    }
+  }
+
+  const handleToggleServiceSelection = (enabled: boolean) => {
+    if (activeFormType === 'reservation') {
+      setReservationFormConfig({
+        ...reservationFormConfig,
+        enableServiceSelection: enabled,
+      })
+    } else if (activeFormType === 'queue') {
+      setQueueFormConfig({
+        ...queueFormConfig,
+        enableServiceSelection: enabled,
+      })
+    }
+  }
+
   const sortedCustomFields = [...currentFormConfig.customFields].sort(
     (a, b) => a.order - b.order
   )
 
+  const sortedServices = activeFormType === 'reservation'
+    ? [...(reservationFormConfig.services || [])].sort((a, b) => a.order - b.order)
+    : [...(queueFormConfig.services || [])].sort((a, b) => a.order - b.order)
+
+  const serviceSelectionEnabled = activeFormType === 'reservation'
+    ? (reservationFormConfig.enableServiceSelection || false)
+    : (queueFormConfig.enableServiceSelection || false)
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
-      {/* Form Type Selector */}
-      <div className="flex gap-2 p-1 bg-zinc-100 dark:bg-zinc-950 rounded-lg">
-        <button
-          onClick={() => setActiveFormType('queue')}
-          className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-            activeFormType === 'queue'
-              ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm'
-              : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300'
-          }`}
-        >
-          Formulário da Fila
-        </button>
-        <button
-          onClick={() => setActiveFormType('reservation')}
-          className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-            activeFormType === 'reservation'
-              ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm'
-              : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300'
-          }`}
-        >
-          Formulário de Reserva
-        </button>
+      {/* Service Selection Toggle - For both queue and reservation forms */}
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-1">
+              Seleção de Serviços
+            </h3>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400">
+              {activeFormType === 'queue'
+                ? 'Permitir que clientes escolham serviços antes de entrar na fila (ideal para barbearias, salões, etc)'
+                : 'Permitir que clientes escolham serviços antes de reservar (ideal para barbearias, salões, restaurantes com opções, etc)'}
+            </p>
+          </div>
+          <Switch
+            checked={serviceSelectionEnabled}
+            onCheckedChange={handleToggleServiceSelection}
+          />
+        </div>
+
+        {/* Required Toggle - Only show if service selection is enabled */}
+        {serviceSelectionEnabled && (
+          <div className="flex items-center justify-between pt-4 border-t border-zinc-200 dark:border-zinc-800">
+            <div className="flex-1">
+              <Label className="text-sm font-medium text-zinc-900 dark:text-white">
+                Seleção Obrigatória
+              </Label>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                Clientes devem escolher um serviço para continuar
+              </p>
+            </div>
+            <Switch
+              checked={activeFormType === 'reservation'
+                ? reservationFormConfig.serviceSelectionRequired
+                : queueFormConfig.serviceSelectionRequired}
+              onCheckedChange={(checked) => {
+                if (activeFormType === 'reservation') {
+                  setReservationFormConfig({
+                    ...reservationFormConfig,
+                    serviceSelectionRequired: checked,
+                  })
+                } else {
+                  setQueueFormConfig({
+                    ...queueFormConfig,
+                    serviceSelectionRequired: checked,
+                  })
+                }
+              }}
+            />
+          </div>
+        )}
       </div>
+
+      {/* Services Management - Show if service selection is enabled */}
+      {serviceSelectionEnabled && (
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">
+              Serviços Disponíveis
+            </h3>
+            <Button size="sm" onClick={handleAddService} className="gap-2">
+              <Plus className="w-4 h-4" />
+              Adicionar Serviço
+            </Button>
+          </div>
+
+          {sortedServices.length === 0 ? (
+            <div className="border border-dashed border-zinc-300 dark:border-zinc-700 rounded-lg p-8 text-center">
+              <p className="text-zinc-500 dark:text-zinc-400 text-sm">
+                Nenhum serviço cadastrado. Adicione serviços para permitir que clientes escolham.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {sortedServices.map((service) => (
+                <div
+                  key={service.id}
+                  className="border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden bg-zinc-50 dark:bg-zinc-950"
+                >
+                  {service.imageUrl && (
+                    <img
+                      src={service.imageUrl}
+                      alt={service.name}
+                      className="w-full h-32 object-cover"
+                    />
+                  )}
+                  <div className="p-3">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
+                        <h4 className="text-zinc-900 dark:text-white font-medium">
+                          {service.name}
+                        </h4>
+                        {service.description && (
+                          <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+                            {service.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between text-sm text-zinc-600 dark:text-zinc-400">
+                      <div className="flex gap-3">
+                        {service.duration && (
+                          <span>{service.duration} min</span>
+                        )}
+                        {service.price && (
+                          <span>{formatCurrency(service.price, currency)}</span>
+                        )}
+                      </div>
+                      <div className="flex gap-1">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEditService(service)}
+                        >
+                          <Edit2 className="w-3 h-3" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleDeleteService(service.id)}
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-6">
@@ -271,9 +502,9 @@ export default function ConfigurationsTabs() {
         </div>
       </div>
 
-      <Button onClick={handleSaveFormConfig} className="w-full gap-2">
+      <Button onClick={handleSaveFormConfig} className="w-full gap-2" disabled={saving}>
         {saved ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
-        {saved ? 'Salvo!' : 'Salvar Alterações'}
+        {saving ? 'Salvando...' : saved ? 'Salvo!' : 'Salvar Alterações'}
       </Button>
 
       <CustomFieldBuilder
@@ -281,6 +512,14 @@ export default function ConfigurationsTabs() {
         onOpenChange={setBuilderOpen}
         onSave={handleSaveCustomField}
         editField={editingField}
+      />
+
+      <ServiceBuilder
+        open={serviceBuilderOpen}
+        onOpenChange={setServiceBuilderOpen}
+        onSave={handleSaveService}
+        editService={editingService}
+        currency={currency}
       />
     </div>
   )

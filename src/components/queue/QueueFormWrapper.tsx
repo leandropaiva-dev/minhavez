@@ -1,8 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import DynamicQueueForm from './DynamicQueueForm'
+import { getPublicFormConfig } from '@/lib/config/form-config-api'
+import type { QueueFormConfig } from '@/types/config.types'
 
 interface QueueFormWrapperProps {
   businessId: string
@@ -15,6 +17,23 @@ export default function QueueFormWrapper({
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [config, setConfig] = useState<QueueFormConfig | null>(null)
+  const [configLoading, setConfigLoading] = useState(true)
+
+  useEffect(() => {
+    async function loadConfig() {
+      try {
+        const formConfig = await getPublicFormConfig(businessId, 'queue')
+        setConfig(formConfig as QueueFormConfig)
+      } catch (err) {
+        console.error('Error loading form config:', err)
+      } finally {
+        setConfigLoading(false)
+      }
+    }
+
+    loadConfig()
+  }, [businessId])
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleSubmit = async (formData: Record<string, any>) => {
@@ -56,6 +75,14 @@ export default function QueueFormWrapper({
     }
   }
 
+  if (configLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
+
   return (
     <div>
       {error && (
@@ -63,7 +90,7 @@ export default function QueueFormWrapper({
           <p className="text-red-500 text-sm">{error}</p>
         </div>
       )}
-      <DynamicQueueForm onSubmit={handleSubmit} loading={loading} />
+      {config && <DynamicQueueForm onSubmit={handleSubmit} loading={loading} config={config} />}
     </div>
   )
 }
