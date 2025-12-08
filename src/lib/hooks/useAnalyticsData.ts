@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
-type TimeFilter = '24h' | '7d' | '15d' | '30d' | '90d'
+type TimeFilter = '24h' | '7d' | '15d' | '30d' | '90d' | 'custom'
 type MetricType = 'attendances' | 'avg_time' | 'reservations' | 'queue_count'
 
 interface DataPoint {
@@ -9,10 +9,16 @@ interface DataPoint {
   value: number
 }
 
+export interface DateRange {
+  from: Date
+  to: Date
+}
+
 export function useAnalyticsData(
   businessId: string,
   metricType: MetricType,
-  timeFilter: TimeFilter
+  timeFilter: TimeFilter,
+  customDateRange?: DateRange
 ) {
   const [data, setData] = useState<DataPoint[]>([])
   const [loading, setLoading] = useState(true)
@@ -29,25 +35,30 @@ export function useAnalyticsData(
       const supabase = createClient()
 
       // Calculate date range
-      const endDate = new Date()
-      const startDate = new Date()
+      let endDate = new Date()
+      let startDate = new Date()
 
-      switch (timeFilter) {
-        case '24h':
-          startDate.setHours(startDate.getHours() - 24)
-          break
-        case '7d':
-          startDate.setDate(startDate.getDate() - 7)
-          break
-        case '15d':
-          startDate.setDate(startDate.getDate() - 15)
-          break
-        case '30d':
-          startDate.setDate(startDate.getDate() - 30)
-          break
-        case '90d':
-          startDate.setDate(startDate.getDate() - 90)
-          break
+      if (timeFilter === 'custom' && customDateRange) {
+        startDate = new Date(customDateRange.from)
+        endDate = new Date(customDateRange.to)
+      } else {
+        switch (timeFilter) {
+          case '24h':
+            startDate.setHours(startDate.getHours() - 24)
+            break
+          case '7d':
+            startDate.setDate(startDate.getDate() - 7)
+            break
+          case '15d':
+            startDate.setDate(startDate.getDate() - 15)
+            break
+          case '30d':
+            startDate.setDate(startDate.getDate() - 30)
+            break
+          case '90d':
+            startDate.setDate(startDate.getDate() - 90)
+            break
+        }
       }
 
       try {
@@ -182,7 +193,7 @@ export function useAnalyticsData(
     }
 
     fetchData()
-  }, [businessId, metricType, timeFilter])
+  }, [businessId, metricType, timeFilter, customDateRange])
 
   return { data, loading }
 }

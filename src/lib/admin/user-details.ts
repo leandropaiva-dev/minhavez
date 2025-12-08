@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireSuperAdmin } from './permissions'
 
 export interface UserActivityLog {
@@ -48,20 +49,55 @@ export interface BusinessMetrics {
 }
 
 export interface DetailedUserData {
+  // Auth data
   userId: string
   email: string
+  phone: string | null
+  emailConfirmedAt: string | null
+  phoneConfirmedAt: string | null
   createdAt: string
+  lastSignInAt: string | null
+
+  // User metadata
+  name: string | null
+  avatarUrl: string | null
+
+  // Activity
   lastActivity: string | null
   totalLogins: number
   activityLogs: UserActivityLog[]
+
+  // Subscription & payments
+  hasActiveSubscription: boolean
+  subscriptionHistory: {
+    status: string
+    startDate: string
+    endDate: string | null
+    businessName: string
+  }[]
+
+  // Businesses
   businesses: {
     id: string
     name: string
+    slug: string
     business_type: string
+    country: string
+    city: string | null
+    phone: string | null
     subscription_status: string
     trial_ends_at: string | null
     created_at: string
     metrics: BusinessMetrics
+  }[]
+
+  // Coupons redeemed
+  couponsUsed: {
+    code: string
+    redeemedAt: string
+    businessName: string
+    discountApplied: number | null
+    trialDaysAdded: number | null
   }[]
 }
 
@@ -73,12 +109,27 @@ export async function getUserDetailedInfo(userId: string) {
 
   const supabase = await createClient()
 
-  // Get user email
+  console.log('[getUserDetailedInfo] Fetching user:', userId)
+
+  // Get FULL user data from auth.users via admin API (using service role key)
+  const { data: { user: authUser }, error: authError } = await supabaseAdmin.auth.admin.getUserById(userId)
+
+  console.log('[getUserDetailedInfo] Auth user result:', { authUser: !!authUser, authError })
+
+  if (authError || !authUser) {
+    console.error('[getUserDetailedInfo] Failed to get user:', authError)
+    return {
+      success: false,
+      error: authError?.message || 'Usuário não encontrado'
+    }
+  }
+
+  // Get user email (backup if admin API fails)
   const { data: email } = await supabase.rpc('get_user_email', {
     p_user_id: userId
   })
 
-  // Get user's businesses
+  // Get user's businesses with ALL fields
   const { data: businesses } = await supabase
     .from('businesses')
     .select('*')
@@ -90,15 +141,52 @@ export async function getUserDetailedInfo(userId: string) {
     .select('*')
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
-    .limit(50)
+    .limit(100)
 
   // Get last activity
   const { data: lastActivity } = await supabase.rpc('get_user_last_activity', {
     p_user_id: userId
   })
 
+  // Get coupon redemptions
+  const { data: couponRedemptions } = await supabase
+    .from('coupon_redemptions')
+    .select(`
+      redeemed_at,
+      discount_applied,
+      trial_days_added,
+      coupon_id,
+      business_id,
+      coupons!inner(code),
+      businesses!inner(name)
+    `)
+    .eq('user_id', userId)
+    .order('redeemed_at', { ascending: false })
+
+  const couponsUsed = (couponRedemptions || []).map(r => ({
+    code: (r.coupons as { code?: string })?.code || 'N/A',
+    redeemedAt: r.redeemed_at,
+    businessName: (r.businesses as { name?: string })?.name || 'N/A',
+    discountApplied: r.discount_applied,
+    trialDaysAdded: r.trial_days_added
+  }))
+
   // Count total logins
   const totalLogins = activityLogs?.filter(log => log.activity_type === 'login').length || 0
+
+  // Check if has active subscription
+  const hasActiveSubscription = businesses?.some(b =>
+    b.subscription_status === 'active' ||
+    (b.subscription_status === 'trial' && b.trial_ends_at && new Date(b.trial_ends_at) > new Date())
+  ) || false
+
+  // Build subscription history
+  const subscriptionHistory = (businesses || []).map(b => ({
+    status: b.subscription_status,
+    startDate: b.created_at,
+    endDate: b.trial_ends_at,
+    businessName: b.name
+  }))
 
   // Get comprehensive metrics for each business
   const businessesWithMetrics = await Promise.all(
@@ -203,18 +291,36 @@ export async function getUserDetailedInfo(userId: string) {
     })
   )
 
-  const createdAt = businesses?.[0]?.created_at || new Date().toISOString()
-
   return {
     success: true,
     data: {
+      // Auth data - COMPLETE from Admin API
       userId,
-      email: email || 'N/A',
-      createdAt,
+      email: authUser.email || email || 'N/A',
+      phone: authUser.phone || null,
+      emailConfirmedAt: authUser.email_confirmed_at || null,
+      phoneConfirmedAt: authUser.phone_confirmed_at || null,
+      createdAt: authUser.created_at,
+      lastSignInAt: authUser.last_sign_in_at || null,
+
+      // User metadata
+      name: authUser.user_metadata?.name || authUser.user_metadata?.full_name || null,
+      avatarUrl: authUser.user_metadata?.avatar_url || null,
+
+      // Activity
       lastActivity,
       totalLogins,
       activityLogs: activityLogs || [],
-      businesses: businessesWithMetrics
+
+      // Subscription & payments
+      hasActiveSubscription,
+      subscriptionHistory,
+
+      // Businesses
+      businesses: businessesWithMetrics,
+
+      // Coupons
+      couponsUsed
     } as DetailedUserData
   }
 }

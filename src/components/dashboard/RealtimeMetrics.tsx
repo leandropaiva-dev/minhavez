@@ -45,16 +45,18 @@ export default function RealtimeMetrics({
         .in('status', ['completed', 'attending'])
         .gte('joined_at', today.toISOString())
 
-      // Atendidos hoje das RESERVAS (completed)
+      // Atendidos hoje das RESERVAS (completed, seated, arrived)
       const { count: reservationsCompleted } = await supabase
         .from('reservations')
         .select('*', { count: 'exact', head: true })
         .eq('business_id', businessId)
-        .eq('status', 'completed')
+        .in('status', ['completed', 'seated', 'arrived'])
         .eq('reservation_date', todayStr)
 
       // Total de atendidos = fila + reservas
       const totalAttended = (queueAttended || 0) + (reservationsCompleted || 0)
+
+      console.log('[RealtimeMetrics] Queue attended:', queueAttended, 'Reservations completed:', reservationsCompleted, 'Total:', totalAttended)
 
       // Reservas de hoje (todas exceto cancelled)
       const { count: reservationsToday } = await supabase
@@ -72,13 +74,6 @@ export default function RealtimeMetrics({
         .in('status', ['completed', 'attending'])
         .gte('joined_at', today.toISOString())
 
-      const { data: completedReservations } = await supabase
-        .from('reservations')
-        .select('created_at, updated_at')
-        .eq('business_id', businessId)
-        .eq('status', 'completed')
-        .eq('reservation_date', todayStr)
-
       let avgWaitTime = 0
       let totalMinutes = 0
       let totalEntries = 0
@@ -95,13 +90,24 @@ export default function RealtimeMetrics({
         })
       }
 
-      // Calcular tempo das reservas (created_at até updated_at quando completed)
-      if (completedReservations && completedReservations.length > 0) {
-        completedReservations.forEach(reservation => {
-          const created = new Date(reservation.created_at).getTime()
+      // Calcular tempo das reservas - usar reservation_time até updated_at
+      const { data: completedReservationsTime } = await supabase
+        .from('reservations')
+        .select('reservation_time, updated_at, created_at')
+        .eq('business_id', businessId)
+        .in('status', ['completed', 'seated', 'arrived'])
+        .eq('reservation_date', todayStr)
+
+      if (completedReservationsTime && completedReservationsTime.length > 0) {
+        completedReservationsTime.forEach(reservation => {
+          // Usar horário da reserva como base, não created_at
+          const reservationDateTime = new Date(`${todayStr}T${reservation.reservation_time}`).getTime()
           const updated = new Date(reservation.updated_at).getTime()
-          totalMinutes += (updated - created) / 60000
-          totalEntries++
+          const minutes = (updated - reservationDateTime) / 60000
+          if (minutes > 0 && minutes < 480) { // Apenas se for razoável (menos de 8h)
+            totalMinutes += minutes
+            totalEntries++
+          }
         })
       }
 

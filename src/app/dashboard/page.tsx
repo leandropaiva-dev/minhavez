@@ -58,11 +58,11 @@ export default async function DashboardPage() {
       .in('status', ['completed', 'attending'])
       .gte('joined_at', today.toISOString())
 
-    const { data: completedReservations } = await supabase
+    const { data: completedReservationsTime } = await supabase
       .from('reservations')
-      .select('created_at, updated_at')
+      .select('reservation_time, updated_at, created_at')
       .eq('business_id', business.id)
-      .eq('status', 'completed')
+      .in('status', ['completed', 'seated', 'arrived'])
       .eq('reservation_date', todayStr)
 
     let avgWaitTime = 0
@@ -80,12 +80,15 @@ export default async function DashboardPage() {
       })
     }
 
-    if (completedReservations && completedReservations.length > 0) {
-      completedReservations.forEach(entry => {
-        const created = new Date(entry.created_at).getTime()
-        const updated = new Date(entry.updated_at).getTime()
-        totalMinutes += (updated - created) / 60000
-        totalCount++
+    if (completedReservationsTime && completedReservationsTime.length > 0) {
+      completedReservationsTime.forEach(reservation => {
+        const reservationDateTime = new Date(`${todayStr}T${reservation.reservation_time}`).getTime()
+        const updated = new Date(reservation.updated_at).getTime()
+        const minutes = (updated - reservationDateTime) / 60000
+        if (minutes > 0 && minutes < 480) {
+          totalMinutes += minutes
+          totalCount++
+        }
       })
     }
 

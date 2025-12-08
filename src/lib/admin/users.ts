@@ -42,9 +42,15 @@ export async function getAllUsers() {
   for (const business of businesses) {
     if (!usersMap.has(business.user_id)) {
       // Get user email using safe function
-      const { data: email } = await supabase.rpc('get_user_email', {
+      const { data: email, error: emailError } = await supabase.rpc('get_user_email', {
         p_user_id: business.user_id
       })
+
+      if (emailError) {
+        console.error('[getAllUsers] Error fetching email for user:', business.user_id, emailError)
+      }
+
+      console.log('[getAllUsers] User:', business.user_id, 'Email:', email)
 
       usersMap.set(business.user_id, {
         id: business.user_id,

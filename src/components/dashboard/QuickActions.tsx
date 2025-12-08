@@ -67,21 +67,18 @@ export default function QuickActions({ businessId }: QuickActionsProps) {
       label: 'Encerrar Fila',
       icon: XCircle,
       onClick: handleCloseQueue,
-      variant: 'danger' as const,
     },
     {
       id: 'close-reservations',
       label: 'Encerrar Reservas',
       icon: Calendar,
       onClick: handleCloseReservations,
-      variant: 'danger' as const,
     },
     {
       id: 'call-next',
       label: 'Chamar Próximo',
       icon: Phone,
       onClick: handleCallNext,
-      variant: 'primary' as const,
       disabled: isProcessing,
     },
     {
@@ -89,49 +86,40 @@ export default function QuickActions({ businessId }: QuickActionsProps) {
       label: 'Inserir na Fila',
       icon: UserPlus,
       onClick: handleAddToQueue,
-      variant: 'secondary' as const,
     },
     {
       id: 'view-queue',
       label: 'Ver Filas',
       icon: Eye,
       onClick: handleViewQueue,
-      variant: 'secondary' as const,
     },
     {
       id: 'view-reservations',
       label: 'Ver Reservas',
       icon: Calendar,
       onClick: handleViewReservations,
-      variant: 'secondary' as const,
     },
     {
       id: 'view-history',
       label: 'Histórico',
       icon: Clock,
       onClick: handleViewHistory,
-      variant: 'secondary' as const,
     },
     {
       id: 'settings',
       label: 'Configurações',
       icon: Settings,
       onClick: handleViewSettings,
-      variant: 'secondary' as const,
     },
     {
       id: 'reports',
       label: 'Relatórios',
       icon: FileText,
       onClick: handleViewReports,
-      variant: 'secondary' as const,
     },
   ]
 
-  const getVariantClasses = () => {
-    // Todos os botões iguais
-    return 'bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white border border-zinc-300 dark:border-zinc-700'
-  }
+  const buttonClasses = 'bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white border border-zinc-300 dark:border-zinc-700'
 
   return (
     <div className="relative group h-80">
@@ -159,7 +147,7 @@ export default function QuickActions({ businessId }: QuickActionsProps) {
                 key={action.id}
                 onClick={action.onClick}
                 disabled={action.disabled}
-                className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg border transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${getVariantClasses()}`}
+                className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg border transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${buttonClasses}`}
               >
                 <Icon className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                 <span className="text-[10px] sm:text-xs font-medium text-center leading-tight">

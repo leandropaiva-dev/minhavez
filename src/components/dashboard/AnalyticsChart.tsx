@@ -2,7 +2,9 @@
 
 import { useState } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { TrendingUp, Loader } from 'react-feather'
+import { TrendingUp, Loader, Calendar as CalendarIcon } from 'react-feather'
+import { format } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
 import {
   Select,
   SelectContent,
@@ -10,9 +12,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { useAnalyticsData } from '@/lib/hooks/useAnalyticsData'
+import { Calendar } from '@/components/ui/calendar'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { Button } from '@/components/ui/button'
+import { useAnalyticsData, type DateRange } from '@/lib/hooks/useAnalyticsData'
 
-type TimeFilter = '24h' | '7d' | '15d' | '30d' | '90d'
+type TimeFilter = '24h' | '7d' | '15d' | '30d' | '90d' | 'custom'
 type MetricType = 'attendances' | 'avg_time' | 'reservations' | 'queue_count'
 
 interface AnalyticsChartProps {
@@ -25,6 +34,7 @@ const timeFilters: { value: TimeFilter; label: string }[] = [
   { value: '15d', label: '15 dias' },
   { value: '30d', label: '30 dias' },
   { value: '90d', label: '90 dias' },
+  { value: 'custom', label: 'Personalizado' },
 ]
 
 const metricTypes: { value: MetricType; label: string }[] = [
@@ -37,8 +47,10 @@ const metricTypes: { value: MetricType; label: string }[] = [
 export default function AnalyticsChart({ businessId }: AnalyticsChartProps) {
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('7d')
   const [metricType, setMetricType] = useState<MetricType>('attendances')
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined)
+  const [showDatePicker, setShowDatePicker] = useState(false)
 
-  const { data, loading } = useAnalyticsData(businessId, metricType, timeFilter)
+  const { data, loading } = useAnalyticsData(businessId, metricType, timeFilter, dateRange)
 
   return (
     <div className="relative group h-80">
@@ -74,7 +86,18 @@ export default function AnalyticsChart({ businessId }: AnalyticsChartProps) {
             </Select>
 
             {/* Time Filter Dropdown */}
-            <Select value={timeFilter} onValueChange={(value) => setTimeFilter(value as TimeFilter)}>
+            <Select
+              value={timeFilter}
+              onValueChange={(value) => {
+                const newFilter = value as TimeFilter
+                setTimeFilter(newFilter)
+                if (newFilter === 'custom') {
+                  setShowDatePicker(true)
+                } else {
+                  setDateRange(undefined)
+                }
+              }}
+            >
               <SelectTrigger className="w-[100px] sm:w-[120px] h-9 bg-white dark:bg-black border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white text-xs">
                 <SelectValue />
               </SelectTrigger>
@@ -86,6 +109,46 @@ export default function AnalyticsChart({ businessId }: AnalyticsChartProps) {
                 ))}
               </SelectContent>
             </Select>
+
+            {/* Custom Date Range Picker */}
+            {timeFilter === 'custom' && (
+              <Popover open={showDatePicker} onOpenChange={setShowDatePicker}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="h-9 text-xs bg-white dark:bg-black border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dateRange?.from ? (
+                      dateRange.to ? (
+                        <>
+                          {format(dateRange.from, 'dd/MM', { locale: ptBR })} -{' '}
+                          {format(dateRange.to, 'dd/MM', { locale: ptBR })}
+                        </>
+                      ) : (
+                        format(dateRange.from, 'dd/MM/yyyy', { locale: ptBR })
+                      )
+                    ) : (
+                      'Selecionar datas'
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800" align="end">
+                  <Calendar
+                    mode="range"
+                    selected={{ from: dateRange?.from, to: dateRange?.to }}
+                    onSelect={(range) => {
+                      if (range?.from && range?.to) {
+                        setDateRange({ from: range.from, to: range.to })
+                        setShowDatePicker(false)
+                      }
+                    }}
+                    locale={ptBR}
+                    className="rounded-md"
+                  />
+                </PopoverContent>
+              </Popover>
+            )}
           </div>
         </div>
 
