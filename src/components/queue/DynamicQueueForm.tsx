@@ -40,20 +40,24 @@ export default function DynamicQueueForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
+    const errorMap: Record<string, string> = {}
+
     // Validate service selection if enabled and required
     if (config.enableServiceSelection && config.serviceSelectionRequired && (config.services || []).length > 0 && !formData.selected_service) {
-      setErrors({ ...errors, selected_service: 'Selecione um serviço' })
-      return
+      errorMap.selected_service = 'Selecione um serviço'
     }
 
     // Validate form
     const validation = validateDynamicForm(formData, config)
 
     if (!validation.valid) {
-      const errorMap: Record<string, string> = {}
       validation.errors.forEach((err) => {
         errorMap[err.field] = err.message
       })
+    }
+
+    // If there are any errors, show them and return
+    if (Object.keys(errorMap).length > 0) {
       setErrors(errorMap)
       return
     }
