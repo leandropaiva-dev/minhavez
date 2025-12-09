@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Upload, DollarSign, Clock } from 'react-feather'
+import { DollarSign, Clock } from 'react-feather'
+import ImageUploader from '@/components/linkpage/ImageUploader'
 import type { ServiceOption } from '@/types/config.types'
 import { getCurrencySymbol } from '@/lib/utils/currency'
 
@@ -16,6 +17,7 @@ interface ServiceBuilderProps {
   onSave: (service: ServiceOption) => void
   editService?: ServiceOption
   currency?: 'BRL' | 'EUR'
+  businessId: string
 }
 
 export default function ServiceBuilder({
@@ -24,6 +26,7 @@ export default function ServiceBuilder({
   onSave,
   editService,
   currency = 'BRL',
+  businessId,
 }: ServiceBuilderProps) {
   const currencySymbol = getCurrencySymbol(currency)
   const [name, setName] = useState('')
@@ -102,35 +105,25 @@ export default function ServiceBuilder({
 
           {/* Imagem */}
           <div className="space-y-2">
-            <Label htmlFor="service-image">URL da Imagem</Label>
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <Input
-                  id="service-image"
-                  placeholder="https://exemplo.com/imagem.jpg"
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                />
-              </div>
-              <Button variant="outline" size="icon" type="button">
-                <Upload className="w-4 h-4" />
-              </Button>
-            </div>
-            {imageUrl && (
-              <div className="mt-2 border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden">
-                <img
-                  src={imageUrl}
-                  alt="Preview"
-                  className="w-full h-40 object-cover"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none'
-                  }}
-                />
-              </div>
-            )}
+            <ImageUploader
+              label="Imagem do Serviço"
+              value={imageUrl}
+              onChange={(url) => setImageUrl(url || '')}
+              businessId={businessId}
+              bucket="service-images"
+              folder="services"
+              aspectRatio="aspect-video"
+              maxWidth="max-w-full"
+            />
             <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              Cole o link de uma imagem ou faça upload (funcionalidade em breve)
+              Faça upload de uma imagem ou cole uma URL abaixo
             </p>
+            <Input
+              placeholder="Ou cole uma URL de imagem"
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+              className="text-sm"
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">

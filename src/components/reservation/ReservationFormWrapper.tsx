@@ -79,6 +79,7 @@ export default function ReservationFormWrapper({
           reservation_date: formData.reservation_date,
           reservation_time: formData.reservation_time,
           notes: formData.notes || null,
+          selected_service: formData.selected_service || null,
           status: 'pending',
         })
 

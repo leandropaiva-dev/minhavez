@@ -73,6 +73,7 @@ export interface Database {
           status: 'waiting' | 'called' | 'attending' | 'completed' | 'cancelled' | 'no_show'
           position: number | null
           notes: string | null
+          selected_service: string | null
           joined_at: string
           called_at: string | null
           attended_at: string | null
@@ -91,6 +92,7 @@ export interface Database {
           status?: 'waiting' | 'called' | 'attending' | 'completed' | 'cancelled' | 'no_show'
           position?: number | null
           notes?: string | null
+          selected_service?: string | null
           joined_at?: string
           called_at?: string | null
           attended_at?: string | null
@@ -109,6 +111,7 @@ export interface Database {
           status?: 'waiting' | 'called' | 'attending' | 'completed' | 'cancelled' | 'no_show'
           position?: number | null
           notes?: string | null
+          selected_service?: string | null
           joined_at?: string
           called_at?: string | null
           attended_at?: string | null
@@ -130,6 +133,7 @@ export interface Database {
           reservation_time: string
           status: 'pending' | 'confirmed' | 'arrived' | 'seated' | 'completed' | 'cancelled' | 'no_show'
           notes: string | null
+          selected_service: string | null
           created_at: string
           updated_at: string
         }
@@ -144,6 +148,7 @@ export interface Database {
           reservation_time: string
           status?: 'pending' | 'confirmed' | 'arrived' | 'seated' | 'completed' | 'cancelled' | 'no_show'
           notes?: string | null
+          selected_service?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -158,6 +163,7 @@ export interface Database {
           reservation_time?: string
           status?: 'pending' | 'confirmed' | 'arrived' | 'seated' | 'completed' | 'cancelled' | 'no_show'
           notes?: string | null
+          selected_service?: string | null
           created_at?: string
           updated_at?: string
         }

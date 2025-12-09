@@ -12,7 +12,7 @@ interface PublicFormsManagerProps {
 
 type FormSection = 'queue' | 'reservation'
 type QueueScreen = 'form' | 'waiting' | 'attending' | 'completed'
-type ReservationScreen = 'form' | 'confirmation'
+type ReservationScreen = 'form' | 'appearance' | 'confirmation'
 
 export default function PublicFormsManager({ businessId }: PublicFormsManagerProps) {
   const [activeSection, setActiveSection] = useState<FormSection>('queue')
@@ -140,10 +140,14 @@ export default function PublicFormsManager({ businessId }: PublicFormsManagerPro
         {/* Reservation Section */}
         <TabsContent value="reservation" className="space-y-4">
           <Tabs value={activeReservationScreen} onValueChange={(v) => setActiveReservationScreen(v as ReservationScreen)}>
-            <TabsList className="grid w-full grid-cols-2 mb-4">
+            <TabsList className="grid w-full grid-cols-3 mb-4">
               <TabsTrigger value="form" className="gap-2">
                 <Edit3 className="w-4 h-4" />
-                Formulário de Reserva
+                Formulário
+              </TabsTrigger>
+              <TabsTrigger value="appearance" className="gap-2">
+                <Eye className="w-4 h-4" />
+                Aparência
               </TabsTrigger>
               <TabsTrigger value="confirmation" className="gap-2">
                 <CheckCircle className="w-4 h-4" />
@@ -159,11 +163,31 @@ export default function PublicFormsManager({ businessId }: PublicFormsManagerPro
                     Formulário de Reserva
                   </h3>
                   <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                    Configure os campos e a aparência da página de reservas
+                    Configure os campos do formulário de reservas
                   </p>
                 </div>
 
                 <ConfigurationsTabs formType="reservation" businessId={businessId} />
+              </div>
+            </TabsContent>
+
+            {/* Appearance Screen */}
+            <TabsContent value="appearance">
+              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6">
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-2">
+                    Aparência da Página
+                  </h3>
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                    Personalize cores, logotipo e estilo da página de reservas
+                  </p>
+                </div>
+                <PageCustomizationEditor
+                  businessId={businessId}
+                  pageType="reservation_form"
+                  title="Formulário de Reserva"
+                  description="Página onde clientes fazem reservas"
+                />
               </div>
             </TabsContent>
 

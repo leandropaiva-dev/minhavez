@@ -520,6 +520,7 @@ export default function ConfigurationsTabs({ formType = 'queue', businessId }: C
         onSave={handleSaveService}
         editService={editingService}
         currency={currency}
+        businessId={businessId}
       />
     </div>
   )

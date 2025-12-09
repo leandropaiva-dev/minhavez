@@ -39,6 +39,7 @@ export async function POST(request: NextRequest) {
       customerEmail: body.customerEmail,
       partySize: body.partySize,
       notes: body.notes,
+      selectedService: body.selectedService,
     })
 
     if (result.error) {

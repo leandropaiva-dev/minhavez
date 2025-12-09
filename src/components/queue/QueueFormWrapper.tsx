@@ -53,6 +53,7 @@ export default function QueueFormWrapper({
           customerEmail: formData.customer_email,
           partySize: formData.party_size || 1,
           notes: formData.notes,
+          selectedService: formData.selected_service,
           ...formData, // Include custom fields
         }),
       })

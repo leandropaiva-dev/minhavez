@@ -11,6 +11,7 @@ export interface JoinQueueData {
   customerEmail?: string
   partySize?: number
   notes?: string
+  selectedService?: string
 }
 
 export async function joinQueue(data: JoinQueueData) {
@@ -44,6 +45,7 @@ export async function joinQueue(data: JoinQueueData) {
     customer_email: data.customerEmail,
     party_size: data.partySize || 1,
     notes: data.notes,
+    selected_service: data.selectedService,
     estimated_wait_time: estimatedWaitTime,
     status: 'waiting',
   }
