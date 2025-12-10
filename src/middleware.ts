@@ -8,74 +8,73 @@ export async function middleware(request: NextRequest) {
     },
   })
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value
-        },
-        set(
-          name: string,
-          value: string,
-          options: {
-            path?: string
-            domain?: string
-            maxAge?: number
-            expires?: Date
-            httpOnly?: boolean
-            secure?: boolean
-            sameSite?: boolean | 'lax' | 'strict' | 'none'
-          }
-        ) {
-          request.cookies.set({
-            name,
-            value,
-            ...options,
-          })
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
-          response.cookies.set({
-            name,
-            value,
-            ...options,
-          })
-        },
-        remove(
-          name: string,
-          options: {
-            path?: string
-            domain?: string
-          }
-        ) {
-          request.cookies.set({
-            name,
-            value: '',
-            ...options,
-          })
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
-          response.cookies.set({
-            name,
-            value: '',
-            ...options,
-          })
-        },
-      },
-    }
-  )
-
-  const { data: { user } } = await supabase.auth.getUser()
-
   // Protect /admin routes - MAXIMUM SECURITY
   if (request.nextUrl.pathname.startsWith('/admin')) {
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return request.cookies.get(name)?.value
+          },
+          set(
+            name: string,
+            value: string,
+            options: {
+              path?: string
+              domain?: string
+              maxAge?: number
+              expires?: Date
+              httpOnly?: boolean
+              secure?: boolean
+              sameSite?: boolean | 'lax' | 'strict' | 'none'
+            }
+          ) {
+            request.cookies.set({
+              name,
+              value,
+              ...options,
+            })
+            response = NextResponse.next({
+              request: {
+                headers: request.headers,
+              },
+            })
+            response.cookies.set({
+              name,
+              value,
+              ...options,
+            })
+          },
+          remove(
+            name: string,
+            options: {
+              path?: string
+              domain?: string
+            }
+          ) {
+            request.cookies.set({
+              name,
+              value: '',
+              ...options,
+            })
+            response = NextResponse.next({
+              request: {
+                headers: request.headers,
+              },
+            })
+            response.cookies.set({
+              name,
+              value: '',
+              ...options,
+            })
+          },
+        },
+      }
+    )
+
+    const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
       // Not authenticated - redirect to login
       const redirectUrl = new URL('/auth', request.url)
@@ -99,6 +98,72 @@ export async function middleware(request: NextRequest) {
 
   // ✅ SECURITY FIX: Protect /dashboard routes
   if (request.nextUrl.pathname.startsWith('/dashboard')) {
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return request.cookies.get(name)?.value
+          },
+          set(
+            name: string,
+            value: string,
+            options: {
+              path?: string
+              domain?: string
+              maxAge?: number
+              expires?: Date
+              httpOnly?: boolean
+              secure?: boolean
+              sameSite?: boolean | 'lax' | 'strict' | 'none'
+            }
+          ) {
+            request.cookies.set({
+              name,
+              value,
+              ...options,
+            })
+            response = NextResponse.next({
+              request: {
+                headers: request.headers,
+              },
+            })
+            response.cookies.set({
+              name,
+              value,
+              ...options,
+            })
+          },
+          remove(
+            name: string,
+            options: {
+              path?: string
+              domain?: string
+            }
+          ) {
+            request.cookies.set({
+              name,
+              value: '',
+              ...options,
+            })
+            response = NextResponse.next({
+              request: {
+                headers: request.headers,
+              },
+            })
+            response.cookies.set({
+              name,
+              value: '',
+              ...options,
+            })
+          },
+        },
+      }
+    )
+
+    const { data: { user } } = await supabase.auth.getUser()
+
     if (!user) {
       // Not authenticated - redirect to login
       const redirectUrl = new URL('/auth', request.url)

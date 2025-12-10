@@ -28,9 +28,11 @@ export async function POST(request: NextRequest) {
 
   try {
     const rawBody = await request.json()
+    console.log('[API] Received body:', rawBody)
 
     // ✅ SECURITY: Sanitize input
     const body = sanitizeObject(rawBody)
+    console.log('[API] Sanitized body:', body)
 
     const result = await joinQueue({
       businessId: body.businessId,
@@ -42,12 +44,16 @@ export async function POST(request: NextRequest) {
       selectedService: body.selectedService,
     })
 
+    console.log('[API] joinQueue result:', result)
+
     if (result.error) {
+      console.error('[API] Error from joinQueue:', result.error)
       return NextResponse.json({ error: result.error }, { status: 400 })
     }
 
     return NextResponse.json({ data: result.data }, { status: 200 })
   } catch (error) {
+    console.error('[API] Exception in queue join:', error)
     logger.error('Error joining queue', error, { path: request.nextUrl.pathname })
     return NextResponse.json(
       { error: 'Internal server error' },

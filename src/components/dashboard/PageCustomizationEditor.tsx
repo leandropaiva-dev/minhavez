@@ -77,17 +77,36 @@ export default function PageCustomizationEditor({
         updated_at: new Date().toISOString(),
       }
 
+      console.log('[PageCustomization] Saving:', { pageType, businessId, payload })
+
       if (customization.id) {
-        await supabase
+        const { data, error } = await supabase
           .from('page_customizations')
           .update(payload)
           .eq('id', customization.id)
+          .select()
+
+        console.log('[PageCustomization] Update result:', { data, error })
+
+        if (error) {
+          console.error('[PageCustomization] Update error:', error)
+          alert('Erro ao salvar: ' + error.message)
+          return
+        }
       } else {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('page_customizations')
           .insert(payload)
           .select()
           .single()
+
+        console.log('[PageCustomization] Insert result:', { data, error })
+
+        if (error) {
+          console.error('[PageCustomization] Insert error:', error)
+          alert('Erro ao criar: ' + error.message)
+          return
+        }
 
         if (data) {
           setCustomization(data)
@@ -97,7 +116,8 @@ export default function PageCustomizationEditor({
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
     } catch (error) {
-      console.error('Error saving:', error)
+      console.error('[PageCustomization] Exception:', error)
+      alert('Erro inesperado: ' + (error as Error).message)
     } finally {
       setSaving(false)
     }
