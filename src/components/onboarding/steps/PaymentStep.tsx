@@ -21,16 +21,22 @@ export default function PaymentStep({ onNext, onBack }: PaymentStepProps) {
     setError(null)
 
     try {
+      alert('[DEBUG] Iniciando processo de finalização...')
+
       // Get onboarding data from localStorage
       const progress = getOnboardingProgress()
+      alert(`[DEBUG] Progress obtido: ${JSON.stringify(progress, null, 2)}`)
 
       if (!progress?.basicInfo) {
-        setError('Dados básicos não encontrados. Por favor, volte e preencha novamente.')
+        const errorMsg = 'Dados básicos não encontrados. Por favor, volte e preencha novamente.'
+        alert(`[DEBUG] ERRO: Sem basicInfo`)
+        setError(errorMsg)
         setIsLoading(false)
         return
       }
 
       const { basicInfo } = progress
+      alert(`[DEBUG] Basic info extraído: ${JSON.stringify(basicInfo, null, 2)}`)
 
       // Prepare business data
       const businessData: BusinessData = {
@@ -41,21 +47,32 @@ export default function PaymentStep({ onNext, onBack }: PaymentStepProps) {
         documentType: basicInfo.documentType || basicInfo.nifType,
         documentNumber: basicInfo.cnpj || basicInfo.cpf || basicInfo.nif,
       }
+      alert(`[DEBUG] Business data preparado: ${JSON.stringify(businessData, null, 2)}`)
 
       // Save to database
+      alert('[DEBUG] Chamando saveBusinessInfo...')
       const result = await saveBusinessInfo(businessData)
+      alert(`[DEBUG] Resultado do saveBusinessInfo: ${JSON.stringify(result, null, 2)}`)
 
       if (result.error) {
+        alert(`[DEBUG] ERRO do servidor: ${result.error}`)
         setError(result.error)
         setIsLoading(false)
         return
       }
 
+      alert('[DEBUG] Sucesso! Chamando onNext()...')
       // Success! Continue to dashboard
       onNext()
     } catch (err) {
-      console.error('Error saving business info:', err)
-      setError('Erro ao salvar informações. Tente novamente.')
+      console.error('[ONBOARDING DEBUG] Exception caught:', err)
+      if (err instanceof Error) {
+        alert(`[DEBUG] EXCEPTION:\nNome: ${err.name}\nMensagem: ${err.message}\nStack: ${err.stack?.substring(0, 200)}`)
+        setError(`Erro: ${err.message}`)
+      } else {
+        alert(`[DEBUG] EXCEPTION desconhecida: ${err}`)
+        setError('Erro desconhecido ao salvar informações. Tente novamente.')
+      }
       setIsLoading(false)
     }
   }

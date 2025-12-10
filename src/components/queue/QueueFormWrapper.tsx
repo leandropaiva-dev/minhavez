@@ -51,11 +51,8 @@ export default function QueueFormWrapper({
         selectedService: formData.selected_service || undefined,
       }
 
-      console.log('[Mobile Debug] Enviando payload:', payload)
-      console.log('[Mobile Debug] User Agent:', navigator.userAgent)
-
       const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 30000) // 30s timeout
+      const timeoutId = setTimeout(() => controller.abort(), 30000)
 
       const response = await fetch('/api/queue/join', {
         method: 'POST',
@@ -68,60 +65,38 @@ export default function QueueFormWrapper({
 
       clearTimeout(timeoutId)
 
-      console.log('[Mobile Debug] Response status:', response.status)
-      console.log('[Mobile Debug] Response headers:', Object.fromEntries(response.headers.entries()))
-
       if (!response.ok) {
-        let errorText = ''
-        try {
-          errorText = await response.text()
-        } catch (e) {
-          errorText = 'Não foi possível ler a resposta'
-        }
-        console.error('[Mobile Debug] Response error:', errorText)
-
-        // Mostrar erro detalhado no mobile
-        const detailedError = `Status: ${response.status}\nURL: ${response.url}\nError: ${errorText}`
-        alert(`[DEBUG] Erro na requisição:\n${detailedError}`)
-        setError(detailedError)
+        const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }))
+        setError(errorData.error || 'Erro ao entrar na fila')
         return
       }
 
       const result = await response.json()
-      console.log('[Mobile Debug] Response result:', result)
 
       if (result.error) {
-        alert(`[DEBUG] Erro do servidor: ${result.error}`)
         setError(result.error)
         return
       }
 
       if (result.data?.id) {
-        console.log('[Mobile Debug] Redirecting to:', `/fila/${businessId}/espera/${result.data.id}`)
-        alert(`[DEBUG] Sucesso! Redirecionando para: /fila/${businessId}/espera/${result.data.id}`)
         router.push(`/fila/${businessId}/espera/${result.data.id}`)
       } else {
-        alert(`[DEBUG] Resposta inválida: ${JSON.stringify(result)}`)
         setError('Resposta inválida do servidor')
       }
     } catch (err) {
-      console.error('[Mobile Debug] Exception:', err)
+      console.error('Error joining queue:', err)
 
-      let errorMessage = ''
       if (err instanceof Error) {
         if (err.name === 'AbortError') {
-          errorMessage = 'Timeout: A requisição demorou muito. Verifique sua conexão.'
+          setError('Timeout: A requisição demorou muito. Verifique sua conexão.')
         } else if (err.message.includes('fetch')) {
-          errorMessage = 'Erro de rede: Verifique sua conexão com a internet.'
+          setError('Erro de rede: Verifique sua conexão com a internet.')
         } else {
-          errorMessage = `Erro: ${err.message}`
+          setError(`Erro: ${err.message}`)
         }
       } else {
-        errorMessage = 'Erro desconhecido. Tente novamente.'
+        setError('Erro desconhecido. Tente novamente.')
       }
-
-      alert(`[DEBUG] Exception:\n${errorMessage}\n${err}`)
-      setError(errorMessage)
     } finally {
       setLoading(false)
     }
