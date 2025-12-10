@@ -57,8 +57,15 @@ export async function joinQueue(data: JoinQueueData) {
     .single()
 
   if (insertError) {
-    console.error('Erro ao inserir na fila:', insertError)
-    return { error: 'Erro ao entrar na fila. Tente novamente.' }
+    console.error('[QUEUE ACTION] Erro ao inserir na fila:', {
+      error: insertError,
+      code: insertError.code,
+      message: insertError.message,
+      details: insertError.details,
+      hint: insertError.hint,
+      queueEntry
+    })
+    return { error: `Erro ao entrar na fila: ${insertError.message}` }
   }
 
   revalidatePath(`/fila/${data.businessId}`)
