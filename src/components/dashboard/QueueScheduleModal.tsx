@@ -13,7 +13,7 @@ interface ScheduleEntry {
   is_active: boolean
 }
 
-interface ReservationScheduleModalProps {
+interface QueueScheduleModalProps {
   businessId: string
   isOpen: boolean
   onClose: () => void
@@ -61,11 +61,11 @@ const QUICK_ACTIONS = [
   },
 ]
 
-export default function ReservationScheduleModal({
+export default function QueueScheduleModal({
   businessId,
   isOpen,
   onClose,
-}: ReservationScheduleModalProps) {
+}: QueueScheduleModalProps) {
   const [schedules, setSchedules] = useState<ScheduleEntry[]>([])
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -75,7 +75,7 @@ export default function ReservationScheduleModal({
     const supabase = createClient()
 
     const { data } = await supabase
-      .from('reservation_schedule')
+      .from('queue_schedule')
       .select('*')
       .eq('business_id', businessId)
       .eq('is_active', true)
@@ -117,7 +117,7 @@ export default function ReservationScheduleModal({
     if (schedule.id) {
       const supabase = createClient()
       await supabase
-        .from('reservation_schedule')
+        .from('queue_schedule')
         .delete()
         .eq('id', schedule.id)
     }
@@ -139,14 +139,14 @@ export default function ReservationScheduleModal({
     try {
       // Delete existing schedules for this business
       await supabase
-        .from('reservation_schedule')
+        .from('queue_schedule')
         .delete()
         .eq('business_id', businessId)
 
       // Insert new schedules
       if (schedules.length > 0) {
         const { error } = await supabase
-          .from('reservation_schedule')
+          .from('queue_schedule')
           .insert(
             schedules.map((schedule) => ({
               business_id: businessId,
@@ -187,10 +187,10 @@ export default function ReservationScheduleModal({
             </div>
             <div>
               <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
-                Horários de Reservas
+                Horários da Fila
               </h2>
               <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                Configure quando aceitar reservas
+                Configure quando a fila estará aberta
               </p>
             </div>
           </div>

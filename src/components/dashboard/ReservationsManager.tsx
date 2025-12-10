@@ -1,12 +1,13 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Calendar, Check, X, Clock, User, Users, CheckCircle, Settings } from 'react-feather'
+import { Calendar, Check, X, Clock, User, Users, CheckCircle, Settings, Lock, Unlock } from 'react-feather'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import ReservationCalendar from './ReservationCalendar'
 import ReservationScheduleModal from './ReservationScheduleModal'
+import Link from 'next/link'
 
 interface Reservation {
   id: string
@@ -39,6 +40,7 @@ export default function ReservationsManager({ businessId }: ReservationsManagerP
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false)
   const [scheduleStatus, setScheduleStatus] = useState<string>('Sem horários configurados')
+  const [isReservationOpen, setIsReservationOpen] = useState(true)
   const [stats, setStats] = useState({
     today: 0,
     confirmed: 0,
@@ -54,6 +56,17 @@ export default function ReservationsManager({ businessId }: ReservationsManagerP
 
   const fetchReservations = useCallback(async () => {
     const supabase = createClient()
+
+    // Fetch reservation open status
+    const { data: businessData } = await supabase
+      .from('businesses')
+      .select('is_reservation_open')
+      .eq('id', businessId)
+      .single()
+
+    if (businessData) {
+      setIsReservationOpen(businessData.is_reservation_open ?? true)
+    }
 
     // Fetch all future reservations
     const today = new Date()
@@ -237,6 +250,20 @@ export default function ReservationsManager({ businessId }: ReservationsManagerP
     closeCancelModal()
   }
 
+  const toggleReservationStatus = async () => {
+    const supabase = createClient()
+    const newStatus = !isReservationOpen
+
+    const { error } = await supabase
+      .from('businesses')
+      .update({ is_reservation_open: newStatus })
+      .eq('id', businessId)
+
+    if (!error) {
+      setIsReservationOpen(newStatus)
+    }
+  }
+
   const statusConfig: Record<string, { label: string; color: string }> = {
     pending: { label: 'Pendente', color: 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white border-zinc-300 dark:border-zinc-700' },
     confirmed: { label: 'Confirmada', color: 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white border-zinc-300 dark:border-zinc-700' },
@@ -326,6 +353,47 @@ export default function ReservationsManager({ businessId }: ReservationsManagerP
         </div>
       </div>
 
+      {/* Action Buttons */}
+      <div className="flex gap-2 flex-wrap sm:justify-end">
+        <Link
+          href="/dashboard/formularios"
+          className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-all font-medium border-2 text-sm bg-zinc-50 dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+          title="Aparência e Configurações"
+        >
+          <Settings className="w-4 h-4" />
+          <span>Aparência e Configs</span>
+        </Link>
+        <button
+          onClick={() => setIsScheduleModalOpen(true)}
+          className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-all font-medium border-2 text-sm bg-zinc-50 dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+          title="Configurar Escala de Horários"
+        >
+          <Calendar className="w-4 h-4" />
+          <span>Escala</span>
+        </button>
+        <button
+          onClick={toggleReservationStatus}
+          className={cn(
+            "flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-all font-medium border-2 text-sm",
+            isReservationOpen
+              ? "bg-blue-50 dark:bg-blue-950 border-blue-500 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900"
+              : "bg-red-50 dark:bg-red-950 border-red-500 text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900"
+          )}
+        >
+          {isReservationOpen ? (
+            <>
+              <Unlock className="w-4 h-4" />
+              <span>Reservas Abertas</span>
+            </>
+          ) : (
+            <>
+              <Lock className="w-4 h-4" />
+              <span>Reservas Fechadas</span>
+            </>
+          )}
+        </button>
+      </div>
+
       {/* Calendar & List Grid - Desktop: side by side, Mobile: stacked */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Calendar Column */}
@@ -347,13 +415,6 @@ export default function ReservationsManager({ businessId }: ReservationsManagerP
                 {scheduleStatus}
               </p>
             </div>
-            <button
-              onClick={() => setIsScheduleModalOpen(true)}
-              className="flex items-center gap-2 px-3 py-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white border border-zinc-300 dark:border-zinc-700 rounded-lg transition-colors text-xs font-medium"
-            >
-              <Settings className="w-4 h-4" />
-              <span className="hidden sm:inline">Configurar</span>
-            </button>
           </div>
 
           {/* Reservations List */}

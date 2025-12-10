@@ -22,6 +22,20 @@ export default async function ReservationPage({
     notFound()
   }
 
+  // Verifica se as reservas estão abertas (toggle manual)
+  const isReservationOpen = business.is_reservation_open ?? true
+
+  // Verifica se está dentro do horário configurado
+  const now = new Date()
+  const { data: isTimeOpen } = await supabase
+    .rpc('is_reservation_time_open', {
+      p_business_id: businessId,
+      p_datetime: now.toISOString()
+    })
+
+  const isOpenBySchedule = isTimeOpen ?? true // Se não tem horário configurado, está aberto
+  const isTotallyOpen = isReservationOpen && isOpenBySchedule
+
   return (
     <CustomizedPageWrapper
       businessId={businessId}
@@ -51,20 +65,38 @@ export default async function ReservationPage({
           </div>
           <div>
             <h2 className="text-xl font-bold" style={{ color: 'var(--text-color)' }}>
-              Fazer Reserva
+              {isTotallyOpen ? 'Fazer Reserva' : 'Reservas Fechadas'}
             </h2>
             <p className="text-sm" style={{ color: 'var(--text-color)', opacity: 0.6 }}>
-              Preencha os dados abaixo
+              {isTotallyOpen ? 'Preencha os dados abaixo' : !isReservationOpen ? 'As reservas estão temporariamente fechadas' : 'Fora do horário de atendimento'}
             </p>
           </div>
         </div>
 
-        <ReservationFormWrapper businessId={businessId} businessName={business.name} />
+        {isTotallyOpen ? (
+          <ReservationFormWrapper businessId={businessId} businessName={business.name} />
+        ) : (
+          <div className="text-center py-8">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style={{
+              backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            }}>
+              <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ color: '#ef4444' }}>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <p className="text-lg font-semibold mb-2" style={{ color: 'var(--text-color)' }}>
+              {!isReservationOpen ? 'Reservas temporariamente fechadas' : 'Fora do horário de atendimento'}
+            </p>
+            <p className="text-sm" style={{ color: 'var(--text-color)', opacity: 0.6 }}>
+              {!isReservationOpen ? 'As reservas serão reabertas em breve. Tente novamente mais tarde.' : 'Volte durante o horário de funcionamento para fazer uma reserva.'}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Footer Info */}
       <p className="text-center text-xs mt-6" style={{ color: 'var(--text-color)', opacity: 0.5 }}>
-        Ao fazer uma reserva, você concorda com nossos termos de uso.
+        {isTotallyOpen ? 'Ao fazer uma reserva, você concorda com nossos termos de uso.' : 'Entre em contato para mais informações.'}
       </p>
     </CustomizedPageWrapper>
   )

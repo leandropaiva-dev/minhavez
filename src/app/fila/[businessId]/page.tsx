@@ -17,13 +17,27 @@ export default async function QueuePage({ params }: PageProps) {
   // Busca informações do negócio
   const { data: business, error } = await supabase
     .from('businesses')
-    .select('id, name, business_type, address')
+    .select('id, name, business_type, address, is_queue_open')
     .eq('id', businessId)
     .single()
 
   if (error || !business) {
     notFound()
   }
+
+  // Verifica se a fila está aberta (toggle manual)
+  const isQueueOpen = business.is_queue_open ?? true
+
+  // Verifica se está dentro do horário configurado
+  const now = new Date()
+  const { data: isTimeOpen } = await supabase
+    .rpc('is_queue_time_open', {
+      p_business_id: businessId,
+      p_datetime: now.toISOString()
+    })
+
+  const isOpenBySchedule = isTimeOpen ?? true // Se não tem horário configurado, está aberto
+  const isTotallyOpen = isQueueOpen && isOpenBySchedule
 
   // Conta quantas pessoas na fila
   const { count } = await supabase
@@ -95,15 +109,33 @@ export default async function QueuePage({ params }: PageProps) {
           </div>
           <div>
             <h2 className="text-xl font-bold" style={{ color: 'var(--text-color)' }}>
-              Entrar na Fila
+              {isTotallyOpen ? 'Entrar na Fila' : 'Fila Fechada'}
             </h2>
             <p className="text-sm" style={{ color: 'var(--text-color)', opacity: 0.6 }}>
-              Preencha seus dados abaixo
+              {isTotallyOpen ? 'Preencha seus dados abaixo' : !isQueueOpen ? 'A fila está temporariamente fechada' : 'Fora do horário de atendimento'}
             </p>
           </div>
         </div>
 
-        <QueueFormWrapper businessId={businessId} businessName={business.name} />
+        {isTotallyOpen ? (
+          <QueueFormWrapper businessId={businessId} businessName={business.name} />
+        ) : (
+          <div className="text-center py-8">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style={{
+              backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            }}>
+              <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ color: '#ef4444' }}>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <p className="text-lg font-semibold mb-2" style={{ color: 'var(--text-color)' }}>
+              {!isQueueOpen ? 'Fila temporariamente fechada' : 'Fora do horário de atendimento'}
+            </p>
+            <p className="text-sm" style={{ color: 'var(--text-color)', opacity: 0.6 }}>
+              {!isQueueOpen ? 'A fila será reaberta em breve. Tente novamente mais tarde.' : 'Volte durante o horário de funcionamento para entrar na fila.'}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Footer Info */}

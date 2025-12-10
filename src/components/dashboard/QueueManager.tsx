@@ -1,10 +1,12 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Phone, Check, X, Clock, User, Bell, TrendingUp, Lock, Unlock } from 'react-feather'
+import { Phone, Check, X, Clock, User, Bell, TrendingUp, Lock, Unlock, Calendar, Settings } from 'react-feather'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
+import QueueScheduleModal from './QueueScheduleModal'
+import Link from 'next/link'
 
 interface QueueEntry {
   id: string
@@ -42,6 +44,10 @@ export default function QueueManager({ businessId }: QueueManagerProps) {
   const [cancellingEntry, setCancellingEntry] = useState<QueueEntry | null>(null)
   const [selectedReason, setSelectedReason] = useState('')
   const [customReason, setCustomReason] = useState('')
+
+  // Schedule modal state
+  const [scheduleModalOpen, setScheduleModalOpen] = useState(false)
+
 
   const fetchQueue = useCallback(async () => {
     const supabase = createClient()
@@ -237,15 +243,30 @@ export default function QueueManager({ businessId }: QueueManagerProps) {
         </div>
       </div>
 
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold text-zinc-900 dark:text-white">Clientes na Fila</h2>
+      {/* Action Buttons */}
+      <div className="flex gap-2 flex-wrap justify-center">
+        <Link
+          href="/dashboard/formularios"
+          className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-all font-medium border-2 text-sm bg-zinc-50 dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+          title="Aparência e Configurações"
+        >
+          <Settings className="w-4 h-4" />
+          <span>Aparência e Configs</span>
+        </Link>
+        <button
+          onClick={() => setScheduleModalOpen(true)}
+          className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-all font-medium border-2 text-sm bg-zinc-50 dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+          title="Configurar Escala de Horários"
+        >
+          <Calendar className="w-4 h-4" />
+          <span>Escala</span>
+        </button>
         <button
           onClick={toggleQueueStatus}
           className={cn(
-            "flex items-center gap-2 px-4 py-2 rounded-lg transition-all font-medium border-2 text-sm",
+            "flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-all font-medium border-2 text-sm",
             isQueueOpen
-              ? "bg-blue-50 dark:bg-blue-950 border-blue-500 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900"
+              ? "bg-green-50 dark:bg-green-950 border-green-500 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900"
               : "bg-red-50 dark:bg-red-950 border-red-500 text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900"
           )}
         >
@@ -253,16 +274,19 @@ export default function QueueManager({ businessId }: QueueManagerProps) {
             <>
               <Unlock className="w-4 h-4" />
               <span>Fila Aberta</span>
-              <span className="hidden sm:inline opacity-75">• Clique para fechar</span>
             </>
           ) : (
             <>
               <Lock className="w-4 h-4" />
               <span>Fila Fechada</span>
-              <span className="hidden sm:inline opacity-75">• Clique para abrir</span>
             </>
           )}
         </button>
+      </div>
+
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold text-zinc-900 dark:text-white">Clientes na Fila</h2>
       </div>
 
       {/* Queue List */}
@@ -420,6 +444,13 @@ export default function QueueManager({ businessId }: QueueManagerProps) {
           </div>
         </div>
       )}
+
+      {/* Schedule Modal */}
+      <QueueScheduleModal
+        businessId={businessId}
+        isOpen={scheduleModalOpen}
+        onClose={() => setScheduleModalOpen(false)}
+      />
     </div>
   )
 }
