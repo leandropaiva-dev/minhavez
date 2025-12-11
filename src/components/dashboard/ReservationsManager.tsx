@@ -5,9 +5,9 @@ import { Calendar, Check, X, Clock, User, Users, CheckCircle, Settings, Lock, Un
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
-import ReservationCalendar from './ReservationCalendar'
+import ReservationGridWrapper from './ReservationGridWrapper'
 import ReservationScheduleModal from './ReservationScheduleModal'
-import Link from 'next/link'
+import ReservationAppearanceModal from './ReservationAppearanceModal'
 
 interface Reservation {
   id: string
@@ -37,8 +37,10 @@ const CANCELLATION_REASONS = [
 export default function ReservationsManager({ businessId }: ReservationsManagerProps) {
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedDate, setSelectedDate] = useState(new Date())
+  const [updating, setUpdating] = useState(false)
+  const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null)
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false)
+  const [isAppearanceModalOpen, setIsAppearanceModalOpen] = useState(false)
   const [scheduleStatus, setScheduleStatus] = useState<string>('Sem horários configurados')
   const [isReservationOpen, setIsReservationOpen] = useState(true)
   const [stats, setStats] = useState({
@@ -213,17 +215,34 @@ export default function ReservationsManager({ businessId }: ReservationsManagerP
 
 
   const updateStatus = async (id: string, status: string, cancellationReason?: string) => {
-    const supabase = createClient()
-    const updates: Record<string, string | null> = { status }
+    if (updating) return
 
-    if (status === 'cancelled' || status === 'no_show') {
-      if (cancellationReason) {
-        updates.cancellation_reason = cancellationReason
+    try {
+      setUpdating(true)
+      const supabase = createClient()
+      const updates: Record<string, string | null> = { status }
+
+      if (status === 'cancelled' || status === 'no_show') {
+        if (cancellationReason) {
+          updates.cancellation_reason = cancellationReason
+        }
       }
-    }
 
-    await supabase.from('reservations').update(updates).eq('id', id)
-    fetchReservations()
+      const { error } = await supabase.from('reservations').update(updates).eq('id', id)
+
+      if (error) {
+        console.error('Erro ao atualizar status:', error)
+        alert('Erro ao atualizar reserva. Tente novamente.')
+        return
+      }
+
+      await fetchReservations()
+    } catch (error) {
+      console.error('Erro ao atualizar status:', error)
+      alert('Erro ao atualizar reserva. Tente novamente.')
+    } finally {
+      setUpdating(false)
+    }
   }
 
   const openCancelModal = (reservation: Reservation) => {
@@ -272,19 +291,9 @@ export default function ReservationsManager({ businessId }: ReservationsManagerP
     completed: { label: 'Concluída', color: 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white border-zinc-300 dark:border-zinc-700' },
   }
 
-  // Get reservations count per date for calendar
-  const reservationsByDate = reservations.reduce((acc, res) => {
-    acc[res.reservation_date] = (acc[res.reservation_date] || 0) + 1
-    return acc
-  }, {} as Record<string, number>)
-
-  // Filter reservations by selected date
-  const selectedDateStr = selectedDate.toISOString().split('T')[0]
-  const filteredReservations = reservations.filter(res => res.reservation_date === selectedDateStr)
-
   return (
     <div className="space-y-6">
-      {/* Schedule Modal */}
+      {/* Modals */}
       <ReservationScheduleModal
         businessId={businessId}
         isOpen={isScheduleModalOpen}
@@ -292,6 +301,11 @@ export default function ReservationsManager({ businessId }: ReservationsManagerP
           setIsScheduleModalOpen(false)
           fetchScheduleStatus()
         }}
+      />
+      <ReservationAppearanceModal
+        businessId={businessId}
+        isOpen={isAppearanceModalOpen}
+        onClose={() => setIsAppearanceModalOpen(false)}
       />
 
       {/* Stats */}
@@ -355,26 +369,26 @@ export default function ReservationsManager({ businessId }: ReservationsManagerP
 
       {/* Action Buttons */}
       <div className="flex gap-2 flex-wrap sm:justify-end">
-        <Link
-          href="/dashboard/formularios"
-          className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-all font-medium border-2 text-sm bg-zinc-50 dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+        <button
+          onClick={() => setIsAppearanceModalOpen(true)}
+          className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg transition-all font-medium border-2 text-xs sm:text-sm bg-zinc-50 dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 min-w-0"
           title="Aparência e Configurações"
         >
-          <Settings className="w-4 h-4" />
-          <span>Aparência e Configs</span>
-        </Link>
+          <Settings className="w-4 h-4 flex-shrink-0" />
+          <span className="truncate">Aparência</span>
+        </button>
         <button
           onClick={() => setIsScheduleModalOpen(true)}
-          className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-all font-medium border-2 text-sm bg-zinc-50 dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+          className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg transition-all font-medium border-2 text-xs sm:text-sm bg-zinc-50 dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 min-w-0"
           title="Configurar Escala de Horários"
         >
-          <Calendar className="w-4 h-4" />
-          <span>Escala</span>
+          <Calendar className="w-4 h-4 flex-shrink-0" />
+          <span className="truncate">Escala</span>
         </button>
         <button
           onClick={toggleReservationStatus}
           className={cn(
-            "flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-all font-medium border-2 text-sm",
+            "flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg transition-all font-medium border-2 text-xs sm:text-sm min-w-0",
             isReservationOpen
               ? "bg-blue-50 dark:bg-blue-950 border-blue-500 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900"
               : "bg-red-50 dark:bg-red-950 border-red-500 text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900"
@@ -382,132 +396,224 @@ export default function ReservationsManager({ businessId }: ReservationsManagerP
         >
           {isReservationOpen ? (
             <>
-              <Unlock className="w-4 h-4" />
-              <span>Reservas Abertas</span>
+              <Unlock className="w-4 h-4 flex-shrink-0" />
+              <span className="truncate">Aberta</span>
             </>
           ) : (
             <>
-              <Lock className="w-4 h-4" />
-              <span>Reservas Fechadas</span>
+              <Lock className="w-4 h-4 flex-shrink-0" />
+              <span className="truncate">Fechada</span>
             </>
           )}
         </button>
       </div>
 
-      {/* Calendar & List Grid - Desktop: side by side, Mobile: stacked */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Calendar Column */}
-        <ReservationCalendar
-          reservations={reservationsByDate}
-          selectedDate={selectedDate}
-          onDateSelect={setSelectedDate}
-        />
+      {/* Reservation Grid with integrated view selector */}
+      <ReservationGridWrapper
+        reservations={reservations}
+        onReservationClick={setSelectedReservation}
+      />
 
-        {/* Reservations List Column */}
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden flex flex-col">
-          {/* Header inside card */}
-          <div className="flex justify-between items-center p-4 sm:p-6 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950">
-            <div>
-              <h2 className="text-lg sm:text-xl font-semibold text-zinc-900 dark:text-white">
-                {selectedDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' })}
-              </h2>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-                {scheduleStatus}
-              </p>
-            </div>
-          </div>
-
-          {/* Reservations List */}
-          <div className="flex-1 overflow-auto">
-        {loading ? (
-          <div className="p-12 text-center"><p className="text-zinc-400 dark:text-zinc-500">Carregando...</p></div>
-        ) : filteredReservations.length === 0 ? (
-          <div className="p-12 text-center">
-            <Calendar className="w-12 h-12 text-zinc-300 dark:text-zinc-600 mx-auto mb-4" />
-            <p className="text-zinc-500 dark:text-zinc-400">Nenhuma reserva para esta data</p>
-          </div>
-        ) : (
-          <div className="divide-y divide-zinc-200 dark:divide-zinc-800">
-            {filteredReservations.map((reservation) => {
-              const status = statusConfig[reservation.status] || statusConfig.pending
-
-              return (
-                <div
-                  key={reservation.id}
-                  className="p-4 sm:p-6 hover:bg-zinc-50 dark:hover:bg-zinc-950 transition-all duration-300"
-                >
-                  <div className="flex flex-col gap-4">
-                    {/* Info Row */}
-                    <div className="flex items-start gap-3 sm:gap-4">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <span className="text-sm sm:text-base font-bold text-white">{reservation.reservation_time.slice(0, 5)}</span>
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <h3 className="font-semibold text-zinc-900 dark:text-white text-sm sm:text-base">{reservation.customer_name}</h3>
-                        <div className="flex flex-wrap items-center gap-2 mt-1 text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
-                          {reservation.customer_phone && <span>{reservation.customer_phone}</span>}
-                          {reservation.customer_email && <span>• {reservation.customer_email}</span>}
-                          <span>• <Users className="w-3 h-3 inline" /> {reservation.party_size} {reservation.party_size === 1 ? 'pessoa' : 'pessoas'}</span>
-                        </div>
-                        {reservation.notes && (
-                          <p className="text-xs sm:text-sm text-zinc-400 dark:text-zinc-500 mt-2 break-words">
-                            📝 {reservation.notes}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Actions Row */}
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto sm:ml-auto">
-                      <span className={cn('px-3 py-1 rounded-full text-xs font-medium border text-center', status.color)}>
-                        {status.label}
-                      </span>
-
-                      {reservation.status === 'pending' && (
-                        <Button
-                          onClick={() => updateStatus(reservation.id, 'confirmed')}
-                          size="sm"
-                          className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto"
-                        >
-                          <Check className="w-4 h-4 mr-2" />Confirmar
-                        </Button>
-                      )}
-
-                      {reservation.status === 'confirmed' && (
-                        <Button onClick={() => updateStatus(reservation.id, 'arrived')} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto">
-                          <User className="w-4 h-4 mr-2" />Cliente Chegou
-                        </Button>
-                      )}
-
-                      {reservation.status === 'arrived' && (
-                        <Button onClick={() => updateStatus(reservation.id, 'seated')} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto">
-                          <CheckCircle className="w-4 h-4 mr-2" />Sentar
-                        </Button>
-                      )}
-
-                      {reservation.status === 'seated' && (
-                        <Button onClick={() => updateStatus(reservation.id, 'completed')} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto">
-                          <Check className="w-4 h-4 mr-2" />Concluir
-                        </Button>
-                      )}
-
-                      {['pending', 'confirmed'].includes(reservation.status) && (
-                        <Button onClick={() => openCancelModal(reservation)} size="sm" variant="outline" className="border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 w-full sm:w-auto">
-                          <X className="w-4 h-4 mr-1 sm:mr-0" />
-                          <span className="sm:hidden">Cancelar</span>
-                        </Button>
-                      )}
-                    </div>
+      {/* Reservation Management Modal */}
+      {selectedReservation && (
+        <div
+          className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+          onClick={() => setSelectedReservation(null)}
+        >
+          <div
+            className="bg-white dark:bg-zinc-900 w-full sm:max-w-2xl sm:rounded-xl overflow-hidden max-h-[90vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="p-4 sm:p-6 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1">
+                  <h3 className="text-lg sm:text-xl font-bold text-zinc-900 dark:text-white">
+                    {selectedReservation.customer_name}
+                  </h3>
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+                    {new Date(selectedReservation.reservation_date).toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })} às {selectedReservation.reservation_time.slice(0, 5)}
+                  </p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className={cn(
+                      "inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium",
+                      selectedReservation.status === 'pending' && "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300",
+                      selectedReservation.status === 'confirmed' && "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300",
+                      selectedReservation.status === 'arrived' && "bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300",
+                      selectedReservation.status === 'seated' && "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300",
+                      selectedReservation.status === 'completed' && "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400"
+                    )}>
+                      {statusConfig[selectedReservation.status]?.label || 'Pendente'}
+                    </span>
+                    <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                      <Users className="w-3 h-3 inline mr-1" />
+                      {selectedReservation.party_size} {selectedReservation.party_size === 1 ? 'pessoa' : 'pessoas'}
+                    </span>
                   </div>
                 </div>
-              )
-            })}
-          </div>
-        )}
+                <button
+                  onClick={() => setSelectedReservation(null)}
+                  className="p-2 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-lg transition-colors flex-shrink-0"
+                >
+                  <X className="w-5 h-5 text-zinc-500 dark:text-zinc-400" />
+                </button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                {selectedReservation.customer_phone && (
+                  <div className="bg-zinc-50 dark:bg-zinc-950 p-3 rounded-lg">
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 uppercase font-medium mb-1">Telefone</p>
+                    <p className="text-sm font-medium text-zinc-900 dark:text-white">{selectedReservation.customer_phone}</p>
+                  </div>
+                )}
+
+                {selectedReservation.customer_email && (
+                  <div className="bg-zinc-50 dark:bg-zinc-950 p-3 rounded-lg">
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 uppercase font-medium mb-1">Email</p>
+                    <p className="text-sm font-medium text-zinc-900 dark:text-white break-all">{selectedReservation.customer_email}</p>
+                  </div>
+                )}
+              </div>
+
+              {selectedReservation.notes && (
+                <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 p-3 rounded-lg mb-6">
+                  <p className="text-xs text-blue-600 dark:text-blue-400 uppercase font-medium mb-1">Observações</p>
+                  <p className="text-sm text-blue-900 dark:text-blue-300">{selectedReservation.notes}</p>
+                </div>
+              )}
+
+              {/* Action Flow */}
+              <div className="space-y-3">
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 uppercase font-medium">Gerenciar Reserva</p>
+
+                {/* Pending -> Confirmed */}
+                {selectedReservation.status === 'pending' && (
+                  <>
+                    <Button
+                      onClick={async () => {
+                        await updateStatus(selectedReservation.id, 'confirmed')
+                        setSelectedReservation(null)
+                      }}
+                      disabled={updating}
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white justify-start disabled:opacity-50"
+                      size="lg"
+                    >
+                      <Check className="w-5 h-5 mr-3" />
+                      <div className="text-left">
+                        <div className="font-semibold">{updating ? 'Confirmando...' : 'Confirmar Reserva'}</div>
+                        <div className="text-xs opacity-80">Cliente confirmou presença</div>
+                      </div>
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        openCancelModal(selectedReservation)
+                        setSelectedReservation(null)
+                      }}
+                      disabled={updating}
+                      variant="outline"
+                      className="w-full border-red-300 dark:border-red-700 text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 justify-start disabled:opacity-50"
+                      size="lg"
+                    >
+                      <X className="w-5 h-5 mr-3" />
+                      <div className="text-left">
+                        <div className="font-semibold">Cancelar Reserva</div>
+                        <div className="text-xs opacity-80">Cliente não virá</div>
+                      </div>
+                    </Button>
+                  </>
+                )}
+
+                {/* Confirmed -> Arrived */}
+                {selectedReservation.status === 'confirmed' && (
+                  <>
+                    <Button
+                      onClick={async () => {
+                        await updateStatus(selectedReservation.id, 'arrived')
+                        setSelectedReservation(null)
+                      }}
+                      disabled={updating}
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white justify-start disabled:opacity-50"
+                      size="lg"
+                    >
+                      <User className="w-5 h-5 mr-3" />
+                      <div className="text-left">
+                        <div className="font-semibold">{updating ? 'Atualizando...' : 'Cliente Chegou'}</div>
+                        <div className="text-xs opacity-80">Marcar presença</div>
+                      </div>
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        openCancelModal(selectedReservation)
+                        setSelectedReservation(null)
+                      }}
+                      disabled={updating}
+                      variant="outline"
+                      className="w-full border-red-300 dark:border-red-700 text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 justify-start disabled:opacity-50"
+                      size="lg"
+                    >
+                      <X className="w-5 h-5 mr-3" />
+                      <div className="text-left">
+                        <div className="font-semibold">Cancelar Reserva</div>
+                        <div className="text-xs opacity-80">Cliente não apareceu</div>
+                      </div>
+                    </Button>
+                  </>
+                )}
+
+                {/* Arrived -> Seated */}
+                {selectedReservation.status === 'arrived' && (
+                  <Button
+                    onClick={async () => {
+                      await updateStatus(selectedReservation.id, 'seated')
+                      setSelectedReservation(null)
+                    }}
+                    disabled={updating}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white justify-start disabled:opacity-50"
+                    size="lg"
+                  >
+                    <CheckCircle className="w-5 h-5 mr-3" />
+                    <div className="text-left">
+                      <div className="font-semibold">{updating ? 'Atualizando...' : 'Sentar Cliente'}</div>
+                      <div className="text-xs opacity-80">Mesa disponibilizada</div>
+                    </div>
+                  </Button>
+                )}
+
+                {/* Seated -> Completed */}
+                {selectedReservation.status === 'seated' && (
+                  <Button
+                    onClick={async () => {
+                      await updateStatus(selectedReservation.id, 'completed')
+                      setSelectedReservation(null)
+                    }}
+                    disabled={updating}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white justify-start disabled:opacity-50"
+                    size="lg"
+                  >
+                    <Check className="w-5 h-5 mr-3" />
+                    <div className="text-left">
+                      <div className="font-semibold">{updating ? 'Concluindo...' : 'Concluir Atendimento'}</div>
+                      <div className="text-xs opacity-80">Cliente finalizou</div>
+                    </div>
+                  </Button>
+                )}
+
+                {/* Completed - Read only */}
+                {selectedReservation.status === 'completed' && (
+                  <div className="text-center py-6">
+                    <CheckCircle className="w-12 h-12 text-green-600 dark:text-green-400 mx-auto mb-2" />
+                    <p className="text-sm font-medium text-zinc-900 dark:text-white">Reserva Concluída</p>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Atendimento finalizado com sucesso</p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Cancellation Modal */}
       {cancelModalOpen && cancellingReservation && (

@@ -22,19 +22,9 @@ export default async function ReservationPage({
     notFound()
   }
 
-  // Verifica se as reservas estão abertas (toggle manual)
+  // Verifica apenas se as reservas estão abertas (toggle manual)
+  // A escala de horários controla os SLOTS disponíveis, não o acesso ao formulário
   const isReservationOpen = business.is_reservation_open ?? true
-
-  // Verifica se está dentro do horário configurado
-  const now = new Date()
-  const { data: isTimeOpen } = await supabase
-    .rpc('is_reservation_time_open', {
-      p_business_id: businessId,
-      p_datetime: now.toISOString()
-    })
-
-  const isOpenBySchedule = isTimeOpen ?? true // Se não tem horário configurado, está aberto
-  const isTotallyOpen = isReservationOpen && isOpenBySchedule
 
   return (
     <CustomizedPageWrapper
@@ -65,15 +55,15 @@ export default async function ReservationPage({
           </div>
           <div>
             <h2 className="text-xl font-bold" style={{ color: 'var(--text-color)' }}>
-              {isTotallyOpen ? 'Fazer Reserva' : 'Reservas Fechadas'}
+              {isReservationOpen ? 'Fazer Reserva' : 'Reservas Fechadas'}
             </h2>
             <p className="text-sm" style={{ color: 'var(--text-color)', opacity: 0.6 }}>
-              {isTotallyOpen ? 'Preencha os dados abaixo' : !isReservationOpen ? 'As reservas estão temporariamente fechadas' : 'Fora do horário de atendimento'}
+              {isReservationOpen ? 'Escolha data e horário disponível' : 'As reservas estão temporariamente fechadas'}
             </p>
           </div>
         </div>
 
-        {isTotallyOpen ? (
+        {isReservationOpen ? (
           <ReservationFormWrapper businessId={businessId} businessName={business.name} />
         ) : (
           <div className="text-center py-8">
@@ -85,10 +75,10 @@ export default async function ReservationPage({
               </svg>
             </div>
             <p className="text-lg font-semibold mb-2" style={{ color: 'var(--text-color)' }}>
-              {!isReservationOpen ? 'Reservas temporariamente fechadas' : 'Fora do horário de atendimento'}
+              Reservas Temporariamente Fechadas
             </p>
             <p className="text-sm" style={{ color: 'var(--text-color)', opacity: 0.6 }}>
-              {!isReservationOpen ? 'As reservas serão reabertas em breve. Tente novamente mais tarde.' : 'Volte durante o horário de funcionamento para fazer uma reserva.'}
+              As reservas serão reabertas em breve. Tente novamente mais tarde.
             </p>
           </div>
         )}
@@ -96,7 +86,7 @@ export default async function ReservationPage({
 
       {/* Footer Info */}
       <p className="text-center text-xs mt-6" style={{ color: 'var(--text-color)', opacity: 0.5 }}>
-        {isTotallyOpen ? 'Ao fazer uma reserva, você concorda com nossos termos de uso.' : 'Entre em contato para mais informações.'}
+        {isReservationOpen ? 'Ao fazer uma reserva, você concorda com nossos termos de uso.' : 'Entre em contato para mais informações.'}
       </p>
     </CustomizedPageWrapper>
   )

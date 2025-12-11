@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import DynamicField from '../queue/DynamicField'
+import TimeSlotPicker from './TimeSlotPicker'
 import { getReservationFormConfig, getDefaultReservationFormConfig } from '@/lib/config/storage'
 import { formatCurrency } from '@/lib/utils/currency'
 import type { ReservationFormConfig } from '@/types/config.types'
@@ -15,12 +16,14 @@ interface DynamicReservationFormProps {
   onSubmit: (formData: Record<string, any>) => void
   loading?: boolean
   config?: ReservationFormConfig
+  businessId?: string
 }
 
 export default function DynamicReservationForm({
   onSubmit,
   loading = false,
   config: propConfig,
+  businessId,
 }: DynamicReservationFormProps) {
   const [config] = useState<ReservationFormConfig>(() => {
     if (propConfig) return propConfig
@@ -260,24 +263,39 @@ export default function DynamicReservationForm({
       )}
 
       {/* Date & Time - Always required */}
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="reservation_date" className="text-zinc-300">
-            Data <span className="text-red-500">*</span>
-          </Label>
-          <Input
-            id="reservation_date"
-            type="date"
-            value={formData.reservation_date}
-            onChange={(e) => handleFieldChange('reservation_date', e.target.value)}
-            min={today}
-            className={`mt-2 ${errors.reservation_date ? 'border-red-500' : ''}`}
-            disabled={loading}
-          />
-          {errors.reservation_date && (
-            <p className="text-red-500 text-sm mt-1">{errors.reservation_date}</p>
-          )}
-        </div>
+      <div>
+        <Label htmlFor="reservation_date" className="text-zinc-300">
+          Data <span className="text-red-500">*</span>
+        </Label>
+        <Input
+          id="reservation_date"
+          type="date"
+          value={formData.reservation_date}
+          onChange={(e) => {
+            handleFieldChange('reservation_date', e.target.value)
+            // Clear time when date changes
+            handleFieldChange('reservation_time', '')
+          }}
+          min={today}
+          className={`mt-2 ${errors.reservation_date ? 'border-red-500' : ''}`}
+          disabled={loading}
+        />
+        {errors.reservation_date && (
+          <p className="text-red-500 text-sm mt-1">{errors.reservation_date}</p>
+        )}
+      </div>
+
+      {/* Time Slot Picker */}
+      {businessId ? (
+        <TimeSlotPicker
+          businessId={businessId}
+          selectedDate={formData.reservation_date}
+          selectedTime={formData.reservation_time}
+          onTimeChange={(time) => handleFieldChange('reservation_time', time)}
+          error={errors.reservation_time}
+          disabled={loading}
+        />
+      ) : (
         <div>
           <Label htmlFor="reservation_time" className="text-zinc-300">
             Horário <span className="text-red-500">*</span>
@@ -294,7 +312,7 @@ export default function DynamicReservationForm({
             <p className="text-red-500 text-sm mt-1">{errors.reservation_time}</p>
           )}
         </div>
-      </div>
+      )}
 
       {/* Notes */}
       {config.fields.notes.enabled && (

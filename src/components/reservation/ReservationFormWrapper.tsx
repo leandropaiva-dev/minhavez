@@ -158,7 +158,14 @@ export default function ReservationFormWrapper({
           <p className="text-red-400 text-sm">{error}</p>
         </div>
       )}
-      {config && <DynamicReservationForm onSubmit={handleSubmit} loading={loading} config={config} />}
+      {config && (
+        <DynamicReservationForm
+          onSubmit={handleSubmit}
+          loading={loading}
+          config={config}
+          businessId={businessId}
+        />
+      )}
     </div>
   )
 }

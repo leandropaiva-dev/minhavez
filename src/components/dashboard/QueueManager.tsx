@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import QueueScheduleModal from './QueueScheduleModal'
-import Link from 'next/link'
+import QueueAppearanceModal from './QueueAppearanceModal'
 
 interface QueueEntry {
   id: string
@@ -47,6 +47,9 @@ export default function QueueManager({ businessId }: QueueManagerProps) {
 
   // Schedule modal state
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false)
+
+  // Appearance modal state
+  const [appearanceModalOpen, setAppearanceModalOpen] = useState(false)
 
 
   const fetchQueue = useCallback(async () => {
@@ -184,6 +187,18 @@ export default function QueueManager({ businessId }: QueueManagerProps) {
 
   return (
     <div className="space-y-6">
+      {/* Modals */}
+      <QueueScheduleModal
+        businessId={businessId}
+        isOpen={scheduleModalOpen}
+        onClose={() => setScheduleModalOpen(false)}
+      />
+      <QueueAppearanceModal
+        businessId={businessId}
+        isOpen={appearanceModalOpen}
+        onClose={() => setAppearanceModalOpen(false)}
+      />
+
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 sm:p-6">
@@ -244,41 +259,41 @@ export default function QueueManager({ businessId }: QueueManagerProps) {
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-2 flex-wrap justify-center">
-        <Link
-          href="/dashboard/formularios"
-          className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-all font-medium border-2 text-sm bg-zinc-50 dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+      <div className="flex gap-2 flex-wrap sm:justify-end">
+        <button
+          onClick={() => setAppearanceModalOpen(true)}
+          className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg transition-all font-medium border-2 text-xs sm:text-sm bg-zinc-50 dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 min-w-0"
           title="Aparência e Configurações"
         >
-          <Settings className="w-4 h-4" />
-          <span>Aparência e Configs</span>
-        </Link>
+          <Settings className="w-4 h-4 flex-shrink-0" />
+          <span className="truncate">Aparência</span>
+        </button>
         <button
           onClick={() => setScheduleModalOpen(true)}
-          className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-all font-medium border-2 text-sm bg-zinc-50 dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+          className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg transition-all font-medium border-2 text-xs sm:text-sm bg-zinc-50 dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 min-w-0"
           title="Configurar Escala de Horários"
         >
-          <Calendar className="w-4 h-4" />
-          <span>Escala</span>
+          <Calendar className="w-4 h-4 flex-shrink-0" />
+          <span className="truncate">Escala</span>
         </button>
         <button
           onClick={toggleQueueStatus}
           className={cn(
-            "flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-all font-medium border-2 text-sm",
+            "flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg transition-all font-medium border-2 text-xs sm:text-sm min-w-0",
             isQueueOpen
-              ? "bg-green-50 dark:bg-green-950 border-green-500 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900"
+              ? "bg-blue-50 dark:bg-blue-950 border-blue-500 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900"
               : "bg-red-50 dark:bg-red-950 border-red-500 text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900"
           )}
         >
           {isQueueOpen ? (
             <>
-              <Unlock className="w-4 h-4" />
-              <span>Fila Aberta</span>
+              <Unlock className="w-4 h-4 flex-shrink-0" />
+              <span className="truncate">Aberta</span>
             </>
           ) : (
             <>
-              <Lock className="w-4 h-4" />
-              <span>Fila Fechada</span>
+              <Lock className="w-4 h-4 flex-shrink-0" />
+              <span className="truncate">Fechada</span>
             </>
           )}
         </button>
