@@ -31,12 +31,6 @@ export default function ReservationGridWrapper({
 }: ReservationGridWrapperProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('week')
 
-  // Debug logging
-  if (typeof window !== 'undefined' && reservations.length > 0) {
-    console.log('ReservationGridWrapper - Total reservations:', reservations.length)
-    console.log('Sample reservation:', reservations[0])
-  }
-
   return (
     <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden">
       {/* View Mode Selector Header */}

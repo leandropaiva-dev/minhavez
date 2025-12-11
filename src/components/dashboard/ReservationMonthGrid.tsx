@@ -90,14 +90,7 @@ export default function ReservationMonthGrid({
     const day = String(date.getDate()).padStart(2, '0')
     const dateStr = `${year}-${month}-${day}`
 
-    const filtered = reservations.filter(res => res.reservation_date === dateStr)
-
-    // Debug logging
-    if (typeof window !== 'undefined' && filtered.length > 0) {
-      console.log('Month Grid - Found reservations for', dateStr, filtered)
-    }
-
-    return filtered
+    return reservations.filter(res => res.reservation_date === dateStr)
   }
 
   const statusColors: Record<string, string> = {

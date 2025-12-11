@@ -109,25 +109,30 @@ export default function ReservationFormWrapper({
 
     return (
       <div className="text-center py-4">
-        <div className="w-16 h-16 bg-green-600/20 rounded-full flex items-center justify-center mx-auto mb-4">
-          <CheckCircle className="w-8 h-8 text-green-500" />
+        <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{
+          backgroundColor: 'rgba(34, 197, 94, 0.2)'
+        }}>
+          <CheckCircle className="w-8 h-8" style={{ color: '#22c55e' }} />
         </div>
-        <h3 className="text-xl font-bold text-white mb-2">
+        <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--text-color, #ffffff)' }}>
           Reserva Solicitada!
         </h3>
-        <p className="text-zinc-400 mb-4">
-          Sua reserva em <span className="text-white font-medium">{businessName}</span> foi enviada.
+        <p className="mb-4" style={{ color: 'var(--text-color, #ffffff)', opacity: 0.6 }}>
+          Sua reserva em <span className="font-medium" style={{ color: 'var(--text-color, #ffffff)', opacity: 1 }}>{businessName}</span> foi enviada.
         </p>
-        <div className="bg-zinc-950 rounded-xl p-4 mb-6">
-          <p className="text-sm text-zinc-400 mb-1">Data e Horário</p>
-          <p className="text-lg font-semibold text-white capitalize">
+        <div className="p-4 mb-6" style={{
+          backgroundColor: 'rgba(0,0,0,0.3)',
+          borderRadius: 'var(--card-radius, 0.75rem)'
+        }}>
+          <p className="text-sm mb-1" style={{ color: 'var(--text-color, #ffffff)', opacity: 0.6 }}>Data e Horário</p>
+          <p className="text-lg font-semibold capitalize" style={{ color: 'var(--text-color, #ffffff)' }}>
             {formattedDate}
           </p>
-          <p className="text-2xl font-bold text-blue-500">
+          <p className="text-2xl font-bold" style={{ color: 'var(--primary-color, #3b82f6)' }}>
             {reservationDetails.time}
           </p>
         </div>
-        <p className="text-sm text-zinc-500 mb-4">
+        <p className="text-sm mb-4" style={{ color: 'var(--text-color, #ffffff)', opacity: 0.4 }}>
           Você receberá uma confirmação em breve.
         </p>
         <button
@@ -135,7 +140,8 @@ export default function ReservationFormWrapper({
             setSuccess(false)
             setReservationDetails(null)
           }}
-          className="text-blue-500 hover:text-blue-400 text-sm font-medium transition-colors"
+          className="text-sm font-medium transition-colors hover:opacity-80"
+          style={{ color: 'var(--primary-color, #3b82f6)' }}
         >
           Fazer outra reserva
         </button>
@@ -146,7 +152,7 @@ export default function ReservationFormWrapper({
   if (configLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: 'var(--primary-color, #3b82f6)' }}></div>
       </div>
     )
   }
@@ -154,8 +160,14 @@ export default function ReservationFormWrapper({
   return (
     <div>
       {error && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-6">
-          <p className="text-red-400 text-sm">{error}</p>
+        <div className="p-4 mb-6" style={{
+          backgroundColor: 'rgba(239, 68, 68, 0.1)',
+          borderWidth: '1px',
+          borderStyle: 'solid',
+          borderColor: 'rgba(239, 68, 68, 0.3)',
+          borderRadius: 'var(--card-radius, 0.75rem)'
+        }}>
+          <p className="text-sm" style={{ color: '#f87171' }}>{error}</p>
         </div>
       )}
       {config && (

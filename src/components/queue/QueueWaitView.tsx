@@ -300,18 +300,18 @@ export default function QueueWaitView({ entry: initialEntry, currentPosition: in
 
   return (
     <div className={`min-h-screen flex items-center justify-center p-4 transition-all duration-500 ${
-      entry.status === 'called'
-        ? 'bg-gradient-to-br from-yellow-950 via-black to-yellow-950 animate-pulse'
-        : 'bg-black'
-    }`}>
+      entry.status === 'called' ? 'animate-pulse' : ''
+    }`} style={{ minHeight: '100vh' }}>
       <div className="w-full max-w-lg">
         {/* Business Info */}
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-white mb-2">
+          <h1 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-color, #ffffff)' }}>
             {entry.business?.name}
           </h1>
           {entry.business?.business_type && (
-            <p className="text-zinc-400 capitalize">{entry.business.business_type}</p>
+            <p className="capitalize" style={{ color: 'var(--text-color, #ffffff)', opacity: 0.6 }}>
+              {entry.business.business_type}
+            </p>
           )}
         </div>
 
@@ -327,39 +327,57 @@ export default function QueueWaitView({ entry: initialEntry, currentPosition: in
         )}
 
         {/* Status Card */}
-        <div className={`bg-zinc-900 border rounded-xl p-8 mb-6 transition-all duration-300 ${
+        <div className={`p-8 mb-6 transition-all duration-300 ${
           entry.status === 'called'
             ? 'border-yellow-500 shadow-2xl shadow-yellow-500/50 ring-4 ring-yellow-500/20'
-            : 'border-zinc-800'
-        }`}>
+            : ''
+        }`} style={{
+          backgroundColor: 'var(--card-bg, #18181b)',
+          borderWidth: '1px',
+          borderStyle: 'solid',
+          borderColor: entry.status === 'called' ? '#eab308' : 'var(--card-border, #27272a)',
+          borderRadius: 'var(--card-radius, 0.75rem)'
+        }}>
           <div className="flex flex-col items-center text-center mb-6">
             <div className="mb-4">
               {statusDisplay.icon}
             </div>
             <h2 className={`text-2xl font-bold mb-2 ${
-              entry.status === 'called' ? 'text-yellow-500 animate-pulse' : 'text-white'
-            }`}>
+              entry.status === 'called' ? 'text-yellow-500 animate-pulse' : ''
+            }`} style={{ color: entry.status === 'called' ? '#eab308' : 'var(--text-color, #ffffff)' }}>
               {statusDisplay.title}
             </h2>
-            <p className="text-zinc-400">{entry.customer_name}</p>
+            <p style={{ color: 'var(--text-color, #ffffff)', opacity: 0.6 }}>{entry.customer_name}</p>
           </div>
 
           {entry.status === 'waiting' && (
             <>
               {/* Position Display */}
               <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="bg-black border border-zinc-800 rounded-lg p-4 text-center">
-                  <p className="text-sm text-zinc-400 mb-1">Sua Posição</p>
-                  <p className="text-4xl font-bold text-blue-500">{currentPosition}</p>
+                <div className="p-4 text-center" style={{
+                  backgroundColor: 'rgba(0,0,0,0.3)',
+                  borderWidth: '1px',
+                  borderStyle: 'solid',
+                  borderColor: 'var(--card-border, #27272a)',
+                  borderRadius: 'var(--card-radius, 0.75rem)'
+                }}>
+                  <p className="text-sm mb-1" style={{ color: 'var(--text-color, #ffffff)', opacity: 0.6 }}>Sua Posição</p>
+                  <p className="text-4xl font-bold" style={{ color: 'var(--primary-color, #3b82f6)' }}>{currentPosition}</p>
                 </div>
-                <div className="bg-black border border-zinc-800 rounded-lg p-4 text-center">
-                  <p className="text-sm text-zinc-400 mb-1">Tempo Estimado</p>
-                  <p className="text-4xl font-bold text-blue-500">{estimatedWaitTime}min</p>
+                <div className="p-4 text-center" style={{
+                  backgroundColor: 'rgba(0,0,0,0.3)',
+                  borderWidth: '1px',
+                  borderStyle: 'solid',
+                  borderColor: 'var(--card-border, #27272a)',
+                  borderRadius: 'var(--card-radius, 0.75rem)'
+                }}>
+                  <p className="text-sm mb-1" style={{ color: 'var(--text-color, #ffffff)', opacity: 0.6 }}>Tempo Estimado</p>
+                  <p className="text-4xl font-bold" style={{ color: 'var(--primary-color, #3b82f6)' }}>{estimatedWaitTime}min</p>
                 </div>
               </div>
 
               {/* Party Size */}
-              <div className="flex items-center justify-center gap-2 text-zinc-400 mb-6">
+              <div className="flex items-center justify-center gap-2 mb-6" style={{ color: 'var(--text-color, #ffffff)', opacity: 0.6 }}>
                 <Users className="w-5 h-5" />
                 <span>{entry.party_size} {entry.party_size === 1 ? 'pessoa' : 'pessoas'}</span>
               </div>
@@ -368,25 +386,31 @@ export default function QueueWaitView({ entry: initialEntry, currentPosition: in
 
           {/* Notes */}
           {entry.notes && (
-            <div className="bg-black border border-zinc-800 rounded-lg p-4 mb-6">
-              <p className="text-sm text-zinc-400 mb-1">Observações</p>
-              <p className="text-white">{entry.notes}</p>
+            <div className="p-4 mb-6" style={{
+              backgroundColor: 'rgba(0,0,0,0.3)',
+              borderWidth: '1px',
+              borderStyle: 'solid',
+              borderColor: 'var(--card-border, #27272a)',
+              borderRadius: 'var(--card-radius, 0.75rem)'
+            }}>
+              <p className="text-sm mb-1" style={{ color: 'var(--text-color, #ffffff)', opacity: 0.6 }}>Observações</p>
+              <p style={{ color: 'var(--text-color, #ffffff)' }}>{entry.notes}</p>
             </div>
           )}
 
           {/* Business Contact */}
           {entry.business && (
-            <div className="border-t border-zinc-800 pt-6 space-y-3">
+            <div className="pt-6 space-y-3" style={{ borderTop: '1px solid var(--card-border, #27272a)' }}>
               {entry.business.address && (
-                <div className="flex items-start gap-3 text-sm">
-                  <MapPin className="w-5 h-5 text-zinc-500 flex-shrink-0 mt-0.5" />
-                  <span className="text-zinc-400">{entry.business.address}</span>
+                <div className="flex items-start gap-3 text-sm" style={{ color: 'var(--text-color, #ffffff)', opacity: 0.6 }}>
+                  <MapPin className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                  <span>{entry.business.address}</span>
                 </div>
               )}
               {entry.business.phone && (
                 <div className="flex items-center gap-3 text-sm">
-                  <Phone className="w-5 h-5 text-zinc-500 flex-shrink-0" />
-                  <a href={`tel:${entry.business.phone}`} className="text-blue-500 hover:underline">
+                  <Phone className="w-5 h-5 flex-shrink-0" style={{ color: 'var(--text-color, #ffffff)', opacity: 0.6 }} />
+                  <a href={`tel:${entry.business.phone}`} className="hover:underline" style={{ color: 'var(--primary-color, #3b82f6)' }}>
                     {entry.business.phone}
                   </a>
                 </div>
@@ -400,31 +424,49 @@ export default function QueueWaitView({ entry: initialEntry, currentPosition: in
           {entry.status === 'waiting' && (
             <>
               <div className="flex gap-3">
-                <Button
+                <button
                   onClick={handleShare}
-                  className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 font-medium transition-all hover:opacity-90"
+                  style={{
+                    backgroundColor: 'var(--card-bg, #18181b)',
+                    color: 'var(--text-color, #ffffff)',
+                    borderRadius: 'var(--button-radius, 8px)',
+                    border: '1px solid var(--card-border, #27272a)'
+                  }}
                 >
-                  <Share2 className="w-4 h-4 mr-2" />
+                  <Share2 className="w-4 h-4" />
                   Compartilhar
-                </Button>
-                <Button
+                </button>
+                <button
                   onClick={handleCopyLink}
-                  className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 font-medium transition-all hover:opacity-90"
+                  style={{
+                    backgroundColor: 'var(--card-bg, #18181b)',
+                    color: 'var(--text-color, #ffffff)',
+                    borderRadius: 'var(--button-radius, 8px)',
+                    border: '1px solid var(--card-border, #27272a)'
+                  }}
                 >
                   {copied ? (
-                    <Check className="w-4 h-4 mr-2" />
+                    <Check className="w-4 h-4" />
                   ) : (
-                    <Copy className="w-4 h-4 mr-2" />
+                    <Copy className="w-4 h-4" />
                   )}
                   {copied ? 'Copiado!' : 'Copiar Link'}
-                </Button>
+                </button>
               </div>
-              <Button
+              <button
                 onClick={openCancelModal}
-                className="w-full bg-red-600/10 border border-red-600/20 hover:bg-red-600/20 text-red-500"
+                className="w-full px-4 py-3 font-medium transition-all hover:opacity-90"
+                style={{
+                  backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                  color: '#ef4444',
+                  borderRadius: 'var(--button-radius, 8px)',
+                  border: '1px solid rgba(220, 38, 38, 0.2)'
+                }}
               >
                 Sair da Fila
-              </Button>
+              </button>
             </>
           )}
 
@@ -432,8 +474,14 @@ export default function QueueWaitView({ entry: initialEntry, currentPosition: in
             <>
               {/* Thank you message */}
               {completionCustomization?.thank_you_message && (
-                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-4">
-                  <p className="text-white text-center whitespace-pre-wrap">
+                <div className="p-6 mb-4" style={{
+                  backgroundColor: 'var(--card-bg, #18181b)',
+                  borderWidth: '1px',
+                  borderStyle: 'solid',
+                  borderColor: 'var(--card-border, #27272a)',
+                  borderRadius: 'var(--card-radius, 0.75rem)'
+                }}>
+                  <p className="text-center whitespace-pre-wrap" style={{ color: 'var(--text-color, #ffffff)' }}>
                     {completionCustomization.thank_you_message}
                   </p>
                 </div>
@@ -441,59 +489,86 @@ export default function QueueWaitView({ entry: initialEntry, currentPosition: in
 
               {/* Review button */}
               {completionCustomization?.review_link && (
-                <Button
+                <button
                   onClick={() => window.open(completionCustomization.review_link!, '_blank')}
-                  className="w-full bg-yellow-600 hover:bg-yellow-700 text-white mb-3"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 font-medium mb-3 transition-all hover:opacity-90"
+                  style={{
+                    backgroundColor: 'var(--button-color, #3b82f6)',
+                    color: 'var(--button-text-color, #ffffff)',
+                    borderRadius: 'var(--button-radius, 8px)'
+                  }}
                 >
-                  <Star className="w-4 h-4 mr-2" />
+                  <Star className="w-4 h-4" />
                   {completionCustomization.review_button_text || 'Avaliar Atendimento'}
-                </Button>
+                </button>
               )}
 
               {/* CTA button */}
               {completionCustomization?.cta_link && completionCustomization?.cta_button_text && (
-                <Button
+                <button
                   onClick={() => window.open(completionCustomization.cta_link!, '_blank')}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white mb-3"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 font-medium mb-3 transition-all hover:opacity-90"
+                  style={{
+                    backgroundColor: 'var(--button-color, #3b82f6)',
+                    color: 'var(--button-text-color, #ffffff)',
+                    borderRadius: 'var(--button-radius, 8px)'
+                  }}
                 >
-                  {completionCustomization.cta_icon === 'star' && <Star className="w-4 h-4 mr-2" />}
-                  {completionCustomization.cta_icon === 'external-link' && <ExternalLink className="w-4 h-4 mr-2" />}
+                  {completionCustomization.cta_icon === 'star' && <Star className="w-4 h-4" />}
+                  {completionCustomization.cta_icon === 'external-link' && <ExternalLink className="w-4 h-4" />}
                   {completionCustomization.cta_button_text}
-                </Button>
+                </button>
               )}
 
               {/* Auto-redirect countdown */}
               {redirectCountdown !== null && redirectCountdown > 0 && (
-                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 mb-3 text-center">
-                  <p className="text-sm text-zinc-400">
-                    Redirecionando em <span className="text-blue-500 font-bold">{redirectCountdown}</span> segundo{redirectCountdown !== 1 ? 's' : ''}...
+                <div className="p-4 mb-3 text-center" style={{
+                  backgroundColor: 'var(--card-bg, #18181b)',
+                  borderWidth: '1px',
+                  borderStyle: 'solid',
+                  borderColor: 'var(--card-border, #27272a)',
+                  borderRadius: 'var(--card-radius, 0.75rem)'
+                }}>
+                  <p className="text-sm" style={{ color: 'var(--text-color, #ffffff)', opacity: 0.6 }}>
+                    Redirecionando em <span className="font-bold" style={{ color: 'var(--primary-color, #3b82f6)' }}>{redirectCountdown}</span> segundo{redirectCountdown !== 1 ? 's' : ''}...
                   </p>
                 </div>
               )}
 
               {/* Back to queue button */}
-              <Button
+              <button
                 onClick={() => router.push(`/fila/${entry.business_id}`)}
-                className="w-full bg-zinc-800 hover:bg-zinc-700 text-white"
+                className="w-full px-4 py-3 font-medium transition-all hover:opacity-90"
+                style={{
+                  backgroundColor: 'var(--card-bg, #18181b)',
+                  color: 'var(--text-color, #ffffff)',
+                  borderRadius: 'var(--button-radius, 8px)',
+                  border: '1px solid var(--card-border, #27272a)'
+                }}
               >
                 Voltar para a Fila
-              </Button>
+              </button>
             </>
           )}
 
           {entry.status === 'cancelled' && (
-            <Button
+            <button
               onClick={() => router.push(`/fila/${entry.business_id}`)}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+              className="w-full px-4 py-3 font-medium transition-all hover:opacity-90"
+              style={{
+                backgroundColor: 'var(--button-color, #3b82f6)',
+                color: 'var(--button-text-color, #ffffff)',
+                borderRadius: 'var(--button-radius, 8px)'
+              }}
             >
               Voltar para a Fila
-            </Button>
+            </button>
           )}
         </div>
 
         {/* Auto-refresh notice */}
         {entry.status === 'waiting' && (
-          <p className="text-xs text-zinc-500 text-center mt-4">
+          <p className="text-xs text-center mt-4" style={{ color: 'var(--text-color, #ffffff)', opacity: 0.4 }}>
             Esta página atualiza automaticamente em tempo real
           </p>
         )}

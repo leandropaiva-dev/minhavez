@@ -88,18 +88,11 @@ export default function ReservationWeekGrid({
 
     const [hour] = timeSlot.split(':').map(Number)
 
-    const filtered = reservations.filter(res => {
+    return reservations.filter(res => {
       if (res.reservation_date !== dateStr) return false
       const [resHour] = res.reservation_time.split(':').map(Number)
       return resHour === hour
     })
-
-    // Debug logging
-    if (typeof window !== 'undefined' && filtered.length > 0) {
-      console.log('Week Grid - Found reservations for', dateStr, timeSlot, filtered)
-    }
-
-    return filtered
   }
 
   const statusColors: Record<string, string> = {

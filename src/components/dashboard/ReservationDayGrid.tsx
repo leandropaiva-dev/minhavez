@@ -70,7 +70,7 @@ export default function ReservationDayGrid({
 
     const [slotHour, slotMinute] = timeSlot.split(':').map(Number)
 
-    const filtered = reservations.filter(res => {
+    return reservations.filter(res => {
       if (res.reservation_date !== dateStr) return false
       const [resHour, resMinute] = res.reservation_time.split(':').map(Number)
 
@@ -81,13 +81,6 @@ export default function ReservationDayGrid({
       // Reservation fits in 30-minute slot window
       return resMinutes >= slotMinutes && resMinutes < slotMinutes + 30
     })
-
-    // Debug logging
-    if (typeof window !== 'undefined' && filtered.length > 0) {
-      console.log('Day Grid - Found reservations for', dateStr, timeSlot, filtered)
-    }
-
-    return filtered
   }
 
   const statusColors: Record<string, string> = {

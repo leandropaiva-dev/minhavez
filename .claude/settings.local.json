@@ -41,7 +41,8 @@
       "Bash(cmd /c \"taskkill /F /PID 10508 && timeout /t 2 /nobreak > nul && if exist c:\\minhavez\\.next rmdir /s /q c:\\minhavez\\.next\")",
       "Bash(npm audit:*)",
       "Bash(if exist \"c:\\minhavez\\src\\components\\dashboard\\ReservationScheduleModal.tsx\" del \"c:\\minhavez\\src\\components\\dashboard\\ReservationScheduleModal.tsx\")",
-      "Bash(copy:*)"
+      "Bash(copy:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []
