@@ -70,7 +70,7 @@ export default function ConfigurationsTabs({ formType = 'queue', businessId }: C
     }
 
     loadConfigs()
-  }, [businessId])
+  }, [businessId, currency])
 
   // Get current form config based on active type
   const currentFormConfig = activeFormType === 'queue' ? queueFormConfig : reservationFormConfig

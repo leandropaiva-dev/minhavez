@@ -263,22 +263,48 @@ export default function DynamicReservationForm({
       )}
 
       {/* Date & Time - Always required */}
-      <div>
+      <div className="relative">
         <Label htmlFor="reservation_date" className="text-zinc-300">
           Data <span className="text-red-500">*</span>
         </Label>
-        <Input
+        <input
           id="reservation_date"
           type="date"
           value={formData.reservation_date}
           onChange={(e) => {
-            handleFieldChange('reservation_date', e.target.value)
-            // Clear time when date changes
-            handleFieldChange('reservation_time', '')
+            const newDate = e.target.value
+            console.log('Date changed:', newDate)
+
+            // Only update if it's a valid date (YYYY-MM-DD format)
+            if (!newDate || newDate.length === 10) {
+              setFormData(prev => ({
+                ...prev,
+                reservation_date: newDate,
+                // Only clear time if date actually changed
+                ...(prev.reservation_date !== newDate ? { reservation_time: '' } : {})
+              }))
+              if (errors.reservation_date) {
+                setErrors({ ...errors, reservation_date: '' })
+              }
+            }
           }}
+          onClick={(e) => e.stopPropagation()}
+          onFocus={(e) => e.stopPropagation()}
           min={today}
-          className={`mt-2 ${errors.reservation_date ? 'border-red-500' : ''}`}
+          className={`h-10 w-full rounded-md border px-3 py-2 text-sm mt-2 ${
+            errors.reservation_date
+              ? 'border-red-500'
+              : 'border-zinc-700'
+          } bg-zinc-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-500`}
           disabled={loading}
+          style={{
+            colorScheme: 'dark',
+            cursor: 'pointer',
+            position: 'relative',
+            zIndex: 50,
+            pointerEvents: 'auto',
+            touchAction: 'auto'
+          }}
         />
         {errors.reservation_date && (
           <p className="text-red-500 text-sm mt-1">{errors.reservation_date}</p>

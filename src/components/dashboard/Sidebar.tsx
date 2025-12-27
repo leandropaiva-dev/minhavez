@@ -9,9 +9,7 @@ import {
   Clock,
   BarChart2,
   Calendar,
-  Settings,
   Link2,
-  Edit3,
 } from 'react-feather'
 import { cn } from '@/lib/utils'
 
@@ -45,16 +43,6 @@ const menuItems = [
     icon: Link2,
     label: 'Página de Links',
     href: '/dashboard/links',
-  },
-  {
-    icon: Edit3,
-    label: 'Formulários Públicos',
-    href: '/dashboard/formularios',
-  },
-  {
-    icon: Settings,
-    label: 'Configurações',
-    href: '/dashboard/configuracoes',
   },
 ]
 

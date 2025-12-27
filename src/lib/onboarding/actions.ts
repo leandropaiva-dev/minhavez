@@ -127,3 +127,149 @@ export async function getBusiness() {
 
   return { data: business, error: null }
 }
+
+// Helper function to generate slug from business name
+function generateSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Remove accents
+    .replace(/[^a-z0-9]+/g, '-') // Replace non-alphanumeric with hyphens
+    .replace(/^-+|-+$/g, '') // Remove leading/trailing hyphens
+}
+
+export interface SimpleOnboardingData {
+  businessName: string
+  phone: string
+  country: Country
+  segment: 'health' | 'food' | 'beauty'
+  avgServiceTime: number
+  serviceMode: 'queue' | 'reservation' | 'both'
+}
+
+export async function completeSimpleOnboarding(data: SimpleOnboardingData) {
+  const supabase = await createClient()
+
+  // Get current user
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+  if (userError || !user) {
+    return { error: 'Usuário não autenticado' }
+  }
+
+  // Check if user already has a business
+  const { data: existingBusiness } = await supabase
+    .from('businesses')
+    .select('id, slug')
+    .eq('user_id', user.id)
+    .single()
+
+  let businessId: string
+  let slug: string
+
+  if (existingBusiness) {
+    // Update existing business
+    const { error: updateError } = await supabase
+      .from('businesses')
+      .update({
+        name: data.businessName,
+        phone: data.phone,
+        country: data.country,
+        segment: data.segment,
+        avg_service_time: data.avgServiceTime,
+        service_mode: data.serviceMode,
+      })
+      .eq('user_id', user.id)
+
+    if (updateError) {
+      return { error: updateError.message }
+    }
+
+    businessId = existingBusiness.id
+    slug = existingBusiness.slug
+  } else {
+    // Generate unique slug
+    const baseSlug = generateSlug(data.businessName)
+    let finalSlug = baseSlug
+    let counter = 1
+
+    // Check if slug exists
+    while (true) {
+      const { data: existingSlug } = await supabase
+        .from('businesses')
+        .select('id')
+        .eq('slug', finalSlug)
+        .single()
+
+      if (!existingSlug) break
+      finalSlug = `${baseSlug}-${counter}`
+      counter++
+    }
+
+    slug = finalSlug
+
+    // Create new business
+    const { data: newBusiness, error: insertError } = await supabase
+      .from('businesses')
+      .insert({
+        user_id: user.id,
+        name: data.businessName,
+        phone: data.phone,
+        country: data.country,
+        segment: data.segment,
+        avg_service_time: data.avgServiceTime,
+        service_mode: data.serviceMode,
+        slug,
+      })
+      .select('id')
+      .single()
+
+    if (insertError || !newBusiness) {
+      return { error: insertError?.message || 'Erro ao criar negócio' }
+    }
+
+    businessId = newBusiness.id
+  }
+
+  // Create default form configuration (basic: name + phone)
+  const { error: formError } = await supabase
+    .from('form_configurations')
+    .upsert({
+      business_id: businessId,
+      form_type: 'queue',
+      fields: {
+        phone: { enabled: true, required: true },
+        email: { enabled: false, required: false },
+        partySize: { enabled: false, required: false },
+        notes: { enabled: false, required: false },
+      },
+      custom_fields: [],
+      enable_service_selection: false,
+      service_selection_required: false,
+      services: [],
+    })
+
+  if (formError) {
+    console.error('Error creating form config:', formError)
+    // Don't fail the whole onboarding for this
+  }
+
+  // Create default link page
+  const { error: linkPageError } = await supabase
+    .from('link_pages')
+    .upsert({
+      business_id: businessId,
+      slug,
+      title: data.businessName,
+      bio: `Entre na fila de ${data.businessName}`,
+      is_published: true,
+    })
+
+  if (linkPageError) {
+    console.error('Error creating link page:', linkPageError)
+    // Don't fail the whole onboarding for this
+  }
+
+  revalidatePath('/dashboard')
+  return { success: true }
+}

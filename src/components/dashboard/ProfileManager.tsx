@@ -142,8 +142,12 @@ export default function ProfileManager({ userName, userEmail, business }: Profil
       {/* Avatar Card */}
       <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6">
         <div className="flex items-center gap-6">
-          <div className="w-20 h-20 rounded-2xl bg-blue-600 flex items-center justify-center flex-shrink-0">
-            <span className="text-white font-bold text-2xl">{getInitials(name)}</span>
+          <div className="w-20 h-20 rounded-2xl bg-blue-600 flex items-center justify-center flex-shrink-0 overflow-hidden">
+            {profilePictureUrl ? (
+              <img src={profilePictureUrl} alt="Foto de perfil" className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-white font-bold text-2xl">{getInitials(name)}</span>
+            )}
           </div>
           <div>
             <h2 className="text-xl font-bold text-zinc-900 dark:text-white">{name || 'Usuário'}</h2>

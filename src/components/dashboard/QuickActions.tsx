@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { XCircle, Phone, UserPlus, Eye, Calendar, Clock, Settings, FileText } from 'react-feather'
+import { XCircle, Phone, UserPlus, Eye, Calendar, Clock } from 'react-feather'
 import { useRouter } from 'next/navigation'
-import { toggleQueueStatus } from '@/lib/queue/actions'
+import { toggleQueueStatus, toggleReservationsStatus, callNextInQueue } from '@/lib/queue/actions'
 
 interface QuickActionsProps {
   businessId: string
@@ -26,15 +26,30 @@ export default function QuickActions({ businessId }: QuickActionsProps) {
     }
   }
 
-  const handleCloseReservations = () => {
-    // TODO: Implement reservations toggle
-    alert('No momento não estamos aceitando reservas')
+  const handleCloseReservations = async () => {
+    setIsProcessing(true)
+    const result = await toggleReservationsStatus(businessId)
+    setIsProcessing(false)
+
+    if (result.success) {
+      alert(result.message)
+      router.refresh()
+    } else {
+      alert('Erro ao alterar status das reservas')
+    }
   }
 
   const handleCallNext = async () => {
     setIsProcessing(true)
-    // TODO: Implement call next in queue
-    setTimeout(() => setIsProcessing(false), 1000)
+    const result = await callNextInQueue(businessId)
+    setIsProcessing(false)
+
+    if (result.success) {
+      alert(result.message)
+      router.refresh()
+    } else {
+      alert(result.error || 'Erro ao chamar próximo')
+    }
   }
 
   const handleAddToQueue = () => {
@@ -51,14 +66,6 @@ export default function QuickActions({ businessId }: QuickActionsProps) {
 
   const handleViewHistory = () => {
     router.push('/dashboard/fila?filter=completed')
-  }
-
-  const handleViewSettings = () => {
-    router.push('/dashboard/configuracoes')
-  }
-
-  const handleViewReports = () => {
-    router.push('/dashboard/relatorios')
   }
 
   const actions = [
@@ -104,18 +111,6 @@ export default function QuickActions({ businessId }: QuickActionsProps) {
       label: 'Histórico',
       icon: Clock,
       onClick: handleViewHistory,
-    },
-    {
-      id: 'settings',
-      label: 'Configurações',
-      icon: Settings,
-      onClick: handleViewSettings,
-    },
-    {
-      id: 'reports',
-      label: 'Relatórios',
-      icon: FileText,
-      onClick: handleViewReports,
     },
   ]
 

@@ -2,6 +2,7 @@
 
 import Sidebar from './Sidebar'
 import Header from './Header'
+import { NavigationProgress } from '@/components/ui/navigation-progress'
 
 interface DashboardLayoutProps {
   userName?: string
@@ -18,6 +19,9 @@ export default function DashboardLayout({
 }: DashboardLayoutProps) {
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-black">
+      {/* Navigation Progress Bar */}
+      <NavigationProgress />
+
       {/* Header - Full width, fixed at top */}
       <Header userName={userName} userEmail={userEmail} profilePictureUrl={profilePictureUrl} />
 

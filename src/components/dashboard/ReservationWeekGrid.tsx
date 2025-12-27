@@ -113,113 +113,122 @@ export default function ReservationWeekGrid({
         <div className="flex items-center justify-between gap-3">
           <button
             onClick={goToPreviousWeek}
-            className="p-2 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-lg transition-colors"
+            className="p-1.5 sm:p-2 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-lg transition-colors active:scale-95"
           >
-            <ChevronLeft className="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
+            <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-600 dark:text-zinc-400" />
           </button>
 
           <div className="flex-1 text-center">
-            <h3 className="text-base sm:text-lg font-semibold text-zinc-900 dark:text-white">
-              {weekDays[0].toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })} - {weekDays[6].toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}
+            <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-zinc-900 dark:text-white leading-tight">
+              <span className="sm:hidden">
+                {weekDays[0].toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })} - {weekDays[6].toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+              </span>
+              <span className="hidden sm:inline">
+                {weekDays[0].toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })} - {weekDays[6].toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}
+              </span>
             </h3>
           </div>
 
           <button
             onClick={goToNextWeek}
-            className="p-2 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-lg transition-colors"
+            className="p-1.5 sm:p-2 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-lg transition-colors active:scale-95"
           >
-            <ChevronRight className="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
+            <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-600 dark:text-zinc-400" />
           </button>
         </div>
 
         <button
           onClick={goToToday}
-          className="mt-3 w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+          className="mt-2 sm:mt-3 w-full py-1.5 sm:py-2 px-3 sm:px-4 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs sm:text-sm font-medium rounded-lg transition-all active:scale-98"
         >
           Hoje
         </button>
       </div>
 
       {/* Grid */}
-      <div className="overflow-x-auto -mx-4 sm:mx-0">
-        <div className="min-w-full inline-block align-middle">
-          <div className="overflow-hidden">
+      <div className="overflow-x-auto">
+        <div className="relative">
+          <div className="inline-block min-w-full">
             {/* Days header */}
-            <div className="grid grid-cols-8 border-b border-zinc-200 dark:border-zinc-800" style={{ minWidth: '600px' }}>
-              <div className="p-1.5 sm:p-2 bg-zinc-50 dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 w-12 sm:w-16 flex-shrink-0">
-                <span className="text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400">Hora</span>
+            <div className="flex border-b border-zinc-200 dark:border-zinc-800">
+              <div className="sticky left-0 z-10 p-2 sm:p-2.5 lg:p-3 bg-zinc-50 dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 flex items-center justify-center w-16 sm:w-20 flex-shrink-0">
+                <span className="text-[10px] sm:text-xs lg:text-sm font-medium text-zinc-500 dark:text-zinc-400">Hora</span>
               </div>
-              {weekDays.map((day, idx) => {
-                const isToday = day.toDateString() === today.toDateString()
-                return (
-                  <div
-                    key={idx}
-                    className={cn(
-                      "p-1.5 sm:p-2 text-center border-r border-zinc-200 dark:border-zinc-800 min-w-[70px] sm:min-w-[90px]",
-                      isToday ? "bg-blue-50 dark:bg-blue-950" : "bg-zinc-50 dark:bg-zinc-950"
-                    )}
-                  >
-                    <div className="text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                      {day.toLocaleDateString('pt-BR', { weekday: 'short' })}
+              <div className="flex">
+                {weekDays.map((day, idx) => {
+                  const isToday = day.toDateString() === today.toDateString()
+                  return (
+                    <div
+                      key={idx}
+                      className={cn(
+                        "p-2 sm:p-2.5 lg:p-4 text-center border-r border-zinc-200 dark:border-zinc-800 w-[85px] sm:w-[120px] lg:w-[160px] flex-shrink-0",
+                        isToday ? "bg-blue-50 dark:bg-blue-950" : "bg-zinc-50 dark:bg-zinc-950"
+                      )}
+                    >
+                      <div className="text-[10px] sm:text-xs lg:text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                        {day.toLocaleDateString('pt-BR', { weekday: 'short' })}
+                      </div>
+                      <div className={cn(
+                        "text-xs sm:text-sm lg:text-base font-semibold mt-0.5",
+                        isToday ? "text-blue-600 dark:text-blue-400" : "text-zinc-900 dark:text-white"
+                      )}>
+                        {day.getDate()}
+                      </div>
                     </div>
-                    <div className={cn(
-                      "text-xs sm:text-sm font-semibold mt-0.5 sm:mt-1",
-                      isToday ? "text-blue-600 dark:text-blue-400" : "text-zinc-900 dark:text-white"
-                    )}>
-                      {day.getDate()}
-                    </div>
-                  </div>
-                )
-              })}
+                  )
+                })}
+              </div>
             </div>
 
             {/* Time slots and reservations */}
             {timeSlots.map((timeSlot) => (
               <div
                 key={timeSlot}
-                className="grid grid-cols-8 border-b border-zinc-200 dark:border-zinc-800"
-                style={{ minHeight: '60px', minWidth: '600px' }}
+                className="flex border-b border-zinc-200 dark:border-zinc-800"
+                style={{ minHeight: '60px' }}
               >
-                {/* Time label */}
-                <div className="p-1.5 sm:p-2 bg-zinc-50 dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 flex items-start w-12 sm:w-16 flex-shrink-0">
-                  <span className="text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                {/* Time label - Sticky */}
+                <div className="sticky left-0 z-10 p-2 sm:p-2.5 lg:p-3 bg-zinc-50 dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 flex items-center justify-center w-16 sm:w-20 flex-shrink-0">
+                  <span className="text-[10px] sm:text-xs lg:text-sm font-medium text-zinc-500 dark:text-zinc-400">
                     {timeSlot}
                   </span>
                 </div>
 
                 {/* Day columns */}
-                {weekDays.map((day, dayIdx) => {
-                  const slotReservations = getReservationsForSlot(day, timeSlot)
-                  const isToday = day.toDateString() === today.toDateString()
+                <div className="flex">
+                  {weekDays.map((day, dayIdx) => {
+                    const slotReservations = getReservationsForSlot(day, timeSlot)
+                    const isToday = day.toDateString() === today.toDateString()
 
-                  return (
-                    <div
-                      key={dayIdx}
-                      className={cn(
-                        "p-0.5 sm:p-1 border-r border-zinc-200 dark:border-zinc-800 space-y-0.5 sm:space-y-1 min-w-[70px] sm:min-w-[90px]",
-                        isToday && "bg-blue-50/30 dark:bg-blue-950/10"
-                      )}
-                    >
-                      {slotReservations.map((reservation) => (
-                        <button
-                          key={reservation.id}
-                          onClick={() => onReservationClick(reservation)}
-                          className={cn(
-                            "w-full text-left p-1 sm:p-1.5 rounded border transition-all hover:shadow-md",
-                            statusColors[reservation.status] || statusColors.pending
-                          )}
-                        >
-                          <div className="font-semibold truncate text-[10px] sm:text-xs">
-                            {reservation.customer_name}
-                          </div>
-                          <div className="text-[9px] sm:text-[10px] opacity-75 truncate">
-                            {reservation.party_size}p
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  )
-                })}
+                    return (
+                      <div
+                        key={dayIdx}
+                        className={cn(
+                          "p-1 sm:p-2 lg:p-3 border-r border-zinc-200 dark:border-zinc-800 space-y-1 w-[85px] sm:w-[120px] lg:w-[160px] flex-shrink-0",
+                          isToday && "bg-blue-50/30 dark:bg-blue-950/10"
+                        )}
+                      >
+                        {slotReservations.map((reservation) => (
+                          <button
+                            key={reservation.id}
+                            onClick={() => onReservationClick(reservation)}
+                            className={cn(
+                              "w-full text-left p-1.5 sm:p-2 lg:p-3 rounded border transition-all hover:shadow-md active:scale-95",
+                              statusColors[reservation.status] || statusColors.pending
+                            )}
+                          >
+                            <div className="font-semibold truncate text-[10px] sm:text-xs lg:text-sm">
+                              {reservation.customer_name}
+                            </div>
+                            <div className="text-[9px] sm:text-[10px] lg:text-xs opacity-75 truncate">
+                              {reservation.party_size}p
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
             ))}
           </div>

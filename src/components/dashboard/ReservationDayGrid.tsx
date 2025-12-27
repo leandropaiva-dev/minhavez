@@ -91,10 +91,6 @@ export default function ReservationDayGrid({
     completed: 'bg-zinc-100 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400',
   }
 
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const isToday = currentDate.toDateString() === today.toDateString()
-
   return (
     <div>
       {/* Header with navigation */}
@@ -108,8 +104,11 @@ export default function ReservationDayGrid({
           </button>
 
           <div className="flex-1 text-center">
-            <h3 className="text-base sm:text-lg font-semibold text-zinc-900 dark:text-white">
-              {currentDate.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
+            <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-zinc-900 dark:text-white leading-tight">
+              {currentDate.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })}
+              <span className="hidden sm:inline">
+                {' '}{currentDate.toLocaleDateString('pt-BR', { year: 'numeric' })}
+              </span>
             </h3>
           </div>
 
@@ -141,17 +140,18 @@ export default function ReservationDayGrid({
               style={{ minHeight: '80px' }}
             >
               {/* Time label */}
-              <div className="w-20 sm:w-24 p-3 bg-zinc-50 dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 flex-shrink-0">
-                <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+              <div className="w-16 sm:w-20 lg:w-24 p-2 sm:p-3 bg-zinc-50 dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 flex-shrink-0 flex items-start">
+                <span className="text-xs sm:text-sm font-medium text-zinc-600 dark:text-zinc-400">
                   {timeSlot}
                 </span>
               </div>
 
               {/* Reservations */}
-              <div className="flex-1 p-2 space-y-2">
+              <div className="flex-1 p-1 sm:p-2 space-y-1 sm:space-y-2">
                 {slotReservations.length === 0 ? (
                   <div className="h-full flex items-center justify-center text-xs text-zinc-400 dark:text-zinc-500">
-                    Sem reservas
+                    <span className="hidden sm:inline">Sem reservas</span>
+                    <span className="sm:hidden">-</span>
                   </div>
                 ) : (
                   slotReservations.map((reservation) => (
@@ -159,18 +159,20 @@ export default function ReservationDayGrid({
                       key={reservation.id}
                       onClick={() => onReservationClick(reservation)}
                       className={cn(
-                        "w-full text-left p-3 rounded-lg border transition-all hover:shadow-md",
+                        "w-full text-left p-2 sm:p-3 rounded-lg border transition-all hover:shadow-md active:scale-98",
                         statusColors[reservation.status] || statusColors.pending
                       )}
                     >
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex-1 min-w-0">
-                          <div className="font-semibold truncate text-sm">
+                          <div className="font-semibold truncate text-xs sm:text-sm">
                             {reservation.customer_name}
                           </div>
-                          <div className="text-xs opacity-75 mt-1">
-                            {reservation.party_size} {reservation.party_size === 1 ? 'pessoa' : 'pessoas'}
-                            {reservation.customer_phone && ` • ${reservation.customer_phone}`}
+                          <div className="text-xs opacity-75 mt-0.5 sm:mt-1 flex flex-col sm:flex-row sm:gap-1">
+                            <span>{reservation.party_size} {reservation.party_size === 1 ? 'pessoa' : 'pessoas'}</span>
+                            {reservation.customer_phone && (
+                              <span className="hidden sm:inline">• {reservation.customer_phone}</span>
+                            )}
                           </div>
                         </div>
                       </div>

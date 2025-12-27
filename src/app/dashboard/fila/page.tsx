@@ -5,14 +5,25 @@ import QueueManager from '@/components/dashboard/QueueManager'
 import { getBusiness } from '@/lib/onboarding/actions'
 
 export default async function QueuePage() {
+  console.time('[FILA] Total page load')
+
+  console.time('[FILA] Create supabase client')
   const supabase = await createClient()
+  console.timeEnd('[FILA] Create supabase client')
+
+  console.time('[FILA] Get user')
   const { data: { user } } = await supabase.auth.getUser()
+  console.timeEnd('[FILA] Get user')
 
   if (!user) {
     redirect('/auth')
   }
 
+  console.time('[FILA] Get business')
   const { data: business } = await getBusiness()
+  console.timeEnd('[FILA] Get business')
+
+  console.timeEnd('[FILA] Total page load')
 
   return (
     <DashboardLayout

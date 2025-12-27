@@ -42,7 +42,8 @@
       "Bash(npm audit:*)",
       "Bash(if exist \"c:\\minhavez\\src\\components\\dashboard\\ReservationScheduleModal.tsx\" del \"c:\\minhavez\\src\\components\\dashboard\\ReservationScheduleModal.tsx\")",
       "Bash(copy:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(del \"c:\\minhavez\\src\\components\\onboarding\\OnboardingSimple.tsx\")"
     ],
     "deny": [],
     "ask": []

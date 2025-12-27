@@ -36,6 +36,7 @@ export default function TimeSlotPicker({
     }
 
     loadAvailableSlots()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate, businessId])
 
   const loadAvailableSlots = async () => {

@@ -10,9 +10,7 @@ import {
   Clock as History,
   BarChart2,
   Calendar,
-  Settings,
   Link2,
-  Edit3,
   LogOut,
 } from 'react-feather'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
@@ -57,19 +55,9 @@ const menuItems = [
     label: 'Página de Links',
     href: '/dashboard/links',
   },
-  {
-    icon: Edit3,
-    label: 'Formulários Públicos',
-    href: '/dashboard/formularios',
-  },
-  {
-    icon: Settings,
-    label: 'Configurações',
-    href: '/dashboard/configuracoes',
-  },
 ]
 
-export default function MobileMenu({ userName, userEmail }: MobileMenuProps) {
+export default function MobileMenu({ userName, userEmail, profilePictureUrl }: MobileMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
@@ -119,9 +107,17 @@ export default function MobileMenu({ userName, userEmail }: MobileMenuProps) {
         <div className="p-6 border-b border-zinc-200 dark:border-zinc-800">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className="w-12 h-12 rounded-lg bg-blue-600 flex items-center justify-center flex-shrink-0">
-                <span className="text-white font-bold text-lg">{getInitials(userName)}</span>
-              </div>
+              {profilePictureUrl ? (
+                <img
+                  src={profilePictureUrl}
+                  alt={userName || 'Usuário'}
+                  className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-lg bg-blue-600 flex items-center justify-center flex-shrink-0">
+                  <span className="text-white font-bold text-lg">{getInitials(userName)}</span>
+                </div>
+              )}
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-zinc-900 dark:text-white truncate">
                   {userName || 'Usuário'}

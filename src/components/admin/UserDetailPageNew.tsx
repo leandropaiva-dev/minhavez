@@ -10,8 +10,6 @@ interface UserDetailPageNewProps {
   userId: string
 }
 
-const COLORS = ['#8b5cf6', '#ec4899', '#3b82f6', '#10b981', '#f59e0b', '#ef4444']
-
 export default function UserDetailPageNew({ userId }: UserDetailPageNewProps) {
   const [userDetails, setUserDetails] = useState<DetailedUserData | null>(null)
   const [businessAnalytics, setBusinessAnalytics] = useState<Record<string, ComprehensiveAnalytics>>({})
@@ -69,8 +67,6 @@ export default function UserDetailPageNew({ userId }: UserDetailPageNewProps) {
       </div>
     )
   }
-
-  const currentAnalytics = selectedBusiness ? businessAnalytics[selectedBusiness] : null
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 p-4 lg:p-8">
@@ -354,7 +350,6 @@ function MetricsTab({
   }
 
   const selectedBusinessData = userDetails.businesses.find(b => b.id === selectedBusiness)
-  const analytics = selectedBusiness ? businessAnalytics[selectedBusiness] : null
 
   return (
     <div className="space-y-6">

@@ -5,14 +5,25 @@ import HistoryManager from '@/components/dashboard/HistoryManager'
 import { getBusiness } from '@/lib/onboarding/actions'
 
 export default async function HistoryPage() {
+  console.time('[HISTORICO] Total page load')
+
+  console.time('[HISTORICO] Create supabase client')
   const supabase = await createClient()
+  console.timeEnd('[HISTORICO] Create supabase client')
+
+  console.time('[HISTORICO] Get user')
   const { data: { user } } = await supabase.auth.getUser()
+  console.timeEnd('[HISTORICO] Get user')
 
   if (!user) {
     redirect('/auth')
   }
 
+  console.time('[HISTORICO] Get business')
   const { data: business } = await getBusiness()
+  console.timeEnd('[HISTORICO] Get business')
+
+  console.timeEnd('[HISTORICO] Total page load')
 
   return (
     <DashboardLayout

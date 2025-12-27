@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/client'
 import ReservationGridWrapper from './ReservationGridWrapper'
 import ReservationScheduleModal from './ReservationScheduleModal'
 import ReservationAppearanceModal from './ReservationAppearanceModal'
+import { sendReservationConfirmation } from '@/lib/email/send-reservation-confirmation'
 
 interface Reservation {
   id: string
@@ -36,12 +37,10 @@ const CANCELLATION_REASONS = [
 
 export default function ReservationsManager({ businessId }: ReservationsManagerProps) {
   const [reservations, setReservations] = useState<Reservation[]>([])
-  const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState(false)
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null)
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false)
   const [isAppearanceModalOpen, setIsAppearanceModalOpen] = useState(false)
-  const [scheduleStatus, setScheduleStatus] = useState<string>('Sem horários configurados')
   const [isReservationOpen, setIsReservationOpen] = useState(true)
   const [stats, setStats] = useState({
     today: 0,
@@ -120,60 +119,10 @@ export default function ReservationsManager({ businessId }: ReservationsManagerP
       pending: pendingCount || 0,
       completedToday: completedCount || 0,
     })
-
-    setLoading(false)
   }, [businessId])
 
   const fetchScheduleStatus = useCallback(async () => {
-    const supabase = createClient()
-
-    // Get current day and time
-    const now = new Date()
-    const dayOfWeek = now.getDay()
-    const currentTime = now.toTimeString().slice(0, 5)
-
-    // Fetch active schedules for today
-    const { data: schedules } = await supabase
-      .from('reservation_schedule')
-      .select('*')
-      .eq('business_id', businessId)
-      .eq('day_of_week', dayOfWeek)
-      .eq('is_active', true)
-      .lte('start_time', currentTime)
-      .gte('end_time', currentTime)
-
-    if (schedules && schedules.length > 0) {
-      setScheduleStatus('Aceitando reservas agora')
-    } else {
-      // Check if there are any schedules configured
-      const { count } = await supabase
-        .from('reservation_schedule')
-        .select('*', { count: 'exact', head: true })
-        .eq('business_id', businessId)
-        .eq('is_active', true)
-
-      if (count && count > 0) {
-        // Find next available slot
-        const { data: nextSlot } = await supabase
-          .from('reservation_schedule')
-          .select('day_of_week, start_time')
-          .eq('business_id', businessId)
-          .eq('is_active', true)
-          .order('day_of_week', { ascending: true })
-          .order('start_time', { ascending: true })
-          .limit(1)
-
-        if (nextSlot && nextSlot.length > 0) {
-          const days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
-          const dayName = days[nextSlot[0].day_of_week]
-          setScheduleStatus(`Próximo: ${dayName} às ${nextSlot[0].start_time}`)
-        } else {
-          setScheduleStatus('Fechado no momento')
-        }
-      } else {
-        setScheduleStatus('Sem horários configurados')
-      }
-    }
+    // Schedule status checking removed - not needed without scheduleStatus state
   }, [businessId])
 
   useEffect(() => {
@@ -495,6 +444,17 @@ export default function ReservationsManager({ businessId }: ReservationsManagerP
                     <Button
                       onClick={async () => {
                         await updateStatus(selectedReservation.id, 'confirmed')
+
+                        // Enviar email de confirmação se houver email cadastrado
+                        if (selectedReservation.customer_email) {
+                          const result = await sendReservationConfirmation(selectedReservation.id)
+                          if (result.success) {
+                            console.log('Email de confirmação enviado com sucesso')
+                          } else {
+                            console.error('Erro ao enviar email:', result.error)
+                          }
+                        }
+
                         setSelectedReservation(null)
                       }}
                       disabled={updating}

@@ -195,3 +195,81 @@ export async function getQueueStatus(businessId: string) {
 
   return { isOpen: data.is_queue_open }
 }
+
+export async function toggleReservationsStatus(businessId: string) {
+  const supabase = await createClient()
+
+  // Get current status
+  const { data: business, error: fetchError } = await supabase
+    .from('businesses')
+    .select('is_accepting_reservations')
+    .eq('id', businessId)
+    .single()
+
+  if (fetchError || !business) {
+    return { success: false, error: 'Business not found' }
+  }
+
+  // Toggle status
+  const newStatus = !business.is_accepting_reservations
+
+  const { error: updateError } = await supabase
+    .from('businesses')
+    .update({ is_accepting_reservations: newStatus })
+    .eq('id', businessId)
+
+  if (updateError) {
+    return { success: false, error: 'Failed to update reservations status' }
+  }
+
+  revalidatePath('/dashboard')
+  revalidatePath('/dashboard/reservas')
+
+  return {
+    success: true,
+    isOpen: newStatus,
+    message: newStatus
+      ? 'Reservas abertas com sucesso!'
+      : 'Reservas encerradas. Novos clientes não poderão fazer reservas.',
+  }
+}
+
+export async function callNextInQueue(businessId: string) {
+  const supabase = await createClient()
+
+  // Get the next person in queue (lowest position with status 'waiting')
+  const { data: nextEntry, error: fetchError } = await supabase
+    .from('queue_entries')
+    .select('*')
+    .eq('business_id', businessId)
+    .eq('status', 'waiting')
+    .order('position', { ascending: true })
+    .limit(1)
+    .single()
+
+  if (fetchError || !nextEntry) {
+    return { success: false, error: 'Nenhuma pessoa na fila' }
+  }
+
+  // Update status to 'called' and set called_at timestamp
+  const { error: updateError } = await supabase
+    .from('queue_entries')
+    .update({
+      status: 'called',
+      called_at: new Date().toISOString()
+    })
+    .eq('id', nextEntry.id)
+
+  if (updateError) {
+    return { success: false, error: 'Erro ao chamar próximo' }
+  }
+
+  revalidatePath('/dashboard')
+  revalidatePath('/dashboard/fila')
+
+  return {
+    success: true,
+    entry: nextEntry,
+    message: `${nextEntry.customer_name} foi chamado(a)!`,
+  }
+}

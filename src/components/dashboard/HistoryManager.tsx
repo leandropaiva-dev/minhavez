@@ -100,6 +100,7 @@ export default function HistoryManager({ businessId }: HistoryManagerProps) {
   const fetchHistory = useCallback(async () => {
     if (!businessId) return
 
+    console.time('[HISTORY] fetchHistory total')
     setLoading(true)
     const supabase = createClient()
 
@@ -128,6 +129,7 @@ export default function HistoryManager({ businessId }: HistoryManagerProps) {
 
     // Fetch queue entries
     if (typeFilter === 'all' || typeFilter === 'queue') {
+      console.time('[HISTORY] Fetch queue entries')
       let query = supabase
         .from('queue_entries')
         .select('id, customer_name, customer_phone, customer_email, party_size, status, joined_at, completed_at, cancellation_reason')
@@ -143,6 +145,7 @@ export default function HistoryManager({ businessId }: HistoryManagerProps) {
       }
 
       const { data: queueData } = await query
+      console.timeEnd('[HISTORY] Fetch queue entries')
 
       if (queueData) {
         queueData.forEach(entry => {
@@ -164,6 +167,7 @@ export default function HistoryManager({ businessId }: HistoryManagerProps) {
 
     // Fetch reservations
     if (typeFilter === 'all' || typeFilter === 'reservation') {
+      console.time('[HISTORY] Fetch reservations')
       let query = supabase
         .from('reservations')
         .select('id, customer_name, customer_phone, customer_email, status, created_at, updated_at, party_size, reservation_date, reservation_time, cancellation_reason')
@@ -179,6 +183,7 @@ export default function HistoryManager({ businessId }: HistoryManagerProps) {
       }
 
       const { data: reservationData } = await query
+      console.timeEnd('[HISTORY] Fetch reservations')
 
       if (reservationData) {
         reservationData.forEach(entry => {
@@ -207,6 +212,7 @@ export default function HistoryManager({ businessId }: HistoryManagerProps) {
 
     setStats({ total: allEntries.length, completed, cancelled })
     setLoading(false)
+    console.timeEnd('[HISTORY] fetchHistory total')
   }, [businessId, typeFilter, statusFilter, periodFilter])
 
   useEffect(() => {
@@ -372,39 +378,39 @@ export default function HistoryManager({ businessId }: HistoryManagerProps) {
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-3">
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 sm:p-4">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="p-1.5 sm:p-2 bg-zinc-100 dark:bg-zinc-800 rounded-lg">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg sm:rounded-xl p-2 sm:p-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
+            <div className="p-1.5 sm:p-2 bg-zinc-100 dark:bg-zinc-800 rounded-lg flex-shrink-0">
               <Users className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-600 dark:text-zinc-400" />
             </div>
-            <div>
-              <p className="text-zinc-500 dark:text-zinc-400 text-[10px] sm:text-xs">Total</p>
-              <p className="text-lg sm:text-xl font-bold text-zinc-900 dark:text-white">{stats.total}</p>
+            <div className="min-w-0">
+              <p className="text-zinc-500 dark:text-zinc-400 text-[10px] sm:text-xs truncate">Total</p>
+              <p className="text-base sm:text-lg lg:text-xl font-bold text-zinc-900 dark:text-white">{stats.total}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 sm:p-4">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="p-1.5 sm:p-2 bg-zinc-100 dark:bg-zinc-800 rounded-lg">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg sm:rounded-xl p-2 sm:p-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
+            <div className="p-1.5 sm:p-2 bg-zinc-100 dark:bg-zinc-800 rounded-lg flex-shrink-0">
               <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-600 dark:text-zinc-400" />
             </div>
-            <div>
-              <p className="text-zinc-500 dark:text-zinc-400 text-[10px] sm:text-xs">Concluídos</p>
-              <p className="text-lg sm:text-xl font-bold text-zinc-900 dark:text-white">{stats.completed}</p>
+            <div className="min-w-0">
+              <p className="text-zinc-500 dark:text-zinc-400 text-[10px] sm:text-xs truncate">Concluídos</p>
+              <p className="text-base sm:text-lg lg:text-xl font-bold text-zinc-900 dark:text-white">{stats.completed}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 sm:p-4">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="p-1.5 sm:p-2 bg-zinc-100 dark:bg-zinc-800 rounded-lg">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg sm:rounded-xl p-2 sm:p-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
+            <div className="p-1.5 sm:p-2 bg-zinc-100 dark:bg-zinc-800 rounded-lg flex-shrink-0">
               <XCircle className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-600 dark:text-zinc-400" />
             </div>
-            <div>
-              <p className="text-zinc-500 dark:text-zinc-400 text-[10px] sm:text-xs">Cancelados</p>
-              <p className="text-lg sm:text-xl font-bold text-zinc-900 dark:text-white">{stats.cancelled}</p>
+            <div className="min-w-0">
+              <p className="text-zinc-500 dark:text-zinc-400 text-[10px] sm:text-xs truncate">Cancelados</p>
+              <p className="text-base sm:text-lg lg:text-xl font-bold text-zinc-900 dark:text-white">{stats.cancelled}</p>
             </div>
           </div>
         </div>

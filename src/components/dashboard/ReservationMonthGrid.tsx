@@ -111,43 +111,48 @@ export default function ReservationMonthGrid({
         <div className="flex items-center justify-between gap-3">
           <button
             onClick={goToPreviousMonth}
-            className="p-2 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-lg transition-colors"
+            className="p-1.5 sm:p-2 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-lg transition-colors active:scale-95"
           >
-            <ChevronLeft className="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
+            <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-600 dark:text-zinc-400" />
           </button>
 
           <div className="flex-1 text-center">
-            <h3 className="text-base sm:text-lg font-semibold text-zinc-900 dark:text-white capitalize">
-              {currentMonth.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+            <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-zinc-900 dark:text-white capitalize leading-tight">
+              <span className="sm:hidden">
+                {currentMonth.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })}
+              </span>
+              <span className="hidden sm:inline">
+                {currentMonth.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+              </span>
             </h3>
           </div>
 
           <button
             onClick={goToNextMonth}
-            className="p-2 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-lg transition-colors"
+            className="p-1.5 sm:p-2 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-lg transition-colors active:scale-95"
           >
-            <ChevronRight className="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
+            <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-600 dark:text-zinc-400" />
           </button>
         </div>
 
         <button
           onClick={goToToday}
-          className="mt-3 w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+          className="mt-2 sm:mt-3 w-full py-1.5 sm:py-2 px-3 sm:px-4 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs sm:text-sm font-medium rounded-lg transition-all active:scale-98"
         >
           Mês Atual
         </button>
       </div>
 
       {/* Calendar grid */}
-      <div className="p-1 sm:p-2">
+      <div className="p-1 sm:p-2 lg:p-3">
         {/* Weekday headers */}
         <div className="grid grid-cols-7 gap-0.5 sm:gap-1 mb-0.5 sm:mb-1">
           {['S', 'T', 'Q', 'Q', 'S', 'S', 'D'].map((day, idx) => (
-            <div key={idx} className="text-center py-1 sm:py-2">
-              <span className="text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 sm:hidden">
+            <div key={idx} className="text-center py-0.5 sm:py-1 lg:py-2">
+              <span className="text-[9px] sm:text-[10px] lg:text-xs font-medium text-zinc-500 dark:text-zinc-400 sm:hidden">
                 {day}
               </span>
-              <span className="hidden sm:inline text-xs font-medium text-zinc-500 dark:text-zinc-400">
+              <span className="hidden sm:inline text-[10px] lg:text-xs font-medium text-zinc-500 dark:text-zinc-400">
                 {['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'][idx]}
               </span>
             </div>
@@ -166,39 +171,39 @@ export default function ReservationMonthGrid({
                 <div
                   key={dayIdx}
                   className={cn(
-                    "min-h-[60px] sm:min-h-[100px] p-1 sm:p-2 rounded border sm:rounded-lg transition-all",
+                    "min-h-[50px] sm:min-h-[80px] lg:min-h-[100px] p-0.5 sm:p-1.5 lg:p-2 rounded border transition-all",
                     isCurrentMonth
                       ? "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800"
                       : "bg-zinc-50 dark:bg-zinc-950 border-zinc-100 dark:border-zinc-900 opacity-40",
-                    isToday && "ring-1 sm:ring-2 ring-blue-500"
+                    isToday && "ring-1 ring-blue-500"
                   )}
                 >
                   <div className={cn(
-                    "text-[10px] sm:text-sm font-semibold mb-0.5 sm:mb-1",
+                    "text-[9px] sm:text-[10px] lg:text-sm font-semibold mb-0.5",
                     isToday ? "text-blue-600 dark:text-blue-400" : "text-zinc-900 dark:text-white"
                   )}>
                     {date.getDate()}
                   </div>
 
-                  <div className="space-y-0.5 sm:space-y-1">
+                  <div className="space-y-0.5">
                     {dayReservations.slice(0, 2).map((reservation) => (
                       <button
                         key={reservation.id}
                         onClick={() => onReservationClick(reservation)}
                         className={cn(
-                          "w-full text-left px-1 sm:px-1.5 py-0.5 sm:py-1 rounded text-[8px] sm:text-xs truncate transition-all hover:shadow-sm",
+                          "w-full text-left px-0.5 sm:px-1 lg:px-1.5 py-0.5 rounded text-[7px] sm:text-[8px] lg:text-xs truncate transition-all hover:shadow-sm active:scale-95",
                           statusColors[reservation.status]
                             ? `${statusColors[reservation.status]} text-white`
                             : "bg-zinc-200 dark:bg-zinc-700 text-zinc-900 dark:text-white"
                         )}
                       >
-                        <span className="hidden sm:inline">{reservation.reservation_time.slice(0, 5)} </span>
+                        <span className="hidden lg:inline">{reservation.reservation_time.slice(0, 5)} </span>
                         {reservation.customer_name}
                       </button>
                     ))}
 
                     {dayReservations.length > 2 && (
-                      <div className="text-[8px] sm:text-[10px] text-zinc-500 dark:text-zinc-400 px-1 sm:px-1.5">
+                      <div className="text-[7px] sm:text-[8px] lg:text-[10px] text-zinc-500 dark:text-zinc-400 px-0.5 sm:px-1">
                         +{dayReservations.length - 2}
                       </div>
                     )}
