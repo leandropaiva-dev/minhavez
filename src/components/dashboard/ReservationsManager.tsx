@@ -123,7 +123,7 @@ export default function ReservationsManager({ businessId }: ReservationsManagerP
 
   const fetchScheduleStatus = useCallback(async () => {
     // Schedule status checking removed - not needed without scheduleStatus state
-  }, [businessId])
+  }, [])
 
   useEffect(() => {
     fetchReservations()

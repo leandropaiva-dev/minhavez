@@ -43,7 +43,9 @@
       "Bash(if exist \"c:\\minhavez\\src\\components\\dashboard\\ReservationScheduleModal.tsx\" del \"c:\\minhavez\\src\\components\\dashboard\\ReservationScheduleModal.tsx\")",
       "Bash(copy:*)",
       "Bash(grep:*)",
-      "Bash(del \"c:\\minhavez\\src\\components\\onboarding\\OnboardingSimple.tsx\")"
+      "Bash(del \"c:\\minhavez\\src\\components\\onboarding\\OnboardingSimple.tsx\")",
+      "Bash(del \"c:\\minhavez\\src\\components\\landing\\HowItWorks.tsx\")",
+      "Bash(del \"c:\\minhavez\\src\\components\\landing\\Features.tsx\")"
     ],
     "deny": [],
     "ask": []

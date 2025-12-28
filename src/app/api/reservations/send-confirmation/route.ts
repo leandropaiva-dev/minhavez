@@ -3,9 +3,8 @@ import { Resend } from 'resend'
 import { createClient } from '@/lib/supabase/server'
 import { getReservationConfirmationHTML } from '@/lib/email/templates/reservation-confirmation-html'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 export async function POST(request: NextRequest) {
+  const resend = new Resend(process.env.RESEND_API_KEY)
   try {
     const { reservationId } = await request.json()
     console.log('[Email API] Recebido reservationId:', reservationId)

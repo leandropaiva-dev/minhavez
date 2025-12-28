@@ -1,210 +1,208 @@
 'use client'
 
-import { Check, Zap } from 'react-feather'
+import { Check } from 'react-feather'
 import { motion } from 'framer-motion'
-import { useRef, useEffect, useState } from 'react'
-import { gsap } from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { useState } from 'react'
 import Link from 'next/link'
 
-if (typeof window !== 'undefined') {
-  gsap.registerPlugin(ScrollTrigger)
-}
-
 export default function Pricing() {
-  const sectionRef = useRef<HTMLDivElement>(null)
-  const [isAnnual, setIsAnnual] = useState(false)
+  const [isAnnual, setIsAnnual] = useState(true)
 
-  const basicFeatures = [
-    'Fila ilimitada',
-    'QR Code automático',
-    'Notificações em tempo real',
-    'Dashboard básico',
-    'Suporte por email',
-  ]
-
-  const proFeatures = [
-    'Tudo do Básico',
-    'Filas por categorias',
-    'Relatórios automáticos',
-    'Lista de contactos',
-    'Suporte prioritário',
-  ]
-
-  useEffect(() => {
-    if (!sectionRef.current) return
-
-    const ctx = gsap.context(() => {
-      ScrollTrigger.create({
-        trigger: sectionRef.current,
-        start: 'center center',
-        end: '+=20%',
-        pin: true,
-        pinSpacing: true,
-        invalidateOnRefresh: true,
-      })
-    }, sectionRef)
-
-    return () => {
-      ctx.revert()
-      ScrollTrigger.getAll().forEach(trigger => trigger.kill())
+  const plans = [
+    {
+      name: 'START',
+      price: isAnnual ? 17 : 19,
+      period: isAnnual ? '/mês' : '/mês',
+      originalPrice: isAnnual ? 19 : null,
+      discount: isAnnual ? Math.floor(((19 - 17) / 19) * 100) : 0, // 10% desconto
+      popular: false,
+      custom: false,
+      description: 'Para pequenos negócios que querem organizar o atendimento sem complicações.',
+      summary: 'Ideal para começar, testar o fluxo real de atendimento e ganhar organização desde o primeiro dia.',
+      features: [
+        'Fila de espera e reservas',
+        'Página pública para clientes',
+        'Notificações automáticas por email',
+        '1 operador',
+        '1 unidade',
+      ]
+    },
+    {
+      name: 'PRO',
+      price: isAnnual ? 30 : 35,
+      period: isAnnual ? '/mês' : '/mês',
+      originalPrice: isAnnual ? 35 : null,
+      discount: isAnnual ? Math.floor(((35 - 30) / 35) * 100) : 0, // 14% desconto
+      popular: true,
+      custom: false,
+      description: 'Para negócios que atendem diariamente e precisam de mais controlo, comunicação e flexibilidade.',
+      summary: 'Pensado para reduzir faltas, melhorar a comunicação com os clientes e escalar o atendimento com confiança.',
+      features: [
+        'Tudo do plano START',
+        'Até 5 operadores e 1 gestor',
+        'WhatsApp (até 1.000/mês)',
+        'Cobrança de sinal ou pré-pagamento',
+        'Analytics completos',
+        'Formulários personalizados',
+        'Cupões e incentivos',
+      ]
+    },
+    {
+      name: 'PERSONALIZADO',
+      price: null,
+      period: '',
+      originalPrice: null,
+      discount: 0,
+      popular: false,
+      custom: true,
+      description: 'Precisa de algo diferente? Também apoiamos todos os tamanhos de empresas, organizações e projectos sociais.',
+      summary: '',
+      features: [
+        'Múltiplas unidades ou equipas',
+        'Volumes elevados de atendimento',
+        'Regras e fluxos personalizados',
+        'Integrações ou necessidades específicas',
+        'Projectos sociais, ONGs e iniciativas públicas',
+      ]
     }
-  }, [])
+  ]
 
   return (
-    <section id="precos" ref={sectionRef} className="min-h-screen flex items-center justify-center bg-zinc-950 relative overflow-hidden py-12 md:py-0">
-      <div className="absolute inset-0 bg-gradient-to-b from-blue-950/10 via-transparent to-purple-950/10" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-3xl" />
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative w-full">
-        <div className="text-center mb-8 md:mb-12">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
-            Planos Simples
+    <section id="pricing" className="py-16 md:py-24 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-center mb-12 md:mb-16"
+        >
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-sm font-medium mb-4">
+            <span>💰</span>
+            <span>Preços</span>
+          </div>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+            Escolha O Melhor Plano Para Si
           </h2>
-          <p className="text-zinc-400 mt-3 md:mt-4 text-base md:text-lg px-2">
-            Escolha o melhor plano para seu negócio
+          <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
+            Selecione o plano ideal adaptado às suas necessidades
           </p>
 
           {/* Toggle Mensal/Anual */}
-          <div className="flex items-center justify-center gap-3 mt-6 md:mt-8">
-            <span className={`text-sm md:text-base transition-colors ${!isAnnual ? 'text-white font-semibold' : 'text-zinc-500'}`}>
-              Mensal
-            </span>
+          <div className="inline-flex items-center gap-0 mt-8 bg-white rounded-lg p-1 shadow-sm border border-gray-200">
             <button
-              onClick={() => setIsAnnual(!isAnnual)}
-              className="relative w-14 h-7 bg-zinc-800 rounded-full transition-colors hover:bg-zinc-700"
+              onClick={() => setIsAnnual(false)}
+              className={`px-6 py-2 rounded-md text-sm font-semibold transition-all ${
+                !isAnnual
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
             >
-              <motion.div
-                className="absolute top-1 left-1 w-5 h-5 bg-blue-600 rounded-full"
-                animate={{ x: isAnnual ? 28 : 0 }}
-                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-              />
+              Mensal
             </button>
-            <span className={`text-sm md:text-base transition-colors ${isAnnual ? 'text-white font-semibold' : 'text-zinc-500'}`}>
-              Anual
-            </span>
-            {isAnnual && (
-              <motion.span
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="inline-flex items-center px-2 py-1 rounded-full bg-blue-600 text-white text-xs font-semibold"
-              >
-                -10%
-              </motion.span>
-            )}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 max-w-5xl mx-auto">
-          {/* Plano Básico */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            whileHover={{ y: -8 }}
-            className="group bg-zinc-900 rounded-xl md:rounded-2xl p-6 md:p-8 border-2 border-zinc-800 hover:border-zinc-700 transition-all duration-300 relative"
-          >
-
-            <div className="inline-flex items-center px-3 py-1 rounded-full bg-zinc-800 text-zinc-300 text-xs md:text-sm mb-3 md:mb-4">
-              Básico
-            </div>
-            <div className="flex items-baseline gap-2 mb-2">
-              <span className="text-4xl md:text-5xl font-bold">
-                €{isAnnual ? '226,80' : '21'}
-              </span>
-              <span className="text-zinc-400 text-sm md:text-base">
-                /{isAnnual ? 'ano' : 'mês'}
-              </span>
-            </div>
-            {isAnnual && (
-              <div className="text-zinc-500 line-through text-sm">€252</div>
-            )}
-
-            <ul className="mt-6 md:mt-8 space-y-3">
-              {basicFeatures.map((feature, index) => (
-                <motion.li
-                  key={index}
-                  initial={{ opacity: 0, x: -10 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: index * 0.1 }}
-                  className="flex items-center gap-2 md:gap-3"
-                >
-                  <div className="bg-blue-600/10 p-1 rounded-full">
-                    <Check className="w-3 h-3 md:w-4 md:h-4 text-blue-600 flex-shrink-0" />
-                  </div>
-                  <span className="text-zinc-300 text-sm md:text-base">{feature}</span>
-                </motion.li>
-              ))}
-            </ul>
-
-            <Link
-              href="/auth?mode=signup"
-              className="inline-flex items-center justify-center w-full mt-6 md:mt-8 rounded-md text-sm md:text-base font-medium transition-all border border-zinc-700 bg-transparent text-white hover:border-zinc-600 h-10 px-4 py-2 hover:scale-105"
+            <button
+              onClick={() => setIsAnnual(true)}
+              className={`px-6 py-2 rounded-md text-sm font-semibold transition-all ${
+                isAnnual
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
             >
-              Cadastrar
-            </Link>
-          </motion.div>
+              Anual
+            </button>
+          </div>
+        </motion.div>
 
-          {/* Plano Pro */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            whileHover={{ y: -8, scale: 1.02 }}
-            className="group bg-gradient-to-br from-zinc-900 to-zinc-900/50 rounded-xl md:rounded-2xl p-6 md:p-8 border-2 border-blue-600 relative overflow-hidden"
-          >
-
-            <div className="absolute top-0 right-0 w-40 h-40 bg-blue-600/20 rounded-full blur-3xl group-hover:w-60 group-hover:h-60 transition-all duration-500" />
-            <div className="absolute -top-1 -right-1 bg-gradient-to-br from-blue-600 to-purple-600 text-white px-3 md:px-4 py-1 rounded-bl-xl rounded-tr-xl flex items-center gap-1 text-xs md:text-sm font-semibold">
-              <Zap className="w-3 h-3 md:w-4 md:h-4" />
-              Popular
-            </div>
-
-            <div className="relative">
-              <div className="inline-flex items-center px-3 py-1 rounded-full bg-blue-600/20 text-blue-400 text-xs md:text-sm mb-3 md:mb-4">
-                Pro
-              </div>
-              <div className="flex items-baseline gap-2 mb-2">
-                <span className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-white to-blue-400 bg-clip-text text-transparent">
-                  €{isAnnual ? '270' : '25'}
-                </span>
-                <span className="text-zinc-400 text-sm md:text-base">
-                  /{isAnnual ? 'ano' : 'mês'}
-                </span>
-              </div>
-              {isAnnual && (
-                <div className="text-zinc-500 line-through text-sm">€300</div>
+        <div className="flex flex-col md:grid md:grid-cols-[1fr_1.15fr_1fr] gap-6 md:gap-8 max-w-6xl mx-auto items-stretch">
+          {plans.map((plan, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              className={`relative rounded-2xl p-8 transition-all hover:shadow-xl bg-white flex flex-col ${
+                plan.popular
+                  ? 'border-4 border-blue-600 shadow-lg md:scale-105'
+                  : 'border border-gray-200 hover:border-blue-300'
+              }`}
+            >
+              {plan.popular && (
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-6 py-1.5 rounded-full text-sm font-semibold">
+                  Mais Escolhido
+                </div>
               )}
 
-              <ul className="mt-6 md:mt-8 space-y-3">
-                {proFeatures.map((feature, index) => (
-                  <motion.li
-                    key={index}
-                    initial={{ opacity: 0, x: -10 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.4, delay: index * 0.1 }}
-                    className="flex items-center gap-2 md:gap-3"
-                  >
-                    <div className="bg-blue-600 p-1 rounded-full">
-                      <Check className="w-3 h-3 md:w-4 md:h-4 text-white flex-shrink-0" />
+              <div className="mb-6">
+                <div className="flex items-start justify-between mb-4">
+                  <h3 className="text-xl font-bold text-gray-900">
+                    {plan.name}
+                  </h3>
+                  {plan.discount > 0 && (
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold">
+                      -{plan.discount}%
+                    </span>
+                  )}
+                </div>
+                {plan.custom ? (
+                  <div className="mb-6">
+                    <p className="text-sm leading-relaxed text-gray-600">
+                      {plan.description}
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="mb-4">
+                      {plan.originalPrice && (
+                        <div className="flex items-baseline gap-2 mb-1">
+                          <span className="text-lg text-gray-400 line-through">
+                            €{plan.originalPrice}
+                          </span>
+                          <span className="text-sm text-gray-500">/mês</span>
+                        </div>
+                      )}
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-5xl font-bold text-gray-900">
+                          €{plan.price}
+                        </span>
+                        <span className="text-base text-gray-500">
+                          {plan.period}
+                        </span>
+                      </div>
+                      {isAnnual && !plan.custom && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          Valor mensal no plano anual
+                        </p>
+                      )}
                     </div>
-                    <span className="text-zinc-300 text-sm md:text-base">{feature}</span>
-                  </motion.li>
-                ))}
-              </ul>
+                    <p className="text-sm leading-relaxed text-gray-600">
+                      {plan.description}
+                    </p>
+                  </>
+                )}
+              </div>
+
+              <div className="mb-8">
+                <p className="text-sm font-semibold text-gray-900 mb-3">O que está incluído</p>
+                <ul className="space-y-3">
+                  {plan.features.map((feature, idx) => (
+                    <li key={idx} className="flex items-start gap-3">
+                      <Check className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                      <span className="text-sm text-gray-700">
+                        {feature}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
 
               <Link
-                href="/auth?mode=signup"
-                className="inline-flex items-center justify-center w-full mt-6 md:mt-8 rounded-md text-sm md:text-base font-medium transition-colors bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/20 text-white h-10 px-4 py-2"
+                href={plan.custom ? '/contacto' : '/auth?mode=signup'}
+                className="inline-flex items-center justify-center w-full rounded-lg text-sm font-bold transition-all h-12 uppercase tracking-wide bg-blue-600 text-white hover:bg-blue-700 mt-auto"
               >
-                Cadastrar
+                {plan.custom ? 'ENTRAR EM CONTACTO' : 'COMEÇAR AGORA'}
               </Link>
-            </div>
-          </motion.div>
+            </motion.div>
+          ))}
         </div>
       </div>
     </section>

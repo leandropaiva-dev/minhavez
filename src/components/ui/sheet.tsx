@@ -61,24 +61,24 @@ export function SheetContent({ children, side = 'left', className }: SheetConten
   if (!context.open) return null
 
   const sideClasses = {
-    left: 'left-0 h-full w-80 border-r animate-in slide-in-from-left',
-    right: 'right-0 h-full w-80 border-l animate-in slide-in-from-right',
-    top: 'left-0 w-full h-80 border-b animate-in slide-in-from-top',
-    bottom: 'bottom-0 left-0 w-full h-80 border-t animate-in slide-in-from-bottom',
+    left: 'left-0 top-16 bottom-0 w-80 border-r animate-in slide-in-from-left duration-300',
+    right: 'right-0 top-16 bottom-0 w-80 border-l animate-in slide-in-from-right duration-300',
+    top: 'left-0 top-16 w-full h-80 border-b animate-in slide-in-from-top duration-300',
+    bottom: 'bottom-0 left-0 w-full h-80 border-t animate-in slide-in-from-bottom duration-300',
   }
 
   return (
     <>
-      {/* Blurred overlay - below header */}
+      {/* Blurred overlay - below navbar */}
       <div
-        className="fixed inset-0 top-16 z-40 bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 top-16 z-40 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
         onClick={() => context.setOpen(false)}
       />
 
       {/* Content */}
       <div
         className={cn(
-          'fixed z-50 bg-zinc-100 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 shadow-lg',
+          'fixed z-50 bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 shadow-2xl overflow-y-auto',
           sideClasses[side],
           className
         )}
@@ -107,4 +107,43 @@ export function SheetClose({ children, asChild }: SheetCloseProps) {
   }
 
   return <button onClick={handleClick}>{children}</button>
+}
+
+interface SheetHeaderProps {
+  children: React.ReactNode
+  className?: string
+}
+
+export function SheetHeader({ children, className }: SheetHeaderProps) {
+  return (
+    <div className={cn('flex flex-col space-y-2 text-center sm:text-left p-6', className)}>
+      {children}
+    </div>
+  )
+}
+
+interface SheetTitleProps {
+  children: React.ReactNode
+  className?: string
+}
+
+export function SheetTitle({ children, className }: SheetTitleProps) {
+  return (
+    <h2 className={cn('text-lg font-semibold text-foreground', className)}>
+      {children}
+    </h2>
+  )
+}
+
+interface SheetDescriptionProps {
+  children: React.ReactNode
+  className?: string
+}
+
+export function SheetDescription({ children, className }: SheetDescriptionProps) {
+  return (
+    <p className={cn('text-sm text-muted-foreground', className)}>
+      {children}
+    </p>
+  )
 }
