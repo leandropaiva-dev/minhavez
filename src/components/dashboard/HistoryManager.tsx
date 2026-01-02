@@ -417,7 +417,7 @@ export default function HistoryManager({ businessId }: HistoryManagerProps) {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col gap-2 sm:gap-3">
+      <div data-tutorial="history-filters" className="flex flex-col gap-2 sm:gap-3">
         {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
@@ -470,7 +470,7 @@ export default function HistoryManager({ businessId }: HistoryManagerProps) {
       </div>
 
       {/* List */}
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden">
+      <div data-tutorial="history-list" className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center p-12">
             <Loader className="w-8 h-8 text-zinc-500 animate-spin" />

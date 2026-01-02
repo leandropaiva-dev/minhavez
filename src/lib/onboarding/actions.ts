@@ -270,6 +270,50 @@ export async function completeSimpleOnboarding(data: SimpleOnboardingData) {
     // Don't fail the whole onboarding for this
   }
 
+  // Create default schedules (Mon-Fri 08:00-18:00) for queue
+  const defaultQueueSchedules = [
+    { day_of_week: 1, start_time: '08:00', end_time: '18:00' }, // Segunda
+    { day_of_week: 2, start_time: '08:00', end_time: '18:00' }, // Terça
+    { day_of_week: 3, start_time: '08:00', end_time: '18:00' }, // Quarta
+    { day_of_week: 4, start_time: '08:00', end_time: '18:00' }, // Quinta
+    { day_of_week: 5, start_time: '08:00', end_time: '18:00' }, // Sexta
+  ]
+
+  const { error: queueScheduleError } = await supabase
+    .from('queue_schedule')
+    .insert(
+      defaultQueueSchedules.map(schedule => ({
+        business_id: businessId,
+        day_of_week: schedule.day_of_week,
+        start_time: schedule.start_time,
+        end_time: schedule.end_time,
+        is_active: true,
+      }))
+    )
+
+  if (queueScheduleError) {
+    console.error('Error creating queue schedules:', queueScheduleError)
+    // Don't fail the whole onboarding for this
+  }
+
+  // Create default schedules (Mon-Fri 08:00-18:00) for reservations
+  const { error: reservationScheduleError } = await supabase
+    .from('reservation_schedule')
+    .insert(
+      defaultQueueSchedules.map(schedule => ({
+        business_id: businessId,
+        day_of_week: schedule.day_of_week,
+        start_time: schedule.start_time,
+        end_time: schedule.end_time,
+        is_active: true,
+      }))
+    )
+
+  if (reservationScheduleError) {
+    console.error('Error creating reservation schedules:', reservationScheduleError)
+    // Don't fail the whole onboarding for this
+  }
+
   revalidatePath('/dashboard')
   return { success: true }
 }

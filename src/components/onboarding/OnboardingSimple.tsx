@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,9 +12,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import PhoneInput from '@/components/ui/phone-input'
 import { Check, AlertCircle, Clock, Users, Calendar } from 'react-feather'
-import { detectCountry, getCountryConfig, type Country } from '@/lib/utils/country-detection'
-import { formatPhone } from '@/lib/utils/document-validation'
+import { getCountryConfig, type Country } from '@/lib/utils/country-detection'
 import { completeSimpleOnboarding } from '@/lib/onboarding/actions'
 
 const STEPS = [
@@ -48,8 +48,7 @@ export default function OnboardingSimple() {
   const [error, setError] = useState('')
 
   // Step 1: Business Info
-  const [country, setCountry] = useState<Country>('BR')
-  const [isDetectingCountry, setIsDetectingCountry] = useState(true)
+  const [country, setCountry] = useState<Country>('PT')
   const [businessName, setBusinessName] = useState('')
   const [phone, setPhone] = useState('')
   const [segment, setSegment] = useState<Segment | ''>('')
@@ -58,20 +57,7 @@ export default function OnboardingSimple() {
   const [avgServiceTime, setAvgServiceTime] = useState('30')
   const [serviceMode, setServiceMode] = useState<ServiceMode>('queue')
 
-  // Auto-detect country on mount
-  useEffect(() => {
-    detectCountry().then((result) => {
-      setCountry(result.country)
-      setIsDetectingCountry(false)
-    })
-  }, [])
-
-  const config = getCountryConfig(country)
-
-  const handlePhoneChange = (value: string) => {
-    const formatted = formatPhone(value, country)
-    setPhone(formatted)
-  }
+  const config = getCountryConfig(country) || getCountryConfig('PT')
 
   const handleStep1Next = () => {
     if (!businessName.trim()) {
@@ -122,13 +108,6 @@ export default function OnboardingSimple() {
     router.push('/dashboard')
   }
 
-  if (isDetectingCountry) {
-    return (
-      <div className="min-h-screen bg-black py-8 px-4 flex items-center justify-center">
-        <div className="text-zinc-400">Detectando sua localização...</div>
-      </div>
-    )
-  }
 
   return (
     <div className="min-h-screen bg-black py-8 px-4">
@@ -204,12 +183,6 @@ export default function OnboardingSimple() {
                 </p>
               </div>
 
-              {/* Country Auto-Detected */}
-              <div className="bg-zinc-800/50 border border-zinc-700 rounded-lg p-4">
-                <p className="text-zinc-400 text-sm">
-                  {config.flag} Detectamos que você está em: <span className="font-semibold text-white">{config.name}</span>
-                </p>
-              </div>
 
               <div className="space-y-4">
                 <div>
@@ -251,17 +224,13 @@ export default function OnboardingSimple() {
                   <Label htmlFor="phone" className="text-zinc-300">
                     Telefone *
                   </Label>
-                  <div className="relative mt-2">
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-sm">
-                      {config.phonePrefix}
-                    </div>
-                    <Input
-                      id="phone"
-                      type="tel"
+                  <div className="mt-2">
+                    <PhoneInput
                       value={phone}
-                      onChange={(e) => handlePhoneChange(e.target.value)}
-                      placeholder={config.phonePlaceholder}
-                      className="pl-16"
+                      onChange={setPhone}
+                      onCountryChange={(code) => setCountry(code as Country)}
+                      required
+                      defaultCountry="PT"
                     />
                   </div>
                 </div>

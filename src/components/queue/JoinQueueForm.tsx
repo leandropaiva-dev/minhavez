@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Users, Phone, Mail, MessageSquare, AlertCircle } from 'react-feather'
+import PhoneInput from '@/components/ui/phone-input'
+import { Users, Mail, MessageSquare, AlertCircle } from 'react-feather'
 import { joinQueue } from '@/lib/queue/actions'
 
 interface JoinQueueFormProps {
@@ -94,16 +95,10 @@ export default function JoinQueueForm({ businessId }: JoinQueueFormProps) {
           <label className="block text-sm font-medium text-zinc-300 mb-2">
             Telefone (Opcional)
           </label>
-          <div className="relative">
-            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
-            <input
-              type="tel"
-              value={formData.customerPhone}
-              onChange={(e) => setFormData({ ...formData, customerPhone: e.target.value })}
-              placeholder="+351 912 345 678"
-              className="w-full pl-11 pr-4 py-3 bg-black border border-zinc-800 rounded-lg text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-            />
-          </div>
+          <PhoneInput
+            value={formData.customerPhone}
+            onChange={(value) => setFormData({ ...formData, customerPhone: value })}
+          />
         </div>
 
         {/* Email */}

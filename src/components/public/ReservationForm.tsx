@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Calendar, Clock, Users, Phone, Mail, MessageSquare, CheckCircle, Star, ExternalLink } from 'react-feather'
+import { Calendar, Clock, Users, Mail, MessageSquare, CheckCircle, Star, ExternalLink } from 'react-feather'
+import PhoneInput from '@/components/ui/phone-input'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import type { PageCustomization } from '@/types/page-customization.types'
@@ -214,18 +215,14 @@ export default function ReservationForm({ businessId }: ReservationFormProps) {
         </div>
 
         {/* Phone & Email */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4">
           <div>
             <label className="block text-sm font-medium text-zinc-900 dark:text-white mb-2">
-              <Phone className="w-4 h-4 inline mr-1" />
               Telefone
             </label>
-            <input
-              type="tel"
+            <PhoneInput
               value={formData.customer_phone}
-              onChange={(e) => setFormData({ ...formData, customer_phone: e.target.value })}
-              className="w-full px-4 py-3 bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="(00) 00000-0000"
+              onChange={(value) => setFormData({ ...formData, customer_phone: value })}
             />
           </div>
           <div>

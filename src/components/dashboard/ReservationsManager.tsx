@@ -319,6 +319,7 @@ export default function ReservationsManager({ businessId }: ReservationsManagerP
       {/* Action Buttons */}
       <div className="flex gap-2 flex-wrap sm:justify-end">
         <button
+          data-tutorial="reservation-appearance"
           onClick={() => setIsAppearanceModalOpen(true)}
           className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg transition-all font-medium border-2 text-xs sm:text-sm bg-zinc-50 dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 min-w-0"
           title="Aparência e Configurações"
@@ -327,6 +328,7 @@ export default function ReservationsManager({ businessId }: ReservationsManagerP
           <span className="truncate">Aparência</span>
         </button>
         <button
+          data-tutorial="reservation-schedule"
           onClick={() => setIsScheduleModalOpen(true)}
           className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg transition-all font-medium border-2 text-xs sm:text-sm bg-zinc-50 dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 min-w-0"
           title="Configurar Escala de Horários"
@@ -358,10 +360,12 @@ export default function ReservationsManager({ businessId }: ReservationsManagerP
       </div>
 
       {/* Reservation Grid with integrated view selector */}
-      <ReservationGridWrapper
-        reservations={reservations}
-        onReservationClick={setSelectedReservation}
-      />
+      <div data-tutorial="reservations-list">
+        <ReservationGridWrapper
+          reservations={reservations}
+          onReservationClick={setSelectedReservation}
+        />
+      </div>
 
       {/* Reservation Management Modal */}
       {selectedReservation && (

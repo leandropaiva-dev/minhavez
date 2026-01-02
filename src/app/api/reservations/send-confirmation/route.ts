@@ -2,8 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { createClient } from '@/lib/supabase/server'
 import { getReservationConfirmationHTML } from '@/lib/email/templates/reservation-confirmation-html'
+import { withRateLimit } from '@/lib/ratelimit/middleware'
+import { emailRateLimiter } from '@/lib/ratelimit/config'
 
 export async function POST(request: NextRequest) {
+  // ✅ SECURITY: Apply rate limiting to prevent email spam abuse
+  const rateLimitResponse = await withRateLimit(request, emailRateLimiter)
+  if (rateLimitResponse) return rateLimitResponse
+
   const resend = new Resend(process.env.RESEND_API_KEY)
   try {
     const { reservationId } = await request.json()

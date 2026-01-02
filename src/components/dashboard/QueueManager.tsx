@@ -269,6 +269,7 @@ export default function QueueManager({ businessId }: QueueManagerProps) {
           <span className="truncate">Aparência</span>
         </button>
         <button
+          data-tutorial="queue-schedule"
           onClick={() => setScheduleModalOpen(true)}
           className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg transition-all font-medium border-2 text-xs sm:text-sm bg-zinc-50 dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 min-w-0"
           title="Configurar Escala de Horários"
@@ -305,7 +306,7 @@ export default function QueueManager({ businessId }: QueueManagerProps) {
       </div>
 
       {/* Queue List */}
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden">
+      <div data-tutorial="queue-list" className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden">
         {loading ? (
           <div className="p-12 text-center"><p className="text-zinc-400 dark:text-zinc-500">Carregando...</p></div>
         ) : queue.length === 0 ? (

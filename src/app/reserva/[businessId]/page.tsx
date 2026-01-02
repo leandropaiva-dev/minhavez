@@ -1,93 +1,78 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
-import ReservationFormWrapper from '@/components/reservation/ReservationFormWrapper'
-import CustomizedPageWrapper from '@/components/public/CustomizedPageWrapper'
+import NewReservationWrapper from '@/components/reservation/NewReservationWrapper'
+import PublicHeader from '@/components/public/PublicHeader'
 import PageTracker from '@/components/analytics/PageTracker'
+import { getBusinessCustomization } from '@/lib/customization/actions'
 
-export default async function ReservationPage({
-  params,
-}: {
-  params: Promise<{ businessId: string }>
-}) {
+interface PageProps {
+  params: Promise<{
+    businessId: string
+  }>
+}
+
+export default async function ReservationPage({ params }: PageProps) {
   const { businessId } = await params
   const supabase = await createClient()
 
-  const { data: business } = await supabase
+  // Busca informações do negócio
+  const { data: business, error } = await supabase
     .from('businesses')
-    .select('*')
+    .select('id, name, business_type, address, is_reservation_open')
     .eq('id', businessId)
     .single()
 
-  if (!business) {
+  if (error || !business) {
     notFound()
   }
 
+  // Busca customização (capa, perfil, contatos)
+  const { data: customization } = await getBusinessCustomization(businessId)
+
   // Verifica apenas se as reservas estão abertas (toggle manual)
-  // A escala de horários controla os SLOTS disponíveis, não o acesso ao formulário
   const isReservationOpen = business.is_reservation_open ?? true
 
   return (
-    <CustomizedPageWrapper
-      businessId={businessId}
-      pageType="reservation_form"
-      businessName={business.name}
-    >
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
       <PageTracker businessId={businessId} pageType="reservation" pagePath={`/reserva/${businessId}`} />
-      {/* Reservation Form Card */}
-      <div className="rounded-2xl p-6 sm:p-8" style={{
-        backgroundColor: 'var(--card-bg)',
-        borderColor: 'var(--card-border)',
-        borderWidth: '1px',
-        borderRadius: 'var(--card-radius)',
-      }}>
-        <div className="flex items-center gap-3 mb-6 pb-6" style={{
-          borderBottom: '1px solid var(--card-border)',
-        }}>
-          <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{
-            backgroundColor: 'var(--primary-color)',
-            opacity: 0.2,
-          }}>
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{
-              color: 'var(--primary-color)',
-            }}>
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-          </div>
-          <div>
-            <h2 className="text-xl font-bold" style={{ color: 'var(--text-color)' }}>
-              {isReservationOpen ? 'Fazer Reserva' : 'Reservas Fechadas'}
-            </h2>
-            <p className="text-sm" style={{ color: 'var(--text-color)', opacity: 0.6 }}>
-              {isReservationOpen ? 'Escolha data e horário disponível' : 'As reservas estão temporariamente fechadas'}
-            </p>
-          </div>
-        </div>
 
+      {/* Header com Capa + Avatar + Contatos */}
+      <PublicHeader
+        businessName={business.name}
+        coverPhotoUrl={customization?.cover_photo_url}
+        profilePhotoUrl={customization?.profile_picture_url}
+        phone={customization?.phone}
+        email={customization?.email}
+        instagramUrl={customization?.instagram_url}
+        websiteUrl={customization?.website_url}
+        address={customization?.address}
+        showPhone={customization?.show_phone}
+        showEmail={customization?.show_email}
+        showInstagram={customization?.show_instagram}
+        showWebsite={customization?.show_website}
+        showAddress={customization?.show_address}
+      />
+
+      {/* Main Content */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {isReservationOpen ? (
-          <ReservationFormWrapper businessId={businessId} businessName={business.name} />
+          <NewReservationWrapper businessId={businessId} businessName={business.name} />
         ) : (
-          <div className="text-center py-8">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style={{
-              backgroundColor: 'rgba(239, 68, 68, 0.1)',
-            }}>
-              <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ color: '#ef4444' }}>
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-12 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center">
+              <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
             </div>
-            <p className="text-lg font-semibold mb-2" style={{ color: 'var(--text-color)' }}>
+            <h2 className="text-2xl font-bold text-zinc-900 dark:text-white mb-2">
               Reservas Temporariamente Fechadas
-            </p>
-            <p className="text-sm" style={{ color: 'var(--text-color)', opacity: 0.6 }}>
+            </h2>
+            <p className="text-zinc-600 dark:text-zinc-400">
               As reservas serão reabertas em breve. Tente novamente mais tarde.
             </p>
           </div>
         )}
       </div>
-
-      {/* Footer Info */}
-      <p className="text-center text-xs mt-6" style={{ color: 'var(--text-color)', opacity: 0.5 }}>
-        {isReservationOpen ? 'Ao fazer uma reserva, você concorda com nossos termos de uso.' : 'Entre em contato para mais informações.'}
-      </p>
-    </CustomizedPageWrapper>
+    </div>
   )
 }

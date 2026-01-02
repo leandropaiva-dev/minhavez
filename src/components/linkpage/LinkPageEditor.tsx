@@ -358,7 +358,7 @@ export default function LinkPageEditor({
 
           {/* Style Tab */}
           <TabsContent value="style" className="space-y-6">
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 space-y-4">
+            <div data-tutorial="links-appearance" className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 space-y-4">
               <h3 className="font-semibold text-zinc-900 dark:text-white">Temas Prontos</h3>
               <div className="grid grid-cols-3 gap-3">
                 {LINK_PAGE_THEMES.map((theme) => (
@@ -572,7 +572,7 @@ export default function LinkPageEditor({
 
           {/* Links Tab */}
           <TabsContent value="links" className="space-y-6">
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6">
+            <div data-tutorial="links-customize" className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold text-zinc-900 dark:text-white">Seus Links</h3>
                 <Button size="sm" onClick={() => { setEditingLink(null); setAddLinkOpen(true) }} className="gap-2">
@@ -629,7 +629,7 @@ export default function LinkPageEditor({
         </Tabs>
 
         {/* Actions */}
-        <div className="flex gap-3">
+        <div data-tutorial="links-share" className="flex gap-3">
           <Button onClick={handleSave} disabled={saving} className="flex-1 gap-2">
             {saved ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
             {saved ? 'Salvo!' : saving ? 'Salvando...' : 'Salvar'}
@@ -646,7 +646,7 @@ export default function LinkPageEditor({
       </div>
 
       {/* Preview */}
-      <div className="order-1 lg:order-2 lg:sticky lg:top-4 h-fit">
+      <div data-tutorial="links-preview" className="order-1 lg:order-2 lg:sticky lg:top-4 h-fit">
         <div className="bg-white dark:bg-zinc-900 rounded-xl p-3 sm:p-4 border border-zinc-200 dark:border-zinc-800">
           {/* Header with device selector */}
           <div className="flex items-center justify-between mb-3">

@@ -1,6 +1,9 @@
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import LinkPageView from '@/components/linkpage/LinkPageView'
+import LinkPageContent from '@/components/linkpage/LinkPageContent'
+import PublicHeader from '@/components/public/PublicHeader'
+import PageTracker from '@/components/analytics/PageTracker'
+import { getBusinessCustomization } from '@/lib/customization/actions'
 import type { Metadata } from 'next'
 
 interface PageProps {
@@ -79,19 +82,50 @@ export default async function LinkPageRoute({ params }: PageProps) {
     .eq('is_active', true)
     .order('position', { ascending: true })
 
-  // Busca info do business para links integrados
+  // Busca info do business para usar o novo header unificado
   const { data: business } = await supabase
     .from('businesses')
     .select('id, name')
     .eq('id', linkPage.business_id)
     .single()
 
+  if (!business) {
+    notFound()
+  }
+
+  // Busca customização (capa, perfil, contatos)
+  const { data: customization } = await getBusinessCustomization(business.id)
+
   return (
-    <LinkPageView
-      linkPage={linkPage}
-      links={links || []}
-      businessId={business?.id}
-      enableTracking={true}
-    />
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+      <PageTracker businessId={business.id} pageType="links" pagePath={`/${slug}`} />
+
+      {/* Header com Capa + Avatar + Contatos */}
+      <PublicHeader
+        businessName={business.name}
+        coverPhotoUrl={customization?.cover_photo_url}
+        profilePhotoUrl={customization?.profile_picture_url}
+        phone={customization?.phone}
+        email={customization?.email}
+        instagramUrl={customization?.instagram_url}
+        websiteUrl={customization?.website_url}
+        address={customization?.address}
+        showPhone={customization?.show_phone}
+        showEmail={customization?.show_email}
+        showInstagram={customization?.show_instagram}
+        showWebsite={customization?.show_website}
+        showAddress={customization?.show_address}
+      />
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+        <LinkPageContent
+          linkPage={linkPage}
+          links={links || []}
+          businessId={business.id}
+          enableTracking={true}
+        />
+      </div>
+    </div>
   )
 }

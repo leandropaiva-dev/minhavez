@@ -10,6 +10,8 @@ import {
   BarChart2,
   Calendar,
   Link2,
+  Package,
+  Settings,
 } from 'react-feather'
 import { cn } from '@/lib/utils'
 
@@ -30,6 +32,11 @@ const menuItems = [
     href: '/dashboard/reservas',
   },
   {
+    icon: Package,
+    label: 'Serviços',
+    href: '/dashboard/servicos',
+  },
+  {
     icon: History,
     label: 'Histórico',
     href: '/dashboard/historico',
@@ -43,6 +50,11 @@ const menuItems = [
     icon: Link2,
     label: 'Página de Links',
     href: '/dashboard/links',
+  },
+  {
+    icon: Settings,
+    label: 'Customização',
+    href: '/dashboard/customizacao',
   },
 ]
 
@@ -69,6 +81,7 @@ export default function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              data-tutorial={(item as {tutorialTarget?: string}).tutorialTarget}
               className={cn(
                 'group relative flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-150',
                 isActive

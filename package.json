@@ -28,6 +28,7 @@
     "@upstash/redis": "^1.35.7",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "country-flag-icons": "^1.6.4",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.23.22",
     "gsap": "^3.13.0",

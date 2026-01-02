@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import RealtimeMetrics from './RealtimeMetrics'
 import AnalyticsChart from './AnalyticsChart'
 import GoalsPanel from './GoalsPanel'
-import QuickActions from './QuickActions'
 import QRCodeCard from './QRCodeCard'
 import ReservationLinkCard from './ReservationLinkCard'
 import { createClient } from '@/lib/supabase/client'
@@ -52,38 +51,35 @@ export default function DynamicDashboard({
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Row 1: Metrics with Real-time Updates */}
-      <RealtimeMetrics
-        businessId={businessId || ''}
-        initialStats={queueStats}
-        todayReservations={todayReservations}
-      />
+      <div data-tutorial="metrics">
+        <RealtimeMetrics
+          businessId={businessId || ''}
+          initialStats={queueStats}
+          todayReservations={todayReservations}
+        />
+      </div>
 
-      {/* Row 2: Analytics (2/3) + Goals (1/3) in desktop, stacked in mobile */}
+      {/* Row 2: Analytics (full width) */}
+      <div data-tutorial="analytics">
+        <AnalyticsChart businessId={businessId || ''} />
+      </div>
+
+      {/* Row 3: QR Codes + Goals in desktop (3 columns), stacked in mobile */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
-        <div className="lg:col-span-2">
-          <AnalyticsChart businessId={businessId || ''} />
+        <div data-tutorial="qr-code">
+          <QRCodeCard
+            businessId={businessId || 'default'}
+            businessName={businessName || 'Organizy'}
+          />
+        </div>
+        <div data-tutorial="reservation-link">
+          <ReservationLinkCard
+            businessId={businessId || 'default'}
+            businessName={businessName || 'Organizy'}
+          />
         </div>
         <div>
           <GoalsPanel businessId={businessId || ''} />
-        </div>
-      </div>
-
-      {/* Row 3: QR Codes (2/3) + Quick Actions (1/3) in desktop, stacked in mobile */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
-        <div>
-          <QRCodeCard
-            businessId={businessId || 'default'}
-            businessName={businessName || 'MinhaVez'}
-          />
-        </div>
-        <div>
-          <ReservationLinkCard
-            businessId={businessId || 'default'}
-            businessName={businessName || 'MinhaVez'}
-          />
-        </div>
-        <div>
-          <QuickActions businessId={businessId || ''} />
         </div>
       </div>
     </div>

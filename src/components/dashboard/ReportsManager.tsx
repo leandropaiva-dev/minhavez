@@ -386,7 +386,7 @@ export default function ReportsManager({ businessId }: ReportsManagerProps) {
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+      <div data-tutorial="reports-period" className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
         <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-2">
           <Select value={period} onValueChange={(value) => setPeriod(value as PeriodFilter)}>
             <SelectTrigger className="h-9 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white text-xs sm:text-sm w-full sm:w-[120px]">
@@ -413,7 +413,7 @@ export default function ReportsManager({ businessId }: ReportsManagerProps) {
       </div>
 
       {/* KPIs - Row 1 */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div data-tutorial="reports-metrics" className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 sm:p-4">
           <div className="flex items-center justify-between mb-2 sm:mb-3">
             <div className="p-1.5 sm:p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
@@ -523,7 +523,7 @@ export default function ReportsManager({ businessId }: ReportsManagerProps) {
       </div>
 
       {/* Charts Row 1 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+      <div data-tutorial="reports-charts" className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Daily Customers Chart */}
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 sm:p-6">
           <h3 className="text-zinc-900 dark:text-white font-semibold text-sm sm:text-base mb-3 sm:mb-4">

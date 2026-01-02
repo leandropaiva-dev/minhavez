@@ -54,6 +54,20 @@ export const couponRateLimiter = redis
   : null
 
 /**
+ * Rate limiter for email sending (confirmation, notifications)
+ * Limit: 5 emails per minute per IP (prevents spam abuse)
+ * This is more restrictive than public API to prevent email abuse
+ */
+export const emailRateLimiter = redis
+  ? new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(5, '1 m'),
+      analytics: true,
+      prefix: 'ratelimit:email',
+    })
+  : null
+
+/**
  * Helper to get client IP from request
  */
 export function getClientIp(headers: Headers): string {
@@ -76,15 +90,21 @@ export async function checkRateLimit(
     return { success: true }
   }
 
-  const { success, remaining } = await limiter.limit(identifier)
+  try {
+    const { success, remaining } = await limiter.limit(identifier)
 
-  if (!success) {
-    return {
-      success: false,
-      error: 'Muitas requisições. Tente novamente em alguns minutos.',
-      remaining: 0,
+    if (!success) {
+      return {
+        success: false,
+        error: 'Muitas requisições. Tente novamente em alguns minutos.',
+        remaining: 0,
+      }
     }
-  }
 
-  return { success: true, remaining }
+    return { success: true, remaining }
+  } catch (error) {
+    // If Redis connection fails, log error but allow request (fail open)
+    console.error('Rate limit check failed (Redis connection error):', error)
+    return { success: true }
+  }
 }

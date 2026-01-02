@@ -2,9 +2,18 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import DynamicQueueForm from './DynamicQueueForm'
-import { getPublicFormConfig } from '@/lib/config/form-config-api'
-import type { QueueFormConfig } from '@/types/config.types'
+import { CheckCircle } from 'react-feather'
+import { createClient } from '@/lib/supabase/client'
+import QueueFormWithServices from './QueueFormWithServices'
+
+interface Service {
+  id: string
+  name: string
+  description?: string | null
+  photo_url: string
+  price_cents?: number | null
+  estimated_duration_minutes?: number | null
+}
 
 interface QueueFormWrapperProps {
   businessId: string
@@ -13,96 +22,79 @@ interface QueueFormWrapperProps {
 
 export default function QueueFormWrapper({
   businessId,
+  businessName,
 }: QueueFormWrapperProps) {
   const router = useRouter()
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [config, setConfig] = useState<QueueFormConfig | null>(null)
-  const [configLoading, setConfigLoading] = useState(true)
+  const [services, setServices] = useState<Service[]>([])
+  const [entryId, setEntryId] = useState<string | null>(null)
 
   useEffect(() => {
-    async function loadConfig() {
-      try {
-        const formConfig = await getPublicFormConfig(businessId, 'queue')
-        setConfig(formConfig as QueueFormConfig)
-      } catch (err) {
-        console.error('Error loading form config:', err)
-      } finally {
-        setConfigLoading(false)
-      }
-    }
-
-    loadConfig()
+    loadServices()
   }, [businessId])
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleSubmit = async (formData: Record<string, any>) => {
-    setLoading(true)
-    setError(null)
-
+  const loadServices = async () => {
     try {
-      const payload = {
-        businessId,
-        customerName: formData.customer_name,
-        customerPhone: formData.customer_phone || undefined,
-        customerEmail: formData.customer_email || undefined,
-        partySize: formData.party_size || 1,
-        notes: formData.notes || undefined,
-        selectedService: formData.selected_service || undefined,
-      }
+      const supabase = createClient()
 
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 30000)
+      const { data: servicesData } = await supabase
+        .from('services')
+        .select('*')
+        .eq('business_id', businessId)
+        .eq('is_active', true)
+        .eq('available_in_queue', true)
+        .order('position')
 
-      const response = await fetch('/api/queue/join', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-        signal: controller.signal,
-      })
-
-      clearTimeout(timeoutId)
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }))
-        setError(errorData.error || 'Erro ao entrar na fila')
-        return
-      }
-
-      const result = await response.json()
-
-      if (result.error) {
-        setError(result.error)
-        return
-      }
-
-      if (result.data?.id) {
-        router.push(`/fila/${businessId}/espera/${result.data.id}`)
-      } else {
-        setError('Resposta inválida do servidor')
-      }
+      setServices(servicesData || [])
     } catch (err) {
-      console.error('Error joining queue:', err)
-
-      if (err instanceof Error) {
-        if (err.name === 'AbortError') {
-          setError('Timeout: A requisição demorou muito. Verifique sua conexão.')
-        } else if (err.message.includes('fetch')) {
-          setError('Erro de rede: Verifique sua conexão com a internet.')
-        } else {
-          setError(`Erro: ${err.message}`)
-        }
-      } else {
-        setError('Erro desconhecido. Tente novamente.')
-      }
+      console.error('Error loading services:', err)
+      setError('Erro ao carregar serviços')
     } finally {
       setLoading(false)
     }
   }
 
-  if (configLoading) {
+  const handleSubmit = async (formData: {
+    customer_name: string
+    customer_phone: string
+    party_size: number
+    selected_service: string | null
+    notes: string
+  }) => {
+    try {
+      const supabase = createClient()
+
+      const { data, error: insertError } = await supabase
+        .from('queue_entries')
+        .insert({
+          business_id: businessId,
+          customer_name: formData.customer_name,
+          customer_phone: formData.customer_phone,
+          party_size: formData.party_size,
+          selected_service: formData.selected_service,
+          notes: formData.notes || null,
+          status: 'waiting',
+        })
+        .select()
+        .single()
+
+      if (insertError) {
+        throw insertError
+      }
+
+      setEntryId(data.id)
+      setSuccess(true)
+    } catch (err) {
+      const error = err as Error
+      console.error('Error joining queue:', error)
+      setError(error.message || 'Erro ao entrar na fila. Tente novamente.')
+      throw err
+    }
+  }
+
+  if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -110,14 +102,52 @@ export default function QueueFormWrapper({
     )
   }
 
+  if (success && entryId) {
+    return (
+      <div className="text-center py-12">
+        <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center mx-auto mb-4">
+          <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
+        </div>
+        <h3 className="text-2xl font-bold text-zinc-900 dark:text-white mb-2">
+          Você está na fila!
+        </h3>
+        <p className="text-zinc-600 dark:text-zinc-400 mb-6">
+          Acompanhe sua posição e aguarde ser chamado
+        </p>
+        <button
+          onClick={() => router.push(`/fila/${businessId}/espera/${entryId}`)}
+          className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+        >
+          Ver Minha Posição
+        </button>
+      </div>
+    )
+  }
+
+  if (services.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-zinc-600 dark:text-zinc-400">
+          Nenhum serviço disponível na fila no momento
+        </p>
+      </div>
+    )
+  }
+
   return (
     <div>
       {error && (
-        <div className="bg-red-500/10 border border-red-500 rounded-lg p-4 mb-6">
-          <p className="text-red-500 text-sm">{error}</p>
+        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
         </div>
       )}
-      {config && <DynamicQueueForm onSubmit={handleSubmit} loading={loading} config={config} />}
+
+      <QueueFormWithServices
+        businessId={businessId}
+        businessName={businessName}
+        services={services}
+        onSubmit={handleSubmit}
+      />
     </div>
   )
 }

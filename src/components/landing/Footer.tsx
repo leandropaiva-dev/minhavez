@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 
 export default function Footer() {
   return (
@@ -7,13 +8,14 @@ export default function Footer() {
         <div className="flex flex-col md:grid md:grid-cols-2 lg:grid-cols-5 gap-8">
           {/* Coluna 1 - Logo e Descrição */}
           <div className="md:col-span-2 lg:col-span-2">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-              </div>
-              <span className="font-bold text-lg md:text-xl text-gray-900">Organizy</span>
+            <div className="mb-4">
+              <Image
+                src="/logos/LogoEscritoLight.png"
+                alt="Organizy"
+                width={180}
+                height={48}
+                className="h-7 sm:h-8 md:h-9 w-auto"
+              />
             </div>
             <p className="text-gray-600 text-sm leading-relaxed max-w-xs mb-6">
               Tudo o que precisa numa única plataforma para manter o seu negócio organizado e crescer rapidamente

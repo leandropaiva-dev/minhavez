@@ -49,6 +49,7 @@ export default function AnalyticsChart({ businessId }: AnalyticsChartProps) {
   const [metricType, setMetricType] = useState<MetricType>('attendances')
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined)
   const [showDatePicker, setShowDatePicker] = useState(false)
+  const [calendarKey, setCalendarKey] = useState(0)
 
   const { data, loading } = useAnalyticsData(businessId, metricType, timeFilter, dateRange)
 
@@ -112,7 +113,19 @@ export default function AnalyticsChart({ businessId }: AnalyticsChartProps) {
 
             {/* Custom Date Range Picker */}
             {timeFilter === 'custom' && (
-              <Popover open={showDatePicker} onOpenChange={setShowDatePicker}>
+              <Popover
+                open={showDatePicker}
+                onOpenChange={(open) => {
+                  // Only allow manual opening
+                  if (open) {
+                    setShowDatePicker(true)
+                  }
+                  // Only close if both dates selected or no dates
+                  else if ((dateRange?.from && dateRange?.to) || !dateRange?.from) {
+                    setShowDatePicker(false)
+                  }
+                }}
+              >
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
@@ -133,19 +146,85 @@ export default function AnalyticsChart({ businessId }: AnalyticsChartProps) {
                     )}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800" align="end">
-                  <Calendar
-                    mode="range"
-                    selected={{ from: dateRange?.from, to: dateRange?.to }}
-                    onSelect={(range) => {
-                      if (range?.from && range?.to) {
-                        setDateRange({ from: range.from, to: range.to })
-                        setShowDatePicker(false)
-                      }
-                    }}
-                    locale={ptBR}
-                    className="rounded-md"
-                  />
+                <PopoverContent
+                  className="w-auto p-0 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800"
+                  align="end"
+                  onInteractOutside={(e) => {
+                    // Prevent closing when clicking inside if only start date is selected
+                    if (dateRange?.from && !dateRange?.to) {
+                      e.preventDefault()
+                    }
+                  }}
+                >
+                  <div className="p-3">
+                    <Calendar
+                      key={calendarKey}
+                      mode="range"
+                      defaultMonth={dateRange?.from}
+                      selected={{ from: dateRange?.from, to: dateRange?.to }}
+                      onSelect={(range) => {
+                        if (!range) {
+                          setDateRange(undefined)
+                          setCalendarKey(k => k + 1)
+                          return
+                        }
+
+                        // If already has a complete range (both from and to)
+                        if (dateRange?.from && dateRange?.to) {
+                          // Third click should reset and start new selection
+                          if (range.from) {
+                            // Force reset by updating calendar key
+                            setCalendarKey(k => k + 1)
+                            // Set only the new from date
+                            const isSameDay = range.from.toDateString() === range.to?.toDateString()
+                            setDateRange({ from: range.from, to: undefined })
+                          }
+                          return
+                        }
+
+                        // First or second click (no complete range yet)
+                        if (range.from && range.to) {
+                          const isSameDay = range.from.toDateString() === range.to.toDateString()
+
+                          if (isSameDay) {
+                            // First click - only set 'from'
+                            setDateRange({ from: range.from, to: undefined })
+                          } else {
+                            // Second click - both dates selected, different days
+                            setDateRange({ from: range.from, to: range.to })
+                            setShowDatePicker(false)
+                          }
+                        } else if (range.from) {
+                          // Only 'from' selected
+                          setDateRange({ from: range.from, to: undefined })
+                        }
+                      }}
+                      numberOfMonths={typeof window !== 'undefined' && window.innerWidth < 768 ? 1 : 2}
+                      locale={ptBR}
+                      className="rounded-md"
+                    />
+                    {dateRange?.from && !dateRange?.to && (
+                      <div className="mt-3 text-xs text-zinc-500 dark:text-zinc-400 text-center border-t border-zinc-200 dark:border-zinc-800 pt-3">
+                        Selecione a data de término
+                      </div>
+                    )}
+                    {dateRange?.from && dateRange?.to && (
+                      <div className="mt-3 flex items-center justify-between border-t border-zinc-200 dark:border-zinc-800 pt-3">
+                        <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                          {format(dateRange.from, 'dd/MM/yyyy', { locale: ptBR })} - {format(dateRange.to, 'dd/MM/yyyy', { locale: ptBR })}
+                        </div>
+                        <button
+                          onClick={() => {
+                            setDateRange(undefined)
+                            setShowDatePicker(false)
+                          }}
+                          className="text-xs text-red-600 dark:text-red-400 hover:underline"
+                        >
+                          Limpar
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </PopoverContent>
               </Popover>
             )}

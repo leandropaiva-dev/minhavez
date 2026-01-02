@@ -1,12 +1,53 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 
+/**
+ * ✅ SECURITY: Determina a origem permitida baseado no ambiente
+ */
+function getAllowedOrigin(): string {
+  // Em produção, use apenas o domínio de produção
+  if (process.env.NODE_ENV === 'production') {
+    return process.env.NEXT_PUBLIC_APP_URL || 'https://minhavez.com'
+  }
+  // Em desenvolvimento, permite localhost
+  return 'http://localhost:3000'
+}
+
+/**
+ * ✅ SECURITY: Adiciona headers CORS seguros à resposta
+ */
+function addCorsHeaders(response: NextResponse, origin: string): NextResponse {
+  const allowedOrigin = getAllowedOrigin()
+
+  // Só adiciona CORS se a origem for permitida
+  if (origin === allowedOrigin) {
+    response.headers.set('Access-Control-Allow-Origin', allowedOrigin)
+  }
+
+  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  response.headers.set('Access-Control-Max-Age', '86400') // 24 horas
+
+  return response
+}
+
 export async function middleware(request: NextRequest) {
+  const origin = request.headers.get('origin') || ''
+
+  // ✅ SECURITY: Handle preflight requests
+  if (request.method === 'OPTIONS') {
+    const preflightResponse = new NextResponse(null, { status: 204 })
+    return addCorsHeaders(preflightResponse, origin)
+  }
+
   let response = NextResponse.next({
     request: {
       headers: request.headers,
     },
   })
+
+  // ✅ SECURITY: Adiciona CORS headers em todas as respostas
+  response = addCorsHeaders(response, origin)
 
   const supabase = createServerClient( 
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

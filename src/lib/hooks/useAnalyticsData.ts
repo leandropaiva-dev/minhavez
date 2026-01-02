@@ -11,7 +11,7 @@ interface DataPoint {
 
 export interface DateRange {
   from: Date
-  to: Date
+  to?: Date
 }
 
 export function useAnalyticsData(
@@ -30,6 +30,13 @@ export function useAnalyticsData(
       return
     }
 
+    // For custom date range, require both from and to
+    if (timeFilter === 'custom' && (!customDateRange || !customDateRange.from || !customDateRange.to)) {
+      setData([])
+      setLoading(false)
+      return
+    }
+
     const fetchData = async () => {
       setLoading(true)
       const supabase = createClient()
@@ -40,7 +47,7 @@ export function useAnalyticsData(
 
       if (timeFilter === 'custom' && customDateRange) {
         startDate = new Date(customDateRange.from)
-        endDate = new Date(customDateRange.to)
+        endDate = customDateRange.to ? new Date(customDateRange.to) : new Date()
       } else {
         switch (timeFilter) {
           case '24h':
@@ -99,9 +106,9 @@ export function useAnalyticsData(
 
           if (combinedEntries.length > 0) {
             const aggregated = aggregateByDate(combinedEntries, 'created_at', timeFilter)
-            setData(fillDateRange(aggregated, timeFilter))
+            setData(fillDateRange(aggregated, timeFilter, startDate, endDate))
           } else {
-            setData(fillDateRange([], timeFilter))
+            setData(fillDateRange([], timeFilter, startDate, endDate))
           }
         } else if (metricType === 'avg_time') {
           // Fetch queue entries with wait times
@@ -147,9 +154,9 @@ export function useAnalyticsData(
 
           if (combinedTimes.length > 0) {
             const aggregated = aggregateAvgTimeByDate(combinedTimes, timeFilter)
-            setData(fillDateRange(aggregated, timeFilter))
+            setData(fillDateRange(aggregated, timeFilter, startDate, endDate))
           } else {
-            setData(fillDateRange([], timeFilter))
+            setData(fillDateRange([], timeFilter, startDate, endDate))
           }
         } else if (metricType === 'reservations') {
           // Fetch reservations
@@ -163,9 +170,9 @@ export function useAnalyticsData(
 
           if (reservations) {
             const aggregated = aggregateByDate(reservations, 'reservation_date', timeFilter)
-            setData(fillDateRange(aggregated, timeFilter))
+            setData(fillDateRange(aggregated, timeFilter, startDate, endDate))
           } else {
-            setData(fillDateRange([], timeFilter))
+            setData(fillDateRange([], timeFilter, startDate, endDate))
           }
         } else if (metricType === 'queue_count') {
           // Fetch current queue count over time
@@ -179,9 +186,9 @@ export function useAnalyticsData(
 
           if (entries) {
             const aggregated = aggregateByDate(entries, 'created_at', timeFilter)
-            setData(fillDateRange(aggregated, timeFilter))
+            setData(fillDateRange(aggregated, timeFilter, startDate, endDate))
           } else {
-            setData(fillDateRange([], timeFilter))
+            setData(fillDateRange([], timeFilter, startDate, endDate))
           }
         }
       } catch (error) {
@@ -259,28 +266,10 @@ function aggregateAvgTimeByDate(items: { created_at: string; completed_at: strin
 // Helper function to fill date range with empty values
 function fillDateRange(
   data: DataPoint[],
-  timeFilter: TimeFilter
+  timeFilter: TimeFilter,
+  startDate: Date,
+  endDate: Date
 ): DataPoint[] {
-  const endDate = new Date()
-  const startDate = new Date()
-
-  switch (timeFilter) {
-    case '24h':
-      startDate.setHours(startDate.getHours() - 24)
-      break
-    case '7d':
-      startDate.setDate(startDate.getDate() - 7)
-      break
-    case '15d':
-      startDate.setDate(startDate.getDate() - 15)
-      break
-    case '30d':
-      startDate.setDate(startDate.getDate() - 30)
-      break
-    case '90d':
-      startDate.setDate(startDate.getDate() - 90)
-      break
-  }
 
   const allDates: DataPoint[] = []
   const currentDate = new Date(startDate)
