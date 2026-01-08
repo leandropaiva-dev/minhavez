@@ -350,9 +350,9 @@ export default function QueueWaitView({ entry: initialEntry, currentPosition: in
             <p style={{ color: 'var(--text-color, #ffffff)', opacity: 0.6 }}>{entry.customer_name}</p>
           </div>
 
-          {entry.status === 'waiting' && (
+          {/* Position Display - Show for all non-cancelled/no-show statuses */}
+          {!['cancelled', 'no_show'].includes(entry.status) && (
             <>
-              {/* Position Display */}
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="p-4 text-center" style={{
                   backgroundColor: 'rgba(0,0,0,0.3)',
@@ -361,8 +361,12 @@ export default function QueueWaitView({ entry: initialEntry, currentPosition: in
                   borderColor: 'var(--card-border, #27272a)',
                   borderRadius: 'var(--card-radius, 0.75rem)'
                 }}>
-                  <p className="text-sm mb-1" style={{ color: 'var(--text-color, #ffffff)', opacity: 0.6 }}>Sua Posição</p>
-                  <p className="text-4xl font-bold" style={{ color: 'var(--primary-color, #3b82f6)' }}>{currentPosition}</p>
+                  <p className="text-sm mb-1" style={{ color: 'var(--text-color, #ffffff)', opacity: 0.6 }}>
+                    {entry.status === 'waiting' ? 'Sua Posição' : 'Posição Inicial'}
+                  </p>
+                  <p className="text-4xl font-bold" style={{ color: 'var(--primary-color, #3b82f6)' }}>
+                    {entry.status === 'waiting' ? currentPosition : (entry.position || currentPosition)}
+                  </p>
                 </div>
                 <div className="p-4 text-center" style={{
                   backgroundColor: 'rgba(0,0,0,0.3)',
@@ -371,8 +375,12 @@ export default function QueueWaitView({ entry: initialEntry, currentPosition: in
                   borderColor: 'var(--card-border, #27272a)',
                   borderRadius: 'var(--card-radius, 0.75rem)'
                 }}>
-                  <p className="text-sm mb-1" style={{ color: 'var(--text-color, #ffffff)', opacity: 0.6 }}>Tempo Estimado</p>
-                  <p className="text-4xl font-bold" style={{ color: 'var(--primary-color, #3b82f6)' }}>{estimatedWaitTime}min</p>
+                  <p className="text-sm mb-1" style={{ color: 'var(--text-color, #ffffff)', opacity: 0.6 }}>
+                    {entry.status === 'waiting' ? 'Tempo Estimado' : 'Tempo Esperado'}
+                  </p>
+                  <p className="text-4xl font-bold" style={{ color: 'var(--primary-color, #3b82f6)' }}>
+                    {estimatedWaitTime}min
+                  </p>
                 </div>
               </div>
 

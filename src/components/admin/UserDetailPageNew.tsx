@@ -332,7 +332,6 @@ function ProfileTab({ userDetails }: { userDetails: DetailedUserData }) {
 // Metrics Tab Component (continuação no próximo arquivo)
 function MetricsTab({
   userDetails,
-  businessAnalytics,
   selectedBusiness,
   setSelectedBusiness
 }: {

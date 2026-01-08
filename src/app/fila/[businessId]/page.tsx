@@ -2,7 +2,6 @@ import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import QueueFormWrapper from '@/components/queue/QueueFormWrapper'
 import PublicHeader from '@/components/public/PublicHeader'
-import Stepper from '@/components/public/Stepper'
 import PageTracker from '@/components/analytics/PageTracker'
 import { getBusinessCustomization } from '@/lib/customization/actions'
 
@@ -75,64 +74,39 @@ export default async function QueuePage({ params }: PageProps) {
         showAddress={customization?.show_address}
       />
 
-      {/* Stepper - Apenas 1 step para fila */}
-      <Stepper
-        steps={[
-          { number: 1, label: 'Entrar na Fila', completed: false, current: true },
-        ]}
-      />
-
       {/* Main Content - 2 Colunas (mobile: 1 col, desktop: 2 cols) */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="max-w-7xl mx-auto px-1.5 sm:px-6 lg:px-8 py-8 pb-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 w-full sm:w-10/12 mx-auto">
           {/* Coluna Esquerda - Formulário */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
             {/* Card de Status da Fila */}
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg sm:rounded-xl p-4 sm:p-6">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                <div className="text-center p-3 sm:p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                   <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mb-1">
                     Pessoas na fila
                   </p>
-                  <p className="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-white">
+                  <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-zinc-900 dark:text-white">
                     {queueLength}
                   </p>
                 </div>
-                <div className="text-center p-4 bg-teal-50 dark:bg-teal-900/20 rounded-lg">
+                <div className="text-center p-3 sm:p-4 bg-teal-50 dark:bg-teal-900/20 rounded-lg">
                   <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mb-1">
                     Tempo estimado
                   </p>
-                  <p className="text-3xl sm:text-4xl font-bold text-teal-600 dark:text-teal-400">
-                    {estimatedWaitTime}<span className="text-lg">min</span>
+                  <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-teal-600 dark:text-teal-400">
+                    {estimatedWaitTime}<span className="text-base sm:text-lg">min</span>
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Card do Formulário */}
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 sm:p-8">
-              <div className="flex items-center gap-3 mb-6 pb-6 border-b border-zinc-200 dark:border-zinc-800">
-                <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-lg sm:text-xl font-bold text-zinc-900 dark:text-white truncate">
-                    {isTotallyOpen ? 'Entrar na Fila' : 'Fila Fechada'}
-                  </h2>
-                  <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 truncate">
-                    {isTotallyOpen ? 'Preencha seus dados abaixo' : !isQueueOpen ? 'Temporariamente fechada' : 'Fora do horário'}
-                  </p>
-                </div>
-              </div>
-
-              {isTotallyOpen ? (
-                <QueueFormWrapper businessId={businessId} businessName={business.name} />
-              ) : (
-                <div className="text-center py-12">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center">
-                    <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            {/* Formulário */}
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg sm:rounded-xl p-4 sm:p-6 md:p-8">
+              {!isTotallyOpen && (
+                <div className="text-center py-8 sm:py-12">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center">
+                    <svg className="w-6 h-6 sm:w-8 sm:h-8 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
                   </div>
@@ -143,6 +117,10 @@ export default async function QueuePage({ params }: PageProps) {
                     {!isQueueOpen ? 'A fila será reaberta em breve.' : 'Volte durante o horário de funcionamento.'}
                   </p>
                 </div>
+              )}
+
+              {isTotallyOpen && (
+                <QueueFormWrapper businessId={businessId} businessName={business.name} />
               )}
             </div>
           </div>

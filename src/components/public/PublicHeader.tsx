@@ -2,7 +2,7 @@
 
 import { Phone, Mail, Instagram, Globe, MapPin } from 'react-feather'
 
-interface PublicHeaderProps {
+export interface PublicHeaderProps {
   businessName: string
   coverPhotoUrl?: string | null
   profilePhotoUrl?: string | null
@@ -56,7 +56,7 @@ export default function PublicHeader({
       {/* Content Container */}
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         <div className="relative -mt-12 sm:-mt-16 md:-mt-20 pb-4 sm:pb-6">
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-6">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 w-10/12 mx-auto">
             {/* Profile Photo */}
             <div className="relative flex-shrink-0">
               <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full border-4 border-white dark:border-zinc-900 bg-white dark:bg-zinc-800 overflow-hidden shadow-2xl">
@@ -75,7 +75,7 @@ export default function PublicHeader({
             </div>
 
             {/* Business Info */}
-            <div className="flex-1 min-w-0 pt-0 sm:pt-8 md:pt-12">
+            <div className="flex-1 min-w-0 pt-12 sm:pt-16 md:pt-20">
               <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-zinc-900 dark:text-white mb-2 sm:mb-3">
                 {businessName}
               </h1>

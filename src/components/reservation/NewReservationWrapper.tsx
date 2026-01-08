@@ -33,7 +33,6 @@ export default function NewReservationWrapper({
 }: NewReservationWrapperProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
-  const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -46,6 +45,7 @@ export default function NewReservationWrapper({
 
   useEffect(() => {
     loadData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [businessId])
 
   const loadData = async () => {
@@ -100,7 +100,6 @@ export default function NewReservationWrapper({
     reservation_time: string
     notes: string
   }) => {
-    setSubmitting(true)
     setError(null)
 
     try {
@@ -129,8 +128,6 @@ export default function NewReservationWrapper({
       const error = err as Error
       console.error('Error creating reservation:', error)
       setError(error.message || 'Erro ao criar reserva. Tente novamente.')
-    } finally {
-      setSubmitting(false)
     }
   }
 

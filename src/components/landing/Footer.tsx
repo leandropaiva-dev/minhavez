@@ -1,7 +1,11 @@
+'use client'
+
 import Link from 'next/link'
 import Image from 'next/image'
+import { useAuthModal } from '@/contexts/AuthModalContext'
 
 export default function Footer() {
+  const { openSignup, openLogin } = useAuthModal()
   return (
     <footer className="border-t border-gray-200 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
@@ -20,9 +24,9 @@ export default function Footer() {
             <p className="text-gray-600 text-sm leading-relaxed max-w-xs mb-6">
               Tudo o que precisa numa única plataforma para manter o seu negócio organizado e crescer rapidamente
             </p>
-            <Link href="/auth?mode=signup" className="inline-flex items-center justify-center rounded-lg text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 transition-all uppercase tracking-wide w-full md:w-auto">
+            <button onClick={openSignup} className="inline-flex items-center justify-center rounded-lg text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 transition-all uppercase tracking-wide w-full md:w-auto cursor-pointer">
               COMEÇAR AGORA
-            </Link>
+            </button>
           </div>
 
           {/* Coluna 2 - Produto */}
@@ -45,9 +49,9 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/auth" className="text-gray-600 hover:text-gray-900 transition text-sm">
+                <button onClick={openLogin} className="text-gray-600 hover:text-gray-900 transition text-sm cursor-pointer">
                   Login
-                </Link>
+                </button>
               </li>
             </ul>
           </div>

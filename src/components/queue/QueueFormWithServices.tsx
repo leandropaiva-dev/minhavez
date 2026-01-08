@@ -31,8 +31,6 @@ interface QueueFormWithServicesProps {
 }
 
 export default function QueueFormWithServices({
-  businessId,
-  businessName,
   services,
   onSubmit,
 }: QueueFormWithServicesProps) {

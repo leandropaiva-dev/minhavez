@@ -1,10 +1,11 @@
 'use client'
 
 import Image from 'next/image'
-import Link from 'next/link'
 import { motion } from 'framer-motion'
+import { useAuthModal } from '@/contexts/AuthModalContext'
 
 export default function Hero() {
+  const { openSignup } = useAuthModal()
   return (
     <section className="relative py-20 md:py-32 overflow-hidden bg-gradient-to-b from-gray-50 to-white">
       {/* Floating Icons */}
@@ -98,12 +99,12 @@ export default function Hero() {
           transition={{ duration: 0.5, delay: 0.3 }}
           className="mt-8 sm:mt-10"
         >
-          <Link
-            href="/auth?mode=signup"
-            className="inline-flex items-center justify-center rounded-lg text-sm sm:text-base font-bold transition-all bg-blue-600 hover:bg-blue-700 text-white px-6 sm:px-8 py-3 sm:py-4 shadow-lg shadow-blue-600/30 hover:shadow-xl hover:shadow-blue-600/40 hover:scale-105 uppercase tracking-wide"
+          <button
+            onClick={openSignup}
+            className="inline-flex items-center justify-center rounded-lg text-sm sm:text-base font-bold transition-all bg-blue-600 hover:bg-blue-700 text-white px-6 sm:px-8 py-3 sm:py-4 shadow-lg shadow-blue-600/30 hover:shadow-xl hover:shadow-blue-600/40 hover:scale-105 uppercase tracking-wide cursor-pointer"
           >
             COMEÇAR AGORA
-          </Link>
+          </button>
         </motion.div>
 
         <motion.div

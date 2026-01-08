@@ -48,8 +48,6 @@ interface MultiStepReservationFormProps {
 }
 
 export default function MultiStepReservationForm({
-  businessId,
-  businessName,
   services,
   professionals = [],
   config,

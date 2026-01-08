@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Edit, Trash2, Image as ImageIcon, DollarSign, Clock, CheckCircle, XCircle, Package } from 'react-feather'
+import { Plus, Edit, Trash2, DollarSign, Clock, CheckCircle, XCircle, Package } from 'react-feather'
 import { Button } from '@/components/ui/button'
 import { getServices, deleteService, type Service } from '@/lib/services/actions'
 import ServiceModal from './ServiceModal'
@@ -28,6 +28,7 @@ export default function ServicesManager({ businessId }: ServicesManagerProps) {
 
   useEffect(() => {
     loadServices()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [businessId])
 
   const handleDelete = async (serviceId: string) => {

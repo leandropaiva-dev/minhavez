@@ -91,15 +91,34 @@ export default function LinkPagePreview({ linkPage, links }: LinkPagePreviewProp
   }
 
   const renderIcon = (link: Partial<LinkPageLink>) => {
+    // Check if icon is an emoji or simple string (like from SimpleLinkPageEditor)
+    if (link.icon && !ICON_MAP[link.icon]) {
+      // Map common icon names to emojis
+      const emojiMap: Record<string, string> = {
+        'link': '🔗',
+        'instagram': '📷',
+        'whatsapp': '💬',
+        'email': '📧',
+        'phone': '📞',
+        'map': '📍',
+        'calendar': '📅',
+        'shopping': '🛒',
+        'menu': '🍽️',
+        'youtube': '▶️',
+        'facebook': '👥',
+        'twitter': '🐦',
+        'tiktok': '🎵',
+        'linkedin': '💼',
+      }
+
+      return <span className="text-sm flex-shrink-0">{emojiMap[link.icon] || '🔗'}</span>
+    }
+
     const iconName = link.icon || (link.link_type ? TYPE_TO_ICON[link.link_type] : 'Link') || 'Link'
     const IconComponent = ICON_MAP[iconName]
 
     if (IconComponent) {
       return <IconComponent className="w-3 h-3 flex-shrink-0" />
-    }
-
-    if (link.icon) {
-      return <span className="text-xs">{link.icon}</span>
     }
 
     return <LinkIcon className="w-3 h-3 flex-shrink-0" />

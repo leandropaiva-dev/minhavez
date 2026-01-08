@@ -216,7 +216,6 @@ export default function PhoneInput({
     const digits = inputValue.replace(/\D/g, '')
 
     // Apply max length based on country
-    const maxDigits = country.maxLength - (country.maxLength - digits.length)
     const limitedDigits = digits.slice(0, country.placeholder.replace(/\D/g, '').length)
 
     // Format the number

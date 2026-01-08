@@ -3,10 +3,12 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useAuthModal } from '@/contexts/AuthModalContext'
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const { openLogin, openSignup } = useAuthModal()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -56,18 +58,18 @@ export default function Navbar() {
 
           {/* Desktop Buttons */}
           <div className="hidden md:flex gap-3 items-center">
-            <Link
-              href="/auth?mode=login"
-              className="inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors text-gray-700 hover:text-gray-900 border border-blue-600 h-10 px-4"
+            <button
+              onClick={openLogin}
+              className="inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors text-gray-700 hover:text-gray-900 border border-blue-600 h-10 px-4 cursor-pointer"
             >
               Entrar
-            </Link>
-            <Link
-              href="/auth?mode=signup"
-              className="inline-flex items-center justify-center rounded-lg text-sm font-bold transition-all bg-blue-600 hover:bg-blue-700 text-white h-10 px-5 shadow-sm hover:shadow-md uppercase tracking-wide"
+            </button>
+            <button
+              onClick={openSignup}
+              className="inline-flex items-center justify-center rounded-lg text-sm font-bold transition-all bg-blue-600 hover:bg-blue-700 text-white h-10 px-5 shadow-sm hover:shadow-md uppercase tracking-wide cursor-pointer"
             >
               COMEÇAR AGORA
-            </Link>
+            </button>
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -121,20 +123,24 @@ export default function Navbar() {
               FAQ
             </Link>
             <div className="pt-3 space-y-2 border-t border-gray-200">
-              <Link
-                href="/auth?mode=login"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block w-full text-center py-2 border border-blue-600 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false)
+                  openLogin()
+                }}
+                className="block w-full text-center py-2 border border-blue-600 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors cursor-pointer"
               >
                 Entrar
-              </Link>
-              <Link
-                href="/auth?mode=signup"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block w-full text-center py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 uppercase tracking-wide shadow-sm transition-colors"
+              </button>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false)
+                  openSignup()
+                }}
+                className="block w-full text-center py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 uppercase tracking-wide shadow-sm transition-colors cursor-pointer"
               >
                 COMEÇAR AGORA
-              </Link>
+              </button>
             </div>
           </div>
         </div>

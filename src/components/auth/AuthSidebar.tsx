@@ -11,13 +11,13 @@ export default function AuthSidebar({ mode, onToggle }: AuthSidebarProps) {
     <div className="h-full flex flex-col items-center justify-center p-12 relative">
       {/* CTA no topo */}
       <div className="absolute top-8 left-0 right-0 text-center">
-        <p className="text-zinc-400 text-sm mb-3">
+        <p className="text-zinc-600 text-sm mb-3">
           {mode === 'login' ? 'Já tem conta?' : 'Não tem conta?'}
         </p>
         <Button
           onClick={onToggle}
           variant="outline"
-          className="border-zinc-700 hover:bg-zinc-800 text-white"
+          className="border-zinc-300 hover:bg-white text-zinc-900"
         >
           {mode === 'login' ? 'Entrar agora!' : 'Comece agora!'}
         </Button>
@@ -35,12 +35,12 @@ export default function AuthSidebar({ mode, onToggle }: AuthSidebarProps) {
 
       {/* Copy */}
       <div className="text-center max-w-md">
-        <h3 className="text-2xl font-bold text-white mb-4">
+        <h3 className="text-2xl font-bold text-zinc-900 mb-4">
           {mode === 'login'
             ? 'Elimine filas físicas no seu negócio'
             : 'Junte-se a centenas de negócios'}
         </h3>
-        <p className="text-zinc-400">
+        <p className="text-zinc-600">
           {mode === 'login'
             ? 'Gestão de fila digital em tempo real. Clientes felizes, mais eficiência.'
             : 'Comece grátis hoje e transforme a experiência dos seus clientes.'}
@@ -50,15 +50,15 @@ export default function AuthSidebar({ mode, onToggle }: AuthSidebarProps) {
       {/* Stats (opcional) */}
       <div className="grid grid-cols-3 gap-4 mt-12 w-full max-w-md">
         <div className="text-center">
-          <div className="text-2xl font-bold text-white">500+</div>
+          <div className="text-2xl font-bold text-zinc-900">500+</div>
           <div className="text-xs text-zinc-500">Negócios</div>
         </div>
         <div className="text-center">
-          <div className="text-2xl font-bold text-white">50k+</div>
+          <div className="text-2xl font-bold text-zinc-900">50k+</div>
           <div className="text-xs text-zinc-500">Clientes</div>
         </div>
         <div className="text-center">
-          <div className="text-2xl font-bold text-white">4.9</div>
+          <div className="text-2xl font-bold text-zinc-900">4.9</div>
           <div className="text-xs text-zinc-500">Avaliação</div>
         </div>
       </div>

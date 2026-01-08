@@ -57,8 +57,6 @@ export default function OnboardingSimple() {
   const [avgServiceTime, setAvgServiceTime] = useState('30')
   const [serviceMode, setServiceMode] = useState<ServiceMode>('queue')
 
-  const config = getCountryConfig(country) || getCountryConfig('PT')
-
   const handleStep1Next = () => {
     if (!businessName.trim()) {
       setError('Nome do negócio é obrigatório')

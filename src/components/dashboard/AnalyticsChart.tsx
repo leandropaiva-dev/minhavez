@@ -176,7 +176,6 @@ export default function AnalyticsChart({ businessId }: AnalyticsChartProps) {
                             // Force reset by updating calendar key
                             setCalendarKey(k => k + 1)
                             // Set only the new from date
-                            const isSameDay = range.from.toDateString() === range.to?.toDateString()
                             setDateRange({ from: range.from, to: undefined })
                           }
                           return

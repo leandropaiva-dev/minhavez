@@ -5,10 +5,13 @@ import { Camera, Upload, Save, AlertCircle } from 'react-feather'
 import Image from 'next/image'
 import {
   updateBusinessCustomization,
-  uploadCoverPhoto,
-  uploadProfilePhoto,
   type BusinessCustomization,
 } from '@/lib/customization/actions'
+import {
+  uploadCoverPhotoClient,
+  uploadProfilePhotoClient,
+} from '@/lib/customization/client-actions'
+import ImageCropModal from '@/components/ui/ImageCropModal'
 
 interface BusinessData {
   id: string
@@ -44,6 +47,11 @@ export default function CustomizationManager({
   const [coverPhotoUrl, setCoverPhotoUrl] = useState<string | null>(initialData.cover_photo_url || null)
   const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(initialData.profile_picture_url || null)
 
+  // Crop modal states
+  const [cropModalOpen, setCropModalOpen] = useState(false)
+  const [cropImageSrc, setCropImageSrc] = useState<string>('')
+  const [cropType, setCropType] = useState<'cover' | 'profile'>('profile')
+
   const [formData, setFormData] = useState<Partial<BusinessCustomization>>({
     show_phone: initialData.show_phone ?? true,
     show_email: initialData.show_email ?? true,
@@ -59,45 +67,74 @@ export default function CustomizationManager({
   const businessName = initialData.name || 'Seu Negócio'
   const initials = businessName.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)
 
-  const handleCoverPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCoverPhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
+    // Read file as data URL for cropper
+    const reader = new FileReader()
+    reader.onload = () => {
+      setCropImageSrc(reader.result as string)
+      setCropType('cover')
+      setCropModalOpen(true)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleCoverPhotoUpload = async (croppedFile: File) => {
+    setCropModalOpen(false)
     setUploadingCover(true)
     setMessage(null)
 
     try {
-      const { url, error } = await uploadCoverPhoto(businessId, file)
-      if (error) {
-        setMessage({ type: 'error', text: error })
-      } else if (url) {
-        setCoverPhotoUrl(url)
+      const result = await uploadCoverPhotoClient(businessId, croppedFile)
+      if (result.error) {
+        setMessage({ type: 'error', text: result.error })
+      } else if (result.url) {
+        setCoverPhotoUrl(result.url)
         setMessage({ type: 'success', text: 'Foto de capa atualizada!' })
+        setTimeout(() => window.location.reload(), 1000)
       }
-    } catch {
-      setMessage({ type: 'error', text: 'Erro ao fazer upload da foto de capa' })
+    } catch (error) {
+      console.error('Cover upload error:', error)
+      setMessage({ type: 'error', text: `Erro ao fazer upload: ${error instanceof Error ? error.message : 'Erro desconhecido'}` })
     } finally {
       setUploadingCover(false)
     }
   }
 
-  const handleProfilePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProfilePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
+    // Read file as data URL for cropper
+    const reader = new FileReader()
+    reader.onload = () => {
+      setCropImageSrc(reader.result as string)
+      setCropType('profile')
+      setCropModalOpen(true)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleProfilePhotoUpload = async (croppedFile: File) => {
+    setCropModalOpen(false)
     setUploadingProfile(true)
     setMessage(null)
 
     try {
-      const { url, error } = await uploadProfilePhoto(businessId, file)
-      if (error) {
-        setMessage({ type: 'error', text: error })
-      } else if (url) {
-        setProfilePhotoUrl(url)
+      const result = await uploadProfilePhotoClient(businessId, croppedFile)
+
+      if (result.error) {
+        setMessage({ type: 'error', text: result.error })
+      } else if (result.url) {
+        setProfilePhotoUrl(result.url)
         setMessage({ type: 'success', text: 'Foto de perfil atualizada!' })
+        setTimeout(() => window.location.reload(), 1000)
       }
-    } catch {
-      setMessage({ type: 'error', text: 'Erro ao fazer upload da foto de perfil' })
+    } catch (error) {
+      console.error('Profile upload error:', error)
+      setMessage({ type: 'error', text: `Erro ao fazer upload: ${error instanceof Error ? error.message : 'Erro desconhecido'}` })
     } finally {
       setUploadingProfile(false)
     }
@@ -213,7 +250,7 @@ export default function CustomizationManager({
             <input
               type="file"
               accept="image/*"
-              onChange={handleCoverPhotoUpload}
+              onChange={handleCoverPhotoSelect}
               disabled={uploadingCover}
               className="hidden"
             />
@@ -246,7 +283,7 @@ export default function CustomizationManager({
             <input
               type="file"
               accept="image/*"
-              onChange={handleProfilePhotoUpload}
+              onChange={handleProfilePhotoSelect}
               disabled={uploadingProfile}
               className="hidden"
             />
@@ -383,6 +420,17 @@ export default function CustomizationManager({
           {saving ? 'Salvando...' : 'Salvar Configurações'}
         </button>
       </div>
+
+      {/* Image Crop Modal */}
+      <ImageCropModal
+        isOpen={cropModalOpen}
+        imageSrc={cropImageSrc}
+        onClose={() => setCropModalOpen(false)}
+        onCropComplete={cropType === 'cover' ? handleCoverPhotoUpload : handleProfilePhotoUpload}
+        aspectRatio={cropType === 'cover' ? 3 : 1}
+        shape={cropType === 'profile' ? 'round' : 'rect'}
+        title={cropType === 'cover' ? 'Ajustar Foto de Capa' : 'Ajustar Foto de Perfil'}
+      />
     </div>
   )
 }

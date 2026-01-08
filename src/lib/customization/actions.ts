@@ -119,15 +119,18 @@ export async function uploadCoverPhoto(
       return { url: null, error: uploadError.message }
     }
 
-    // Obter URL pública
+    // Obter URL pública com cache busting
+    const timestamp = Date.now()
     const { data: { publicUrl } } = supabase.storage
       .from('cover-photos')
       .getPublicUrl(filePath)
 
-    // Atualizar banco
-    await updateBusinessCustomization(businessId, { cover_photo_url: publicUrl })
+    const urlWithCacheBusting = `${publicUrl}?t=${timestamp}`
 
-    return { url: publicUrl, error: null }
+    // Atualizar banco
+    await updateBusinessCustomization(businessId, { cover_photo_url: urlWithCacheBusting })
+
+    return { url: urlWithCacheBusting, error: null }
   } catch (error) {
     console.error('Error uploading cover photo:', error)
     return { url: null, error: 'Erro ao fazer upload da foto de capa' }
@@ -144,19 +147,25 @@ export async function uploadProfilePhoto(
   const supabase = await createClient()
 
   try {
+    console.log('[uploadProfilePhoto] Starting upload for business:', businessId)
+
     // Validar tipo de arquivo
     if (!file.type.startsWith('image/')) {
+      console.error('[uploadProfilePhoto] Invalid file type:', file.type)
       return { url: null, error: 'Arquivo deve ser uma imagem' }
     }
 
     // Validar tamanho (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
+      console.error('[uploadProfilePhoto] File too large:', file.size)
       return { url: null, error: 'Imagem deve ter no máximo 5MB' }
     }
 
     const fileExt = file.name.split('.').pop()
     const fileName = `profile.${fileExt}`
     const filePath = `${businessId}/${fileName}`
+
+    console.log('[uploadProfilePhoto] Uploading to path:', filePath)
 
     // Upload para Supabase Storage (bucket profile-pictures que já existe)
     const { error: uploadError } = await supabase.storage
@@ -167,21 +176,35 @@ export async function uploadProfilePhoto(
       })
 
     if (uploadError) {
-      console.error('Upload error:', uploadError)
+      console.error('[uploadProfilePhoto] Upload error:', uploadError)
       return { url: null, error: uploadError.message }
     }
 
-    // Obter URL pública
+    console.log('[uploadProfilePhoto] Upload successful, getting public URL')
+
+    // Obter URL pública com cache busting
+    const timestamp = Date.now()
     const { data: { publicUrl } } = supabase.storage
       .from('profile-pictures')
       .getPublicUrl(filePath)
 
-    // Atualizar banco
-    await updateBusinessCustomization(businessId, { profile_picture_url: publicUrl })
+    const urlWithCacheBusting = `${publicUrl}?t=${timestamp}`
 
-    return { url: publicUrl, error: null }
+    console.log('[uploadProfilePhoto] Public URL:', urlWithCacheBusting)
+
+    // Atualizar banco
+    const updateResult = await updateBusinessCustomization(businessId, { profile_picture_url: urlWithCacheBusting })
+
+    if (updateResult.error) {
+      console.error('[uploadProfilePhoto] Database update error:', updateResult.error)
+      return { url: null, error: updateResult.error }
+    }
+
+    console.log('[uploadProfilePhoto] Successfully updated database')
+
+    return { url: urlWithCacheBusting, error: null }
   } catch (error) {
-    console.error('Error uploading profile photo:', error)
+    console.error('[uploadProfilePhoto] Unexpected error:', error)
     return { url: null, error: 'Erro ao fazer upload da foto de perfil' }
   }
 }

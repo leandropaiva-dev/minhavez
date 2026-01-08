@@ -8,7 +8,12 @@
       "Bash(tasklist)",
       "Bash(npx eslint:*)",
       "Bash(timeout 120 npm run build:*)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(cat:*)",
+      "Bash(npm run dev:*)",
+      "Bash(findstr:*)",
+      "Bash(if exist .next rmdir /s /q .next)",
+      "Bash(npm install:*)"
     ],
     "deny": [],
     "ask": []

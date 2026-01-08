@@ -48,7 +48,7 @@ interface DashboardTutorialProps {
   onComplete?: () => void
 }
 
-export default function DashboardTutorial({ userId, businessId, onComplete }: DashboardTutorialProps) {
+export default function DashboardTutorial({ userId, onComplete }: DashboardTutorialProps) {
   const [currentStep, setCurrentStep] = useState(0)
   const [isActive, setIsActive] = useState(false)
   const [targetPosition, setTargetPosition] = useState<DOMRect | null>(null)

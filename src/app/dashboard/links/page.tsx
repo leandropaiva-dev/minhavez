@@ -1,8 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
-import LinkPageEditor from '@/components/linkpage/LinkPageEditor'
+import SimpleLinkPageEditor from '@/components/linkpage/SimpleLinkPageEditor'
 import { getBusiness } from '@/lib/onboarding/actions'
+import { getBusinessCustomization } from '@/lib/customization/actions'
+import type { LinkPageLink } from '@/types/linkpage.types'
 
 export default async function LinksPage() {
   const supabase = await createClient()
@@ -26,7 +28,7 @@ export default async function LinksPage() {
     .single()
 
   // Busca os links se existir link page
-  let links: unknown[] = []
+  let links: Partial<LinkPageLink>[] = []
   if (linkPage) {
     const { data } = await supabase
       .from('link_page_links')
@@ -34,8 +36,11 @@ export default async function LinksPage() {
       .eq('link_page_id', linkPage.id)
       .order('position', { ascending: true })
 
-    links = data || []
+    links = (data || []) as Partial<LinkPageLink>[]
   }
+
+  // Busca customização do negócio
+  const { data: customization } = await getBusinessCustomization(business.id)
 
   return (
     <DashboardLayout
@@ -52,11 +57,13 @@ export default async function LinksPage() {
           </p>
         </div>
 
-        <LinkPageEditor
+        <SimpleLinkPageEditor
           businessId={business.id}
           businessName={business.name}
           initialLinkPage={linkPage}
           initialLinks={links}
+          coverPhotoUrl={customization?.cover_photo_url}
+          profilePictureUrl={customization?.profile_picture_url}
         />
       </main>
     </DashboardLayout>

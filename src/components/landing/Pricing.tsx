@@ -4,9 +4,11 @@ import { Check } from 'react-feather'
 import { motion } from 'framer-motion'
 import { useState } from 'react'
 import Link from 'next/link'
+import { useAuthModal } from '@/contexts/AuthModalContext'
 
 export default function Pricing() {
   const [isAnnual, setIsAnnual] = useState(true)
+  const { openSignup } = useAuthModal()
 
   const plans = [
     {
@@ -195,12 +197,21 @@ export default function Pricing() {
                 </ul>
               </div>
 
-              <Link
-                href={plan.custom ? '/contacto' : '/auth?mode=signup'}
-                className="inline-flex items-center justify-center w-full rounded-lg text-sm font-bold transition-all h-12 uppercase tracking-wide bg-blue-600 text-white hover:bg-blue-700 mt-auto"
-              >
-                {plan.custom ? 'ENTRAR EM CONTACTO' : 'COMEÇAR AGORA'}
-              </Link>
+              {plan.custom ? (
+                <Link
+                  href="/contacto"
+                  className="inline-flex items-center justify-center w-full rounded-lg text-sm font-bold transition-all h-12 uppercase tracking-wide bg-blue-600 text-white hover:bg-blue-700 mt-auto cursor-pointer"
+                >
+                  ENTRAR EM CONTACTO
+                </Link>
+              ) : (
+                <button
+                  onClick={openSignup}
+                  className="inline-flex items-center justify-center w-full rounded-lg text-sm font-bold transition-all h-12 uppercase tracking-wide bg-blue-600 text-white hover:bg-blue-700 mt-auto cursor-pointer"
+                >
+                  COMEÇAR AGORA
+                </button>
+              )}
             </motion.div>
           ))}
         </div>
