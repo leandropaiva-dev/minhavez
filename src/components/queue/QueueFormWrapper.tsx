@@ -99,12 +99,78 @@ export default function QueueFormWrapper({
     }
   }
 
-  // Realtime updates quando na fila
+  // Realtime updates quando na fila + Polling como fallback
   useEffect(() => {
     if (!entryId || !entryData) return
 
     const supabase = createClient()
+    let pollInterval: NodeJS.Timeout
 
+    // Função para atualizar dados
+    const fetchUpdate = async () => {
+      const { data: updatedEntry } = await supabase
+        .from('queue_entries')
+        .select('*')
+        .eq('id', entryId)
+        .single()
+
+      if (updatedEntry) {
+        const wasWaiting = entryData.status === 'waiting'
+        const nowCalled = updatedEntry.status === 'called'
+
+        // Detecta quando cliente é chamado
+        if (wasWaiting && nowCalled) {
+          // Notificação
+          if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+            new Notification('Você foi chamado!', {
+              body: `${businessName} está te chamando`,
+              icon: '/icon.png',
+              tag: 'queue-call',
+              requireInteraction: true
+            })
+          }
+          // Vibra (mobile)
+          if ('vibrate' in navigator) {
+            navigator.vibrate([200, 100, 200, 100, 200])
+          }
+          // Som
+          try {
+            const audio = new Audio('/notification.mp3')
+            audio.play().catch(() => {
+              const ctx = new AudioContext()
+              const oscillator = ctx.createOscillator()
+              const gainNode = ctx.createGain()
+              oscillator.connect(gainNode)
+              gainNode.connect(ctx.destination)
+              oscillator.frequency.value = 800
+              gainNode.gain.value = 0.3
+              oscillator.start()
+              setTimeout(() => oscillator.stop(), 500)
+            })
+          } catch {
+            console.log('Audio não disponível')
+          }
+        }
+
+        setEntryData(updatedEntry as QueueEntry)
+
+        // Recalcula posição se ainda waiting
+        if (updatedEntry.status === 'waiting') {
+          const { count } = await supabase
+            .from('queue_entries')
+            .select('*', { count: 'exact', head: true })
+            .eq('business_id', businessId)
+            .eq('status', 'waiting')
+            .lt('position', updatedEntry.position || 999999)
+
+          const newPosition = (count || 0) + 1
+          setCurrentPosition(newPosition)
+          setEstimatedWaitTime((count || 0) * 15)
+        }
+      }
+    }
+
+    // Tenta usar realtime
     const channel = supabase
       .channel(`queue-entry-${entryId}`)
       .on(
@@ -115,79 +181,28 @@ export default function QueueFormWrapper({
           table: 'queue_entries',
           filter: `id=eq.${entryId}`,
         },
-        (payload) => {
-          if (payload.new) {
-            const newEntry = payload.new as QueueEntry
-            const wasWaiting = entryData.status === 'waiting'
-            const nowCalled = newEntry.status === 'called'
-
-            // Detecta quando cliente é chamado
-            if (wasWaiting && nowCalled) {
-              // Notificação
-              if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-                new Notification('Você foi chamado!', {
-                  body: `${businessName} está te chamando`,
-                  icon: '/icon.png',
-                  tag: 'queue-call',
-                  requireInteraction: true
-                })
-              }
-              // Vibra (mobile)
-              if ('vibrate' in navigator) {
-                navigator.vibrate([200, 100, 200, 100, 200])
-              }
-              // Som
-              try {
-                const audio = new Audio('/notification.mp3')
-                audio.play().catch(() => {
-                  const ctx = new AudioContext()
-                  const oscillator = ctx.createOscillator()
-                  const gainNode = ctx.createGain()
-                  oscillator.connect(gainNode)
-                  gainNode.connect(ctx.destination)
-                  oscillator.frequency.value = 800
-                  gainNode.gain.value = 0.3
-                  oscillator.start()
-                  setTimeout(() => oscillator.stop(), 500)
-                })
-              } catch {
-                console.log('Audio não disponível')
-              }
-            }
-
-            setEntryData(prev => ({ ...prev, ...newEntry }))
-          }
+        () => {
+          fetchUpdate()
         }
       )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'queue_entries',
-          filter: `business_id=eq.${businessId}`,
-        },
-        async () => {
-          if (!entryData) return
-          // Recalcula posição
-          const { count } = await supabase
-            .from('queue_entries')
-            .select('*', { count: 'exact', head: true })
-            .eq('business_id', businessId)
-            .eq('status', 'waiting')
-            .lt('position', entryData.position || 999999)
+      .subscribe((status) => {
+        console.log('Realtime status:', status)
 
-          const newPosition = (count || 0) + 1
-          setCurrentPosition(newPosition)
-          setEstimatedWaitTime((count || 0) * 15)
+        // Se realtime falhar, usa polling
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          console.log('Realtime falhou, usando polling...')
+          pollInterval = setInterval(fetchUpdate, 3000) // Poll a cada 3s
         }
-      )
-      .subscribe()
+      })
+
+    // Polling como fallback imediato para mobile
+    pollInterval = setInterval(fetchUpdate, 3000)
 
     return () => {
       supabase.removeChannel(channel)
+      if (pollInterval) clearInterval(pollInterval)
     }
-  }, [entryId, entryData, businessId, businessName])
+  }, [entryId, entryData?.status, businessId, businessName])
 
   const handleSubmit = async (formData: {
     customer_name: string
