@@ -3,21 +3,33 @@ import { createClient } from '@/lib/supabase/server';
 import webpush from 'web-push';
 import type { PushNotificationPayload } from '@/lib/push/types';
 
-// Configure web-push with VAPID details
-const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!;
-const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY!;
+// Initialize VAPID configuration lazily at runtime
+function initializeVapid() {
+  const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+  const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
 
-if (!vapidPublicKey || !vapidPrivateKey) {
-  console.error('VAPID keys are not configured!');
+  if (!vapidPublicKey || !vapidPrivateKey) {
+    throw new Error('VAPID keys are not configured');
+  }
+
+  webpush.setVapidDetails(
+    'mailto:noreply@minhavez.com',
+    vapidPublicKey,
+    vapidPrivateKey
+  );
 }
 
-webpush.setVapidDetails(
-  'mailto:noreply@minhavez.com',
-  vapidPublicKey,
-  vapidPrivateKey
-);
-
 export async function POST(request: NextRequest) {
+  // Initialize VAPID on first request
+  try {
+    initializeVapid();
+  } catch (error) {
+    console.error('VAPID initialization error:', error);
+    return NextResponse.json(
+      { error: 'Push notifications not configured' },
+      { status: 500 }
+    );
+  }
   try {
     const supabase = await createClient();
 

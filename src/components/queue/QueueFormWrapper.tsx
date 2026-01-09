@@ -217,6 +217,9 @@ export default function QueueFormWrapper({
     try {
       const supabase = createClient()
 
+      // Get current user if logged in (optional - for push notifications)
+      const { data: { user } } = await supabase.auth.getUser()
+
       const { data, error: insertError } = await supabase
         .from('queue_entries')
         .insert({
@@ -227,6 +230,7 @@ export default function QueueFormWrapper({
           selected_service: formData.selected_service,
           notes: formData.notes || null,
           status: 'waiting',
+          user_id: user?.id || null, // Save user_id for push notifications
         })
         .select()
         .single()

@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import QueueScheduleModal from './QueueScheduleModal'
 import QueueAppearanceModal from './QueueAppearanceModal'
+import { sendPushNotification } from '@/lib/push/send-notification'
 
 interface QueueEntry {
   id: string
@@ -119,6 +120,39 @@ export default function QueueManager({ businessId }: QueueManagerProps) {
       updates.called_at = new Date().toISOString()
       setCallingId(id)
       setTimeout(() => setCallingId(null), 2000)
+
+      // Get queue entry details for push notification
+      const { data: entry } = await supabase
+        .from('queue_entries')
+        .select('user_id, customer_name')
+        .eq('id', id)
+        .single()
+
+      // Send push notification if user has user_id
+      if (entry?.user_id) {
+        const { data: business } = await supabase
+          .from('businesses')
+          .select('name')
+          .eq('id', businessId)
+          .single()
+
+        // Send notification asynchronously using server action
+        sendPushNotification(entry.user_id, {
+          title: 'Sua vez chegou!',
+          body: `${business?.name || 'O estabelecimento'} está te chamando. Dirija-se ao atendimento!`,
+          icon: '/icon-192.png',
+          badge: '/icon-192.png',
+          tag: 'queue-call',
+          requireInteraction: true,
+          data: {
+            url: `/fila/${businessId}/espera/${id}`,
+            queueEntryId: id,
+            businessId: businessId,
+          },
+        }).catch((error) => {
+          console.error('Failed to send push notification:', error)
+        })
+      }
     } else if (status === 'attending') {
       updates.attended_at = new Date().toISOString()
     } else if (status === 'completed') {
