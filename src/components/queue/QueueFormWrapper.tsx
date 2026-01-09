@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import QueueFormWithServices from './QueueFormWithServices'
 import { cancelQueueEntry } from '@/lib/queue/actions'
 import { Button } from '@/components/ui/button'
+import { usePushNotifications } from '@/lib/hooks/usePushNotifications'
 
 interface Service {
   id: string
@@ -49,7 +50,16 @@ export default function QueueFormWrapper({
   const [selectedReason, setSelectedReason] = useState('')
   const [customReason, setCustomReason] = useState('')
   const [canceling, setCanceling] = useState(false)
-  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default')
+
+  // Use the push notifications hook
+  const {
+    isSupported: isPushSupported,
+    permission: pushPermission,
+    isSubscribed: isPushSubscribed,
+    isLoading: isPushLoading,
+    subscribe: subscribeToPush,
+    unsubscribe: unsubscribeFromPush,
+  } = usePushNotifications()
 
   const CUSTOMER_CANCEL_REASONS = [
     'Não posso mais esperar',
@@ -84,20 +94,13 @@ export default function QueueFormWrapper({
     }
   }
 
-  // Solicita permissão para notificações
+  // Auto-subscribe to push notifications when joining queue
   useEffect(() => {
-    if (typeof window !== 'undefined' && 'Notification' in window) {
-      setNotificationPermission(Notification.permission)
+    if (success && entryId && isPushSupported && !isPushSubscribed && pushPermission !== 'denied') {
+      // Automatically attempt to subscribe when user joins queue
+      subscribeToPush()
     }
-  }, [])
-
-  // Solicita permissão quando entrar na fila
-  const requestNotificationPermission = async () => {
-    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
-      const permission = await Notification.requestPermission()
-      setNotificationPermission(permission)
-    }
-  }
+  }, [success, entryId, isPushSupported, isPushSubscribed, pushPermission, subscribeToPush])
 
   // Realtime updates quando na fila + Polling como fallback
   useEffect(() => {
@@ -247,9 +250,6 @@ export default function QueueFormWrapper({
       setEntryId(data.id)
       setEntryData(data)
       setSuccess(true)
-
-      // Solicita permissão de notificação
-      requestNotificationPermission()
     } catch (err) {
       const error = err as Error
       console.error('Error joining queue:', error)
@@ -436,28 +436,42 @@ export default function QueueFormWrapper({
             </div>
           )}
 
-          {/* Notification permission request */}
-          {notificationPermission === 'default' && entryData.status === 'waiting' && (
-            <div className="p-3 mb-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
-              <p className="text-xs text-amber-800 dark:text-amber-200 mb-2">
-                📱 Ative as notificações para ser avisado quando for sua vez
-              </p>
-              <button
-                onClick={requestNotificationPermission}
-                className="w-full px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium transition-colors text-xs"
-              >
-                Ativar Notificações
-              </button>
-            </div>
-          )}
+          {/* Push Notification Status */}
+          {isPushSupported && entryData.status === 'waiting' && (
+            <>
+              {!isPushSubscribed && pushPermission !== 'denied' && (
+                <div className="p-3 mb-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                  <p className="text-xs text-amber-800 dark:text-amber-200 mb-2">
+                    📱 Ative as notificações push para receber avisos mesmo com o site fechado
+                  </p>
+                  <button
+                    onClick={subscribeToPush}
+                    disabled={isPushLoading}
+                    className="w-full px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium transition-colors text-xs disabled:opacity-50"
+                  >
+                    {isPushLoading ? 'Ativando...' : 'Ativar Notificações Push'}
+                  </button>
+                </div>
+              )}
 
-          {notificationPermission === 'granted' && entryData.status === 'waiting' && (
-            <div className="p-2.5 mb-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800 flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" />
-              <p className="text-xs text-green-800 dark:text-green-200">
-                Notificações ativadas! Você será avisado quando for chamado.
-              </p>
-            </div>
+              {isPushSubscribed && (
+                <div className="p-2.5 mb-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800 flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" />
+                  <p className="text-xs text-green-800 dark:text-green-200">
+                    Notificações push ativas! Você será avisado mesmo com o site fechado.
+                  </p>
+                </div>
+              )}
+
+              {pushPermission === 'denied' && (
+                <div className="p-2.5 mb-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800 flex items-center gap-2">
+                  <XCircle className="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0" />
+                  <p className="text-xs text-red-800 dark:text-red-200">
+                    Notificações bloqueadas. Ative nas configurações do navegador.
+                  </p>
+                </div>
+              )}
+            </>
           )}
         </div>
 
