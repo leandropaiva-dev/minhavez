@@ -129,12 +129,20 @@ export default function QueueManager({ businessId }: QueueManagerProps) {
         .single()
 
       // Send push notification if user has user_id
+      console.log('[QueueManager] 📱 Checking push notification for entry:', {
+        entryId: id,
+        userId: entry?.user_id,
+        hasUserId: !!entry?.user_id
+      })
+
       if (entry?.user_id) {
         const { data: business } = await supabase
           .from('businesses')
           .select('name')
           .eq('id', businessId)
           .single()
+
+        console.log('[QueueManager] 🚀 Sending push notification to user:', entry.user_id)
 
         // Send notification asynchronously using server action
         sendPushNotification(entry.user_id, {
@@ -149,9 +157,15 @@ export default function QueueManager({ businessId }: QueueManagerProps) {
             queueEntryId: id,
             businessId: businessId,
           },
-        }).catch((error) => {
-          console.error('Failed to send push notification:', error)
         })
+        .then((result) => {
+          console.log('[QueueManager] ✅ Push notification sent successfully:', result)
+        })
+        .catch((error) => {
+          console.error('[QueueManager] ❌ Failed to send push notification:', error)
+        })
+      } else {
+        console.log('[QueueManager] ⚠️ No user_id found, skipping push notification')
       }
     } else if (status === 'attending') {
       updates.attended_at = new Date().toISOString()

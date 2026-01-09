@@ -106,16 +106,16 @@ export default function QueueFormWrapper({
 
   // Realtime updates quando na fila + Polling como fallback
   useEffect(() => {
-    if (!entryId || !entryData) {
-      console.log('[QueueFormWrapper] ❌ No entryId or entryData, skipping realtime setup')
+    if (!entryId) {
+      console.log('[QueueFormWrapper] ❌ No entryId, skipping realtime setup')
       return
     }
 
     console.log('[QueueFormWrapper] 🔄 Setting up realtime updates for entry:', entryId)
-    console.log('[QueueFormWrapper] 📊 Current status:', entryData.status)
 
     const supabase = createClient()
     let pollInterval: NodeJS.Timeout
+    let previousStatus = entryData?.status || 'waiting'
 
     // Função para atualizar dados
     const fetchUpdate = async () => {
@@ -133,7 +133,7 @@ export default function QueueFormWrapper({
       }
 
       console.log('[QueueFormWrapper] ✅ Got update:', {
-        currentStatus: entryData.status,
+        previousStatus: previousStatus,
         newStatus: updatedEntry?.status,
         entryId: updatedEntry?.id
       })
@@ -143,7 +143,7 @@ export default function QueueFormWrapper({
       setDebugInfo(`Status: ${updatedEntry?.status || 'unknown'} | Last check: ${new Date().toLocaleTimeString()}`)
 
       if (updatedEntry) {
-        const wasWaiting = entryData.status === 'waiting'
+        const wasWaiting = previousStatus === 'waiting'
         const nowCalled = updatedEntry.status === 'called'
 
         console.log('[QueueFormWrapper] 🎯 Status check:', {
@@ -188,6 +188,10 @@ export default function QueueFormWrapper({
         }
 
         console.log('[QueueFormWrapper] 💾 Updating entryData state with new status:', updatedEntry.status)
+
+        // Update previous status for next comparison
+        previousStatus = updatedEntry.status
+
         setEntryData(updatedEntry as QueueEntry)
 
         // Recalcula posição se ainda waiting
@@ -237,10 +241,11 @@ export default function QueueFormWrapper({
     pollInterval = setInterval(fetchUpdate, 3000)
 
     return () => {
+      console.log('[QueueFormWrapper] 🧹 Cleaning up realtime subscription')
       supabase.removeChannel(channel)
       if (pollInterval) clearInterval(pollInterval)
     }
-  }, [entryId, entryData?.status, businessId, businessName])
+  }, [entryId, businessId, businessName]) // Removed entryData?.status from dependencies!
 
   const handleSubmit = async (formData: {
     customer_name: string
