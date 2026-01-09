@@ -50,6 +50,8 @@ export default function QueueFormWrapper({
   const [selectedReason, setSelectedReason] = useState('')
   const [customReason, setCustomReason] = useState('')
   const [canceling, setCanceling] = useState(false)
+  const [lastUpdate, setLastUpdate] = useState<string>('')
+  const [debugInfo, setDebugInfo] = useState<string>('')
 
   // Use the push notifications hook
   const {
@@ -104,25 +106,55 @@ export default function QueueFormWrapper({
 
   // Realtime updates quando na fila + Polling como fallback
   useEffect(() => {
-    if (!entryId || !entryData) return
+    if (!entryId || !entryData) {
+      console.log('[QueueFormWrapper] ❌ No entryId or entryData, skipping realtime setup')
+      return
+    }
+
+    console.log('[QueueFormWrapper] 🔄 Setting up realtime updates for entry:', entryId)
+    console.log('[QueueFormWrapper] 📊 Current status:', entryData.status)
 
     const supabase = createClient()
     let pollInterval: NodeJS.Timeout
 
     // Função para atualizar dados
     const fetchUpdate = async () => {
-      const { data: updatedEntry } = await supabase
+      console.log('[QueueFormWrapper] 🔍 Fetching update for entry:', entryId)
+
+      const { data: updatedEntry, error } = await supabase
         .from('queue_entries')
         .select('*')
         .eq('id', entryId)
         .single()
 
+      if (error) {
+        console.error('[QueueFormWrapper] ❌ Error fetching update:', error)
+        return
+      }
+
+      console.log('[QueueFormWrapper] ✅ Got update:', {
+        currentStatus: entryData.status,
+        newStatus: updatedEntry?.status,
+        entryId: updatedEntry?.id
+      })
+
+      // Update debug info for visual display
+      setLastUpdate(new Date().toLocaleTimeString())
+      setDebugInfo(`Status: ${updatedEntry?.status || 'unknown'} | Last check: ${new Date().toLocaleTimeString()}`)
+
       if (updatedEntry) {
         const wasWaiting = entryData.status === 'waiting'
         const nowCalled = updatedEntry.status === 'called'
 
+        console.log('[QueueFormWrapper] 🎯 Status check:', {
+          wasWaiting,
+          nowCalled,
+          shouldNotify: wasWaiting && nowCalled
+        })
+
         // Detecta quando cliente é chamado
         if (wasWaiting && nowCalled) {
+          console.log('[QueueFormWrapper] 🔔 CLIENT WAS CALLED! Showing notification...')
           // Notificação
           if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
             new Notification('Você foi chamado!', {
@@ -155,10 +187,12 @@ export default function QueueFormWrapper({
           }
         }
 
+        console.log('[QueueFormWrapper] 💾 Updating entryData state with new status:', updatedEntry.status)
         setEntryData(updatedEntry as QueueEntry)
 
         // Recalcula posição se ainda waiting
         if (updatedEntry.status === 'waiting') {
+          console.log('[QueueFormWrapper] 📍 Recalculating position...')
           const { count } = await supabase
             .from('queue_entries')
             .select('*', { count: 'exact', head: true })
@@ -189,16 +223,17 @@ export default function QueueFormWrapper({
         }
       )
       .subscribe((status) => {
-        console.log('Realtime status:', status)
+        console.log('[QueueFormWrapper] 📡 Realtime subscription status:', status)
 
         // Se realtime falhar, usa polling
         if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          console.log('Realtime falhou, usando polling...')
+          console.log('[QueueFormWrapper] ⚠️ Realtime failed, using polling fallback')
           pollInterval = setInterval(fetchUpdate, 3000) // Poll a cada 3s
         }
       })
 
     // Polling como fallback imediato para mobile
+    console.log('[QueueFormWrapper] ⏱️ Starting polling every 3 seconds')
     pollInterval = setInterval(fetchUpdate, 3000)
 
     return () => {
@@ -527,10 +562,22 @@ export default function QueueFormWrapper({
           )}
         </div>
 
+        {/* Debug info banner */}
+        {entryData.status === 'waiting' && debugInfo && (
+          <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded text-xs">
+            <p className="text-blue-800 dark:text-blue-200 font-mono">
+              🔍 DEBUG: {debugInfo}
+            </p>
+            <p className="text-blue-600 dark:text-blue-400 mt-1">
+              DB Status: {entryData.status} | Entry ID: {entryData.id.slice(0, 8)}...
+            </p>
+          </div>
+        )}
+
         {/* Auto-refresh notice */}
         {entryData.status === 'waiting' && (
           <p className="text-xs text-center mt-3 text-zinc-400">
-            Atualização automática em tempo real
+            Atualização automática em tempo real {lastUpdate && `(última: ${lastUpdate})`}
           </p>
         )}
 
